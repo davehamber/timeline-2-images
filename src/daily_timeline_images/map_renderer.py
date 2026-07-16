@@ -65,7 +65,7 @@ def _calculate_bounds(all_points: list) -> tuple:
         geometry=[Point(lon, lat) for lat, lon in [(min_lat, min_lon), (max_lat, max_lon)]],
         crs="EPSG:4326"
     ).to_crs(epsg=3857)
-    return bounds_gdf.total_bounds
+    return tuple(bounds_gdf.total_bounds)
 
 
 def _calculate_padded_bounds(minx: float, miny: float, maxx: float, maxy: float) -> tuple:
