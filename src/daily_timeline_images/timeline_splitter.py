@@ -27,11 +27,13 @@ def split_timeline_by_year(json_path: str, output_dir: str = "timelines") -> Dic
         data = json.load(f)
 
     # Group data by year
-    yearly_data: Dict[int, Dict[str, Any]] = defaultdict(lambda: {
-        "semanticSegments": [],
-        "rawSignals": data.get("rawSignals", []),
-        "userLocationProfile": data.get("userLocationProfile", {}),
-    })
+    yearly_data: Dict[int, Dict[str, Any]] = defaultdict(
+        lambda: {
+            "semanticSegments": [],
+            "rawSignals": data.get("rawSignals", []),
+            "userLocationProfile": data.get("userLocationProfile", {}),
+        }
+    )
 
     # Process semanticSegments
     total_segments = 0

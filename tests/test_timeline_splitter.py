@@ -17,23 +17,17 @@ def sample_timeline_multi_year():
             {
                 "startTime": "2023-01-15T10:00:00Z",
                 "endTime": "2023-01-15T11:00:00Z",
-                "timelinePath": [
-                    {"point": "37.0°, -122.0°", "time": "2023-01-15T10:30:00Z"}
-                ],
+                "timelinePath": [{"point": "37.0°, -122.0°", "time": "2023-01-15T10:30:00Z"}],
             },
             {
                 "startTime": "2024-06-20T14:00:00Z",
                 "endTime": "2024-06-20T15:00:00Z",
-                "timelinePath": [
-                    {"point": "37.1°, -122.1°", "time": "2024-06-20T14:30:00Z"}
-                ],
+                "timelinePath": [{"point": "37.1°, -122.1°", "time": "2024-06-20T14:30:00Z"}],
             },
             {
                 "startTime": "2024-12-25T08:00:00Z",
                 "endTime": "2024-12-25T09:00:00Z",
-                "timelinePath": [
-                    {"point": "37.2°, -122.2°", "time": "2024-12-25T08:30:00Z"}
-                ],
+                "timelinePath": [{"point": "37.2°, -122.2°", "time": "2024-12-25T08:30:00Z"}],
             },
         ],
         "rawSignals": [],

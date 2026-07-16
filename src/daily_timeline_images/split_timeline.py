@@ -27,9 +27,7 @@ def _handle_merge(timeline_dir: str, output: str):
 
 def main():
     """Command-line interface for timeline splitting."""
-    parser = argparse.ArgumentParser(
-        description="Split or merge Google Timeline exports by year"
-    )
+    parser = argparse.ArgumentParser(description="Split or merge Google Timeline exports by year")
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
 
     split_parser = subparsers.add_parser("split", help="Split Timeline.json by year")

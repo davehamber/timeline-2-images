@@ -42,7 +42,7 @@ def _parse_segment_datetime(start_str: str, target: date) -> str | None:
     dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
     if pd.isna(dt_timestamp):
         return None
-    dt = datetime.fromisoformat(str(dt_timestamp.isoformat()))
+    dt = datetime.fromisoformat(str(dt_timestamp.isoformat()))  # type: ignore[union-attr]
     if dt.astimezone(timezone.utc).date() != target:
         return None
     return start_str
@@ -78,11 +78,13 @@ def load_segments_for_day(json_path: str, target_date: str) -> list[dict]:
         waypoints = _parse_waypoints(seg.get("timelinePath", []))
 
         if waypoints:
-            segments.append({
-                "startTime": start_str,
-                "endTime": seg.get("endTime"),
-                "waypoints": waypoints,
-            })
+            segments.append(
+                {
+                    "startTime": start_str,
+                    "endTime": seg.get("endTime"),
+                    "waypoints": waypoints,
+                }
+            )
 
     return segments
 
@@ -93,7 +95,7 @@ def _parse_timestamp(ts: str | int | float) -> datetime | None:
         dt = pd.to_datetime(ts, utc=True, errors="coerce")
         if pd.isna(dt):
             return None
-        return datetime.fromisoformat(str(dt.isoformat()))
+        return datetime.fromisoformat(str(dt.isoformat()))  # type: ignore[union-attr]
     return datetime.fromtimestamp(int(ts) / 1000, tz=timezone.utc)
 
 
@@ -278,9 +280,7 @@ def load_points_for_day(json_path: str, target_date: str) -> pd.DataFrame:
     rows.extend(_extract_from_semantic_segments(data, target))
 
     if not rows:
-        raise ValueError(
-            f"No points found for {target_date}. Check the Timeline JSON structure."
-        )
+        raise ValueError(f"No points found for {target_date}. Check the Timeline JSON structure.")
 
     df = pd.DataFrame(rows, columns=["timestamp", "lat", "lon"]).sort_values("timestamp")
     return df
