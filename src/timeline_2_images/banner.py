@@ -1,4 +1,5 @@
 """ASCII art banner for timeline-2-images application."""
+# pylint: disable=line-too-long
 
 
 def print_banner():

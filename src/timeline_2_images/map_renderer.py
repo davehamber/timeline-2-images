@@ -18,8 +18,8 @@ _memory_cache = MemoryTileCache()
 _disk_cache = DiskTileCache()
 
 # Track cache statistics for debugging
-_tile_requests: dict[str, int] = {}
-_debug_mode = False
+_TILE_REQUESTS: dict[str, int] = {}
+DEBUG_MODE = False
 _cache_session = None
 
 # Install requests-cache globally to cache all tile downloads
@@ -41,7 +41,7 @@ def _get_cache_stats() -> dict:
             return {
                 "cache_db_path": ".tile_cache/osm-tiles.sqlite",
             }
-    except Exception:
+    except (OSError, sqlite3.Error):
         pass
     return {}
 
@@ -185,7 +185,7 @@ def get_render_cache_info() -> dict:
             "total_cached_tiles": count,
             "cache_enabled": True,
         }
-    except Exception:
+    except (OSError, sqlite3.Error):
         return {"status": "unknown"}
 
 
@@ -275,23 +275,23 @@ def get_tile_cache_stats() -> dict:
 
 def clear_tile_caches() -> None:
     """Clear all tile caches."""
-    global _tile_requests
+    global _TILE_REQUESTS
     _memory_cache.clear()
     _disk_cache.clear()
-    _tile_requests.clear()
+    _TILE_REQUESTS.clear()
     # Clear the requests-cache
     try:
         import requests_cache
 
         requests_cache.clear()
-    except Exception:
+    except (OSError, sqlite3.Error):
         pass
 
 
 def set_debug_mode(enabled: bool) -> None:
     """Enable/disable debug mode for tile caching."""
-    global _debug_mode
-    _debug_mode = enabled
+    global DEBUG_MODE
+    DEBUG_MODE = enabled
     if enabled:
         print("Debug mode enabled: tile caching via requests-cache in .tile_cache")
 

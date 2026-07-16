@@ -83,8 +83,12 @@ def _process_date_successful(
     image_size: int,
     profile: bool,
     start_time: float,
+    load_timing: dict | None = None,
 ) -> tuple[bool, float, dict]:
     """Handle successful date processing."""
+    if load_timing is None:
+        load_timing = {}
+
     output_file = output_path / f"timeline_{date_str}.jpg"
     cache_before = get_render_cache_info()
     render_timing = render_segments(
@@ -105,7 +109,7 @@ def _process_date_successful(
     print(f"✓ {details} → {output_file.name}")
 
     if profile:
-        _print_timing_breakdown({}, render_timing)
+        _print_timing_breakdown(load_timing, render_timing)
 
     return True, elapsed, cache_info
 
@@ -136,7 +140,7 @@ def _process_date(
             return False, time.time() - start_time, {}
 
         return _process_date_successful(
-            date_str, output_path, segments, image_size, profile, start_time
+            date_str, output_path, segments, image_size, profile, start_time, load_timing
         )
     except (ValueError, OSError, RuntimeError) as e:
         _handle_date_error(e)
