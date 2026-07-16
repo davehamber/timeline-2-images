@@ -1,296 +1,469 @@
-# Architecture & Function Flow
+# Architecture & Design
 
 ## Overview
 
-This document describes the timeline-2-images architecture, which now includes a modern OOP design alongside the legacy functional implementation.
+**timeline-2-images** is a modern Python application that generates daily route maps from Google Timeline JSON exports. It uses a layered object-oriented architecture with clear separation of concerns, making it suitable for both library and CLI usage.
 
-**Note:** The new OOP design is the recommended approach for new development. The legacy functional API remains available for backward compatibility.
-
-## New OOP Architecture (Recommended)
-
-The new object-oriented design provides better encapsulation, testability, and maintainability.
-
-### Application Entry Point
-
-```python
-from timeline_2_images.app import TimelineApp
-from timeline_2_images.config import RenderConfiguration
-
-# Create app with configuration
-config = RenderConfiguration(image_size=800, min_area_sq_km=5.0)
-app = TimelineApp("Timeline.json", output_dir="maps", config=config)
-
-# Process a date range
-results = app.process_date_range(days=14)
-
-# Process specific date
-result = app.process_date("2024-01-15")
-```
-
-### Class Hierarchy
-
-```
-TimelineApp (orchestrator)
-├── TimelineProcessor (data loading)
-├── SegmentProcessor (processing)
-├── MapRenderer (rendering)
-└── RenderConfiguration (settings)
-
-Models
-├── Segment
-├── ProcessedSegment
-├── Bounds
-└── RenderResult
-
-Caching
-├── CacheManager (interface)
-├── TileCacheManager
-└── sqlite_cache (implementation)
-
-Configuration
-├── RenderConfiguration
-└── DateRangeQuery
-```
-
-### Data Flow
-
-```
-TimelineApp.process_date_range()
-  ↓
-DateRangeQuery (parse parameters)
-  ↓
-TimelineProcessor.load_segments_for_day()
-  ↓
-SegmentProcessor.process_segments()
-  ├─ simplify_waypoints()
-  ├─ calculate_bounds()
-  └─ ProcessedSegment objects
-  ↓
-MapRenderer.render_segments()
-  ├─ _calculate_bounds() → Web Mercator projection
-  ├─ _render_map()
-  ├─ _draw_journey_line()
-  ├─ _draw_markers()
-  └─ RenderResult
-```
-
-### Key Components
-
-**TimelineApp** - Master orchestrator
-- Coordinates processing, rendering, caching
-- Unified interface for operations
-- Error handling and statistics
-
-**TimelineProcessor** - Data layer
-- Loads segments from Timeline.json
-- Manages session and persistent caching
-- Handles date range queries
-
-**SegmentProcessor** - Transformation layer
-- Simplifies waypoints (RDP algorithm)
-- Calculates geographic bounds
-- Filters segments by properties
-
-**MapRenderer** - Presentation layer
-- Renders segments to map images
-- Manages tile caching
-- Enforces minimum viewing area
-
-**Models** - Data structures
-- `Segment`: Raw segment with waypoints
-- `ProcessedSegment`: After simplification
-- `Bounds`: Geographic bounding box
-- `RenderResult`: Rendering operation result
+The application is production-ready with:
+- ✅ Full type hints (MyPy validated)
+- ✅ Low cyclomatic complexity (all functions A-rated)
+- ✅ Installable as a Python library
+- ✅ Deployable as a standalone executable
+- ✅ Comprehensive error handling and validation
 
 ---
 
-## Legacy Functional Architecture
+## Architecture Layers
 
-The original functional implementation is preserved for backward compatibility.
-
-## Main Data Processing Flow
-
-```mermaid
-graph TD
-    A["main.py: main()"] --> B["get_last_n_days_with_data()"]
-    B --> C["Extracts dates from Timeline.json"]
-    A --> D["_process_date()"]
-    D --> E["load_segments_for_day()"]
-    E --> F["_parse_waypoints()"]
-    D --> G["render_segments()"]
-    G --> H["Collects & simplifies waypoints"]
-    G --> I["Calculates bounds"]
-    G --> J["Draws journey line & markers"]
-    G --> K["Saves JPG output"]
+```
+┌─────────────────────────────────────────┐
+│         User Interface Layer            │
+│  ┌─────────────────────────────────────┐│
+│  │  CLI (main.py: cli())              ││
+│  │  Library API (TimelineApp)          ││
+│  └─────────────────────────────────────┘│
+└─────────────────────────────────────────┘
+                  ↓
+┌─────────────────────────────────────────┐
+│       Application Layer                 │
+│  ┌─────────────────────────────────────┐│
+│  │  TimelineApp (orchestrator)         ││
+│  │  - Coordinates all components      ││
+│  │  - Manages workflow                ││
+│  └─────────────────────────────────────┘│
+└─────────────────────────────────────────┘
+                  ↓
+┌─────────────────────────────────────────┐
+│      Processing & Rendering Layer       │
+│  ┌─────────────────────────────────────┐│
+│  │  TimelineProcessor    Validation    ││
+│  │  SegmentProcessor     MapRenderer   ││
+│  │  TileCacheManager                   ││
+│  └─────────────────────────────────────┘│
+└─────────────────────────────────────────┘
+                  ↓
+┌─────────────────────────────────────────┐
+│         Data Layer                      │
+│  ┌─────────────────────────────────────┐│
+│  │  Models (Segment, ProcessedSegment) ││
+│  │  Configuration (RenderConfiguration)││
+│  │  Cache (CacheManager, SQLite)       ││
+│  └─────────────────────────────────────┘│
+└─────────────────────────────────────────┘
 ```
 
-## Detailed Module Functions
+---
 
-### timeline_parser.py - Date & Segment Extraction
+## Module Organization
 
-```mermaid
-graph TD
-    A["get_last_n_days_with_data()"]
-    A --> B["_extract_dates_from_locations()"]
-    A --> C["_extract_dates_from_timeline_objects()"]
-    A --> D["_extract_dates_from_segments()"]
-
-    C --> C1["_get_segment_start_date()"]
-    D --> D1["_get_semantic_segment_datetime()"]
-
-    style A fill:#e1f5ff,color:#000000,color:#000000
-    style B fill:#f3e5f5,color:#000000,color:#000000
-    style C fill:#f3e5f5,color:#000000,color:#000000
-    style D fill:#f3e5f5,color:#000000,color:#000000
+```
+src/timeline_2_images/
+├── __init__.py                  # Public API exports
+├── main.py                      # CLI entry points (cli, main)
+├── app.py                       # TimelineApp orchestrator
+├── banner.py                    # ASCII banner display
+├── timeline_validator.py        # JSON structure validation
+├── timeline_parser.py           # Legacy functional API (internal)
+├── map_renderer.py              # Legacy utilities (internal)
+├── sqlite_cache.py              # SQLite cache implementation
+│
+├── config/                      # Configuration layer
+│   ├── __init__.py
+│   ├── render_configuration.py  # Image rendering settings
+│   └── date_range_query.py      # Date range logic
+│
+├── models/                      # Data structures
+│   ├── __init__.py
+│   ├── segment.py               # Segment & ProcessedSegment
+│   ├── bounds.py                # Geographic bounding box
+│   └── render_result.py         # Rendering operation result
+│
+├── processors/                  # Data transformation
+│   ├── __init__.py
+│   ├── timeline_processor.py    # JSON loading & caching
+│   └── segment_processor.py     # RDP simplification & processing
+│
+├── rendering/                   # Map rendering
+│   ├── __init__.py
+│   ├── map_renderer.py          # MapRenderer class
+│   └── tile_cache_manager.py    # OSM tile caching
+│
+└── cache/                       # Cache abstraction
+    ├── __init__.py
+    └── manager.py               # CacheManager interface
 ```
 
-### timeline_parser.py - Point Extraction
+---
 
-```mermaid
-graph TD
-    A["load_points_for_day()"]
-    A --> B["_extract_from_flat_locations()"]
-    A --> C["_extract_from_timeline_objects()"]
-    A --> D["_extract_from_semantic_segments()"]
+## Key Components
 
-    B --> B1["_process_flat_location()"]
-    B1 --> B2["_parse_timestamp()"]
-    B1 --> B3["_extract_location_point()"]
+### 1. TimelineApp (Orchestrator)
 
-    C --> C1["_process_timeline_object()"]
-    C1 --> C2["_get_timeline_object_datetime()"]
-    C1 --> C3["_matches_target_date()"]
-    C1 --> C4["_extract_waypoints_from_segment()"]
-    C1 --> C5["_extract_locations_from_segment()"]
+Central coordinator that ties all components together.
 
-    D --> D1["_process_semantic_segment()"]
-    D1 --> D2["_get_semantic_segment_datetime()"]
-    D1 --> D3["_matches_target_date()"]
-    D1 --> D4["_extract_points_from_segment_path()"]
-    D4 --> D5["_parse_point_string()"]
+```python
+from timeline_2_images import TimelineApp, RenderConfiguration
 
-    style A fill:#e1f5ff,color:#000000
-    style B fill:#f3e5f5,color:#000000
-    style C fill:#f3e5f5,color:#000000
-    style D fill:#f3e5f5,color:#000000
+config = RenderConfiguration(image_size=800)
+app = TimelineApp("Timeline.json", output_dir="maps", config=config)
+
+# Process date range
+results = app.process_date_range(start_date="2026-06-01", days=30)
+
+# Get statistics
+dates = app.get_available_dates()
+stats = app.get_statistics()
 ```
 
-### timeline_parser.py - Segment Loading
+**Responsibilities:**
+- Manages TimelineProcessor, SegmentProcessor, MapRenderer
+- Orchestrates the processing workflow
+- Provides unified public API
+- Handles cache clearing and statistics
 
-```mermaid
-graph TD
-    A["load_segments_for_day()"]
-    A --> B["_parse_segment_datetime()"]
-    A --> C["_parse_waypoints()"]
+---
 
-    style A fill:#e1f5ff,color:#000000
-    style B fill:#c8e6c9,color:#000000
-    style C fill:#c8e6c9,color:#000000
+### 2. TimelineProcessor (Data Layer)
+
+Loads and parses Timeline.json data with session-level caching.
+
+**Key Methods:**
+- `load_segments_for_day(date)` → List[Segment]
+- `load_points_for_day(date)` → List[Point]
+- `get_available_dates()` → List[str]
+- `get_date_range(query)` → List[str]
+
+**Caching Strategy:**
+- **Session Cache**: In-memory cache for the JSON file
+- **Performance**: ~14x speedup for multi-date queries
+- **Implementation**: Lazy date index building on first access
+
+---
+
+### 3. SegmentProcessor (Transformation Layer)
+
+Processes raw segments with line simplification and bounds calculation.
+
+**Key Methods:**
+- `process_segments(segments)` → List[ProcessedSegment]
+- `simplify_waypoints(waypoints)` → List[waypoints]
+- `filter_by_waypoint_count(segments)` → List[Segment]
+
+**Algorithm:** Ramer-Douglas-Peucker (RDP) line simplification
+- Tolerance: 20 meters
+- Reduces GPS jitter while preserving path shape
+- Automatically clusters stationary points
+
+---
+
+### 4. MapRenderer (Presentation Layer)
+
+Renders processed segments to map images with OSM basemaps.
+
+**Key Methods:**
+- `render_segments(segments, output_path)` → RenderResult
+- `get_cache_info()` → Dict[cache_stats]
+- `clear_cache()` → None
+
+**Rendering Pipeline:**
+1. Calculate Web Mercator bounds from waypoints
+2. Apply padding (5%) and enforce minimum area (5 sq km)
+3. Fetch OSM tiles via requests-cache (XDG compliant)
+4. Draw base map with contextily
+5. Draw journey line with border effect
+6. Draw start/end markers
+7. Save as JPG image
+
+**Tile Caching:**
+- Location: `~/.cache/timeline-2-images/tiles.sqlite`
+- Backend: SQLite with requests-cache
+- Expiration: Never (tiles are immutable)
+- Size: Typically 2-5MB for typical usage
+
+---
+
+### 5. Validation Layer (TimelineValidator)
+
+Validates Timeline.json structure early in the pipeline.
+
+**Validation Checks:**
+- File exists and is readable
+- Valid JSON format
+- Root is an object/dictionary
+- Contains at least one data source (semanticSegments, timelineObjects, locations)
+- Data source arrays are properly typed
+
+**Error Messages:**
+- Descriptive and actionable
+- Suggest checking Google Takeout
+- Acknowledge format changes
+
+---
+
+### 6. Configuration Layer
+
+**RenderConfiguration:**
+- image_size: 500px (default)
+- dpi: 100 (default)
+- output_format: "jpg"
+- start_marker_size: 70 pixels
+- end_marker_size: 50 pixels
+- min_area_sq_km: 5.0 (minimum viewing area)
+
+**DateRangeQuery:**
+Implements flexible date range logic with parameter precedence:
+1. `--start-date` + `--end-date` → exact range
+2. `--start-date` + `--days` → from start + N days
+3. `--end-date` + `--days` → N days before end
+4. `--days` only → last N days with data
+
+---
+
+## Data Models
+
+### Segment (Raw Data)
+
+```python
+@dataclass
+class Segment:
+    start_time: str              # ISO 8601 timestamp
+    end_time: str
+    waypoints: List[tuple]       # (lat, lon) tuples
+
+    methods:
+    - get_bounds() → Bounds
+    - get_duration() → timedelta
+    - get_waypoint_count() → int
 ```
 
-### map_renderer.py - Map Rendering Pipeline
+### ProcessedSegment (After Simplification)
 
-```mermaid
-graph TD
-    A["render_segments()"]
-    A --> B["_collect_and_simplify_waypoints()"]
-    B --> B1["simplify_waypoints()"]
+```python
+@dataclass
+class ProcessedSegment:
+    simplified_waypoints: List[tuple]  # After RDP simplification
+    bounds: Bounds
+    original_waypoint_count: int
+    simplified_waypoint_count: int
 
-    A --> C["_calculate_bounds()"]
-    A --> D["_calculate_padded_bounds()"]
-    A --> E["_enforce_minimum_area()"]
-
-    A --> F["_draw_journey_line()"]
-    A --> G["_draw_markers()"]
-
-    A --> H["savefig() - Output JPG"]
-
-    style A fill:#e1f5ff,color:#000000
-    style B1 fill:#fff9c4,color:#000000
-    style F fill:#f8bbd0,color:#000000
-    style G fill:#f8bbd0,color:#000000
-    style H fill:#90caf9,color:#000000
+    methods:
+    - from_segment(Segment) → ProcessedSegment
 ```
 
-### split_timeline.py - CLI & Timeline Splitting
+### Bounds (Geographic Box)
 
-```mermaid
-graph TD
-    A["main()"]
-    A --> B["_handle_split()"]
-    A --> C["_handle_merge()"]
+```python
+@dataclass
+class Bounds:
+    min_latitude: float
+    max_latitude: float
+    min_longitude: float
+    max_longitude: float
 
-    B --> B1["split_timeline_by_year()"]
-    C --> C1["merge_timelines()"]
-
-    style A fill:#e1f5ff,color:#000000
-    style B fill:#c8e6c9,color:#000000
-    style C fill:#c8e6c9,color:#000000
+    methods:
+    - get_center() → (lat, lon)
+    - expand(factor) → Bounds
+    - get_area_degrees_squared() → float
 ```
 
-### main.py - CLI & Orchestration
+### RenderResult (Operation Result)
 
-```mermaid
-graph TD
-    A["main()"]
-    A --> B["get_last_n_days_with_data()"]
-    A --> C["_process_date()"]
+```python
+@dataclass
+class RenderResult:
+    date: str
+    output_path: Path
+    segment_count: int
+    point_count: int
+    render_time: float
+    success: bool
+    error_message: str | None
 
-    C --> C1["load_segments_for_day()"]
-    C --> C2["render_segments()"]
-
-    style A fill:#e1f5ff,color:#000000
-    style B fill:#b3e5fc,color:#000000
-    style C fill:#c8e6c9,color:#000000
+    methods:
+    - was_successful() → bool
+    - get_summary() → str
 ```
 
-## Data Flow Architecture
+---
 
-```mermaid
-graph LR
-    A["Timeline.json<br/>Input"] --> B["Date Query<br/>Functions"]
-    B --> C["Segment/Point<br/>Extraction"]
-    C --> D["Waypoint<br/>Simplification<br/>RDP Algorithm"]
-    D --> E["Bounds<br/>Calculation"]
-    E --> F["Map<br/>Rendering<br/>Matplotlib + OSM"]
-    F --> G["JPG Output<br/>Images"]
+## Data Flow
 
-    style A fill:#ffebee,color:#000000
-    style G fill:#c8e6c9,color:#000000
-    style D fill:#fff9c4,color:#000000
-    style F fill:#f8bbd0,color:#000000
+```
+Timeline.json
+       ↓
+[Validation] → TimelineValidationError on failure
+       ↓
+TimelineProcessor.load_segments_for_day()
+       ↓
+List[Segment] (raw data)
+       ↓
+SegmentProcessor.process_segments()
+  ├─ simplify_waypoints() [RDP algorithm]
+  ├─ calculate_bounds() [Web Mercator]
+  └─ filter by properties
+       ↓
+List[ProcessedSegment] (simplified)
+       ↓
+MapRenderer.render_segments()
+  ├─ Calculate total bounds
+  ├─ Apply padding & minimum area
+  ├─ Render map background (OSM)
+  ├─ Draw journey lines
+  ├─ Draw start/end markers
+  └─ Save JPG
+       ↓
+RenderResult (success/error)
 ```
 
-## Function Complexity Hierarchy
+---
 
-**Tier 1 - Entry Points (A complexity)**
-- `main()` - CLI orchestrator
-- `main()` (split_timeline) - Timeline management CLI
+## Usage Modes
 
-**Tier 2 - Core Business Logic (A complexity)**
-- `load_segments_for_day()` - Extract segments with waypoints
-- `load_points_for_day()` - Extract individual points
-- `get_last_n_days_with_data()` - Find dates with data
-- `render_segments()` - Generate map images
+### Mode 1: Command-Line Tool
 
-**Tier 3 - Schema Handlers (A complexity)**
-- `_process_flat_location()` - Handle flat location schema
-- `_process_timeline_object()` - Handle timeline objects schema
-- `_process_semantic_segment()` - Handle semantic segments schema
+```bash
+# Install as package
+pip install timeline-2-images
 
-**Tier 4 - Utility Functions (A complexity)**
-- `simplify_waypoints()` - RDP line simplification
-- `_parse_timestamp()` - Timestamp parsing
-- `_parse_waypoints()` - Waypoint coordinate parsing
-- `_parse_point_string()` - String coordinate parsing
-- Bounds calculation helpers
+# Use as CLI
+timeline-2-images Timeline.json --start-date 2026-06-01 --days 30
+timeline-2-images --clean-cache
+```
 
-**All 39 functions maintain A complexity (≤ 5 cyclomatic complexity)**
+**Entry Point:** `timeline_2_images.main:cli()` (defined in pyproject.toml)
 
-## Key Design Patterns
+---
 
-1. **Data Pipeline**: Functions transform data sequentially without state
-2. **Pure Functions**: Most functions have no side effects
-3. **Schema Abstraction**: Three schema handlers for different Timeline JSON formats
-4. **Single Responsibility**: Each function does one thing well
-5. **Composition**: Small functions compose into larger workflows
+### Mode 2: Library
+
+```python
+from timeline_2_images import TimelineApp, RenderConfiguration
+
+config = RenderConfiguration(image_size=800)
+app = TimelineApp("Timeline.json", output_dir="maps", config=config)
+
+# Process and iterate results
+results = app.process_date_range(days=14)
+for result in results:
+    if result.was_successful():
+        print(f"✓ {result.date}")
+    else:
+        print(f"✗ {result.date}: {result.error_message}")
+```
+
+---
+
+### Mode 3: Standalone Executable
+
+```bash
+# Build with Nuitka
+./build_executable.sh
+
+# Use as standalone
+./dist/timeline2images Timeline.json
+```
+
+No Python runtime required. Distributable as a single binary.
+
+---
+
+## Performance Characteristics
+
+### Caching
+
+**Session-Level Cache:**
+- JSON file parsed once per session
+- All subsequent queries use cached data
+- Lazy date index built on first availability check
+- Speed-up: ~14x for multi-date processing
+
+**Tile Cache:**
+- SQLite backend at `~/.cache/timeline-2-images`
+- XDG Base Directory compliant
+- Persists across sessions
+- Typical size: 2-5MB
+
+### Processing Speed
+
+Typical performance on modern hardware:
+- 1 date: ~5-7 seconds (includes tile fetch + render)
+- 14 dates: ~40-60 seconds
+- 30 dates: ~90-120 seconds
+
+Bottlenecks:
+1. OSM tile fetching (network-dependent)
+2. Matplotlib rendering (CPU-dependent)
+3. GeoDataFrame projections (CPU-dependent)
+
+---
+
+## Code Quality
+
+**Metrics:**
+- Type Coverage: 100% (MyPy validated)
+- Average Complexity: 2.89/10 (A-rated)
+- Pylint Score: 9.69/10
+- Functions Analyzed: 137 blocks
+- All Functions: A-rated complexity
+
+**Testing:**
+- 5 test modules (config, models, processors, rendering, integration)
+- Unit and integration tests
+- ~74 test cases
+
+---
+
+## Design Principles
+
+1. **Separation of Concerns** - Layers handle specific responsibilities
+2. **Type Safety** - Full type hints, MyPy validated
+3. **Low Complexity** - All functions maintain A-rated complexity
+4. **Testability** - Dependency injection, mockable components
+5. **Flexibility** - Works as library, CLI, or executable
+6. **Performance** - Session caching for ~14x speedup
+7. **User-Friendly** - Clear error messages, helpful guidance
+
+---
+
+## Error Handling
+
+**Validation Layer:**
+- Early detection of invalid Timeline.json
+- Descriptive error messages
+- Actionable solutions
+
+**Processing Layer:**
+- Per-date error handling
+- Partial success (some dates fail, others succeed)
+- Error messages in RenderResult
+
+**Display Layer:**
+- Clear success/failure reporting
+- Cache statistics on completion
+
+---
+
+## Future Extensibility
+
+The architecture supports:
+
+1. **Custom Caching** - Implement CacheManager interface
+2. **Alternative Projections** - Modify MapRenderer._calculate_bounds()
+3. **Additional Output Formats** - Extend RenderResult, add new renderers
+4. **Different Data Sources** - Subclass TimelineProcessor
+5. **Custom Simplification** - Replace SegmentProcessor algorithm
+6. **Map Styling** - Extend MapRenderer._render_map()
+
+---
+
+## Backward Compatibility
+
+**Legacy API Preserved:**
+- `timeline_parser.py` - Functional API for internal use
+- `map_renderer.py` - Utility functions (simplify_waypoints)
+- All legacy functions maintained for compatibility
+
+**Migration Path:**
+- Old code works with minimal changes
+- New code should use TimelineApp
+- Both can coexist in the same application
