@@ -7,6 +7,7 @@ from pathlib import Path
 from daily_timeline_images.timeline_parser import (
     load_segments_for_day,
     get_date_range,
+    get_cache_source,
 )
 from daily_timeline_images.map_renderer import (
     render_segments,
@@ -93,7 +94,13 @@ def main(
         str(timeline_path), start_date=start_date, end_date=end_date, days=days
     )
     load_time = time.time() - load_start
-    print(f"✓ ({load_time:.2f}s)")
+    cache_source = get_cache_source()
+    cache_label = {
+        "session": "session cache",
+        "disk": "disk cache",
+        "parsed": "parsed from JSON",
+    }.get(cache_source, "unknown")
+    print(f"✓ ({load_time:.2f}s, {cache_label})")
 
     if not target_dates:
         date_desc = (
