@@ -35,8 +35,19 @@ def validate_timeline_structure(json_path: str) -> dict:
             data = json.load(f)
     except json.JSONDecodeError as e:
         raise TimelineValidationError(
-            f"Invalid JSON format in {json_path}: {e}\n"
-            "Please ensure the file is valid Google Timeline JSON export."
+            f"Invalid JSON format in {json_path}:\n"
+            f"  {e}\n\n"
+            "This file does not appear to be valid JSON.\n"
+            "Expected structure: a JSON object containing timeline data with one or more of:\n"
+            "  • semanticSegments - array of semantic location segments\n"
+            "  • timelineObjects - array of raw timeline events\n"
+            "  • locations - array of historical location records\n\n"
+            "Possible causes:\n"
+            "  • File is corrupted or incomplete\n"
+            "  • File was edited manually and syntax is broken\n"
+            "  • Google changed the Timeline export format\n\n"
+            "Solution: Re-download your Timeline.json from Google Takeout\n"
+            "          (https://takeout.google.com) and select 'Location History'"
         ) from e
     except (IOError, OSError) as e:
         raise TimelineValidationError(f"Cannot read Timeline file: {e}") from e
@@ -44,7 +55,10 @@ def validate_timeline_structure(json_path: str) -> dict:
     # Validate it's a dictionary
     if not isinstance(data, dict):
         raise TimelineValidationError(
-            f"Timeline.json root must be an object/dictionary, got {type(data).__name__}"
+            f"Timeline.json root must be an object/dictionary, got {type(data).__name__}\n"
+            'Expected: {"semanticSegments": [...], "timelineObjects": [...], "locations": [...]}\n'
+            "Note: Google may have changed their Timeline export format.\n"
+            "Check that you're exporting from Google Takeout (https://takeout.google.com)"
         )
 
     # Check for at least one data source
@@ -80,8 +94,14 @@ def validate_timeline_structure(json_path: str) -> dict:
     # Check if we have at least one data source
     if not has_data:
         raise TimelineValidationError(
-            "Timeline.json must contain at least one of: "
-            "semanticSegments, timelineObjects, or locations"
+            "Timeline.json does not contain location data.\n"
+            "Expected at least one of these top-level arrays:\n"
+            "  • semanticSegments - semantic location visits and journeys\n"
+            "  • timelineObjects - raw timeline events\n"
+            "  • locations - historical location records\n\n"
+            "Note: Google may have changed their Timeline export format.\n"
+            "Please verify the file is from Google Takeout (https://takeout.google.com)\n"
+            "and includes 'Location History' in the export."
         )
 
     # Report any validation errors found
