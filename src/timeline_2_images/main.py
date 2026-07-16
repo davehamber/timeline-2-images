@@ -18,32 +18,31 @@ from timeline_2_images.map_renderer import (
 
 
 def _print_banner():
-    """Display ASCII art banner with colorized block characters."""
-    # Color codes: Cyan for borders/TIMELINE, Magenta for 2 IMAGES, White for text
-    cyan = "\033[36m"
-    magenta = "\033[35m"
-    white = "\033[37m"
+    """Display ASCII art banner with lilac and deep purple colors."""
+    # RGB True color codes: Lilac for blocks, Deep Purple for borders
+    lilac = "\033[38;2;200;162;200m"      # Light lilac/lavender
+    deep_purple = "\033[38;2;138;43;226m" # Deep purple (blue-violet)
     reset = "\033[0m"
 
     banner = f"""
-{cyan}╔═════════════════════════════════════════════════════════════════╗
-║{reset}                                                                 {cyan}║
-║{reset}  {cyan}████████╗{reset}{white}██╗{cyan}███╗   ███╗███████╗{reset}{white}██╗     ██╗{cyan}███╗   ██╗███████╗{reset}   {cyan}║
-║{reset}  {cyan}╚══██╔══╝{reset}{white}██║{cyan}████╗ ████║██╔════╝{reset}{white}██║     ██║{cyan}████╗  ██║██╔════╝{reset}   {cyan}║
-║{reset}     {cyan}██║{reset}   {white}██║{cyan}██╔████╔██║█████╗{reset}  {white}██║     ██║{cyan}██╔██╗ ██║█████╗{reset}     {cyan}║
-║{reset}     {cyan}██║{reset}   {white}██║{cyan}██║╚██╔╝██║██╔══╝{reset}  {white}██║     ██║{cyan}██║╚██╗██║██╔══╝{reset}     {cyan}║
-║{reset}     {cyan}██║{reset}   {white}██║{cyan}██║ ╚═╝ ██║███████╗{reset}{white}███████╗██║{cyan}██║ ╚████║███████╗{reset}   {cyan}║
-║{reset}     {cyan}╚═╝{reset}   {white}╚═╝╚═╝     ╚═╝╚══════╝{reset}{white}╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝{reset}   {cyan}║
-║{reset}                                                                 {cyan}║
-║{reset}    {magenta}███████╗{reset}  {white}██╗{magenta}███╗   ███╗ █████╗  ██████╗ ███████╗███████║{reset}    {cyan}║
-║{reset}    {magenta}╚════██║{reset}  {white}██║{magenta}████╗ ████║██╔══██╗██╔════╝ ██╔════╝██╔════╝{reset}    {cyan}║
-║{reset}     {magenta}█████╔╝{reset}  {white}██║{magenta}██╔████╔██║███████║██║  ███╗█████╗  ███████║{reset}    {cyan}║
-║{reset}    {magenta}██╔═══╝{reset}   {white}██║{magenta}██║╚██╔╝██║██╔══██║██║   ██║██╔══╝  ╚════██║{reset}    {cyan}║
-║{reset}    {magenta}███████╗{reset}  {white}██║{magenta}██║ ╚═╝ ██║██║  ██║╚██████╔╝███████╗███████║{reset}    {cyan}║
-║{reset}    {magenta}╚══════╝{reset}  {white}╚═╝╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝{reset}    {cyan}║
-║{reset}                                                                 {cyan}║
-║{reset}        {white}Generate daily route maps from Google Timeline{reset}           {cyan}║
-║{reset}                                                                 {cyan}║
+{deep_purple}╔═════════════════════════════════════════════════════════════════╗
+║{reset}                                                                 {deep_purple}║
+║{reset}  {lilac}████████╗██╗███╗   ███╗███████╗██╗     ██╗███╗   ██╗███████╗{reset}   {deep_purple}║
+║{reset}  {lilac}╚══██╔══╝██║████╗ ████║██╔════╝██║     ██║████╗  ██║██╔════╝{reset}   {deep_purple}║
+║{reset}     {lilac}██║   ██║██╔████╔██║█████╗  ██║     ██║██╔██╗ ██║█████╗{reset}     {deep_purple}║
+║{reset}     {lilac}██║   ██║██║╚██╔╝██║██╔══╝  ██║     ██║██║╚██╗██║██╔══╝{reset}     {deep_purple}║
+║{reset}     {lilac}██║   ██║██║ ╚═╝ ██║███████╗███████╗██║██║ ╚████║███████╗{reset}   {deep_purple}║
+║{reset}     {lilac}╚═╝   ╚═╝╚═╝     ╚═╝╚══════╝╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝{reset}   {deep_purple}║
+║{reset}                                                                 {deep_purple}║
+║{reset}    {lilac}███████╗  ██╗███╗   ███╗ █████╗  ██████╗ ███████╗███████║{reset}    {deep_purple}║
+║{reset}    {lilac}╚════██║  ██║████╗ ████║██╔══██╗██╔════╝ ██╔════╝██╔════╝{reset}    {deep_purple}║
+║{reset}     {lilac}█████╔╝  ██║██╔████╔██║███████║██║  ███╗█████╗  ███████║{reset}    {deep_purple}║
+║{reset}    {lilac}██╔═══╝   ██║██║╚██╔╝██║██╔══██║██║   ██║██╔══╝  ╚════██║{reset}    {deep_purple}║
+║{reset}    {lilac}███████╗  ██║██║ ╚═╝ ██║██║  ██║╚██████╔╝███████╗███████║{reset}    {deep_purple}║
+║{reset}    {lilac}╚══════╝  ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝{reset}    {deep_purple}║
+║{reset}                                                                 {deep_purple}║
+║{reset}        Generate daily route maps from Google Timeline           {deep_purple}║
+║{reset}                                                                 {deep_purple}║
 ╚═════════════════════════════════════════════════════════════════╝{reset}
 """
     print(banner)
