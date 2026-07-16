@@ -2,8 +2,62 @@
 
 import json
 from datetime import datetime, date, timezone, timedelta
+from typing import Dict, Set
 
 import pandas as pd
+
+
+class TimelineCache:
+    """Session-level cache for Timeline JSON data to avoid re-parsing large files.
+
+    Caches the full parsed JSON structure in memory for the lifetime of the session,
+    avoiding expensive re-parsing when processing multiple dates from the same file.
+    """
+
+    def __init__(self):
+        self.file_path: str | None = None
+        self.data: dict | None = None
+        self.date_index: Dict[date, bool] | None = None
+
+    def load_file(self, json_path: str) -> dict:
+        """Load and cache Timeline JSON file. Returns cached data if already loaded."""
+        if self.file_path == json_path and self.data is not None:
+            return self.data
+
+        self.file_path = json_path
+        with open(json_path, "r", encoding="utf-8") as f:
+            self.data = json.load(f)
+        self.date_index = None
+        assert self.data is not None
+        return self.data
+
+    def build_date_index(self) -> Dict[date, bool]:
+        """Build an index of all dates with data for fast lookup."""
+        if self.date_index is not None:
+            return self.date_index
+
+        self.date_index = {}
+        if not self.data:
+            return self.date_index
+
+        all_dates = set()
+        all_dates.update(_extract_dates_from_locations(self.data))
+        all_dates.update(_extract_dates_from_timeline_objects(self.data))
+        all_dates.update(_extract_dates_from_segments(self.data))
+
+        for d in all_dates:
+            self.date_index[d] = True
+
+        return self.date_index
+
+    def clear(self) -> None:
+        """Clear the cache."""
+        self.file_path = None
+        self.data = None
+        self.date_index = None
+
+
+_cache = TimelineCache()
 
 
 def _parse_semantic_segments_iter(data: dict):
@@ -61,8 +115,7 @@ def load_segments_for_day(json_path: str, target_date: str) -> list[dict]:
     Returns:
         List of segment dicts with keys: startTime, endTime, waypoints (list of (lat, lon, time))
     """
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    data = _cache.load_file(json_path)
 
     segments = []
     target = datetime.strptime(target_date, "%Y-%m-%d").date()
@@ -259,6 +312,8 @@ def load_points_for_day(json_path: str, target_date: str) -> pd.DataFrame:
       2. Semantic Location History with timelineObjects
       3. Newer on-device export with semanticSegments
 
+    Uses session-level caching to avoid re-parsing large files.
+
     Args:
         json_path: Path to the Timeline JSON file
         target_date: Date in YYYY-MM-DD format
@@ -269,8 +324,7 @@ def load_points_for_day(json_path: str, target_date: str) -> pd.DataFrame:
     Raises:
         ValueError: If no points found for the target date
     """
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    data = _cache.load_file(json_path)
 
     target = datetime.strptime(target_date, "%Y-%m-%d").date()
 
@@ -286,7 +340,7 @@ def load_points_for_day(json_path: str, target_date: str) -> pd.DataFrame:
     return df
 
 
-def _extract_dates_from_locations(data: dict) -> set:
+def _extract_dates_from_locations(data: dict) -> Set[date]:
     """Extract unique dates from flat locations list."""
     dates = set()
     for loc in data.get("locations", []):
@@ -312,7 +366,7 @@ def _get_segment_start_date(seg: dict) -> date | None:
     return dt.astimezone(timezone.utc).date()
 
 
-def _extract_dates_from_timeline_objects(data: dict) -> set:
+def _extract_dates_from_timeline_objects(data: dict) -> Set[date]:
     """Extract unique dates from timelineObjects."""
     dates = set()
     for obj in data.get("timelineObjects", []):
@@ -325,7 +379,7 @@ def _extract_dates_from_timeline_objects(data: dict) -> set:
     return dates
 
 
-def _extract_dates_from_segments(data: dict) -> set:
+def _extract_dates_from_segments(data: dict) -> Set[date]:
     """Extract unique dates from semanticSegments."""
     dates = set()
     for _, dt in _parse_semantic_segments_iter(data):
@@ -337,17 +391,17 @@ def get_last_n_days_with_data(json_path: str, days: int = 14) -> list[str]:
     """
     Find the last N days that have timeline data.
 
+    Uses session-level caching to avoid re-parsing.
+
     Returns dates in YYYY-MM-DD format, sorted chronologically.
     """
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    _cache.load_file(json_path)
+    _cache.build_date_index()
 
-    all_dates = set()
-    all_dates.update(_extract_dates_from_locations(data))
-    all_dates.update(_extract_dates_from_timeline_objects(data))
-    all_dates.update(_extract_dates_from_segments(data))
+    if not _cache.date_index:
+        return []
 
-    sorted_dates = sorted(all_dates, reverse=True)
+    sorted_dates = sorted(_cache.date_index.keys(), reverse=True)
     last_n = sorted_dates[:days]
     return sorted([d.strftime("%Y-%m-%d") for d in last_n])
 
@@ -360,6 +414,8 @@ def get_date_range(
 ) -> list[str]:
     """
     Get dates with data based on flexible date range parameters.
+
+    Uses session-level caching to avoid re-parsing large files.
 
     Priority:
     1. If both start_date and end_date: use that range, ignore days
@@ -378,20 +434,14 @@ def get_date_range(
     Returns:
         List of YYYY-MM-DD dates with data, sorted chronologically
     """
-    all_available_dates = set()
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    _cache.load_file(json_path)
+    _cache.build_date_index()
 
-    all_available_dates.update(_extract_dates_from_locations(data))
-    all_available_dates.update(_extract_dates_from_timeline_objects(data))
-    all_available_dates.update(_extract_dates_from_segments(data))
-
-    available_sorted = sorted(all_available_dates)
-
-    if not available_sorted:
+    if not _cache.date_index:
         return []
 
-    # Determine the date range to search
+    available_sorted = sorted(_cache.date_index.keys())
+
     if start_date and end_date:
         start = datetime.strptime(start_date, "%Y-%m-%d").date()
         end = datetime.strptime(end_date, "%Y-%m-%d").date()
@@ -404,6 +454,10 @@ def get_date_range(
     else:
         return get_last_n_days_with_data(json_path, days)
 
-    # Filter available dates to those within range
     result = [d for d in available_sorted if start <= d <= end]
     return [d.strftime("%Y-%m-%d") for d in result]
+
+
+def clear_cache() -> None:
+    """Clear the session cache. Useful for testing or memory management."""
+    _cache.clear()
