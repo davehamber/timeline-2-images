@@ -88,14 +88,16 @@ def _calculate_padded_bounds(minx: float, miny: float, maxx: float, maxy: float)
     )
 
 
-def _enforce_minimum_area(minx: float, miny: float, maxx: float, maxy: float,
-                         center_x: float, center_y: float, min_area_sq_km: float) -> tuple:
+def _enforce_minimum_area(bounds: tuple, min_area_sq_km: float) -> tuple:
     """Enforce minimum viewing area."""
+    minx, miny, maxx, maxy = bounds
     width_m = maxx - minx
     height_m = maxy - miny
     area_sq_km = (width_m * height_m) / 1e6
     if area_sq_km >= min_area_sq_km:
-        return minx, miny, maxx, maxy
+        return bounds
+    center_x = (minx + maxx) / 2
+    center_y = (miny + maxy) / 2
     area_sq_m = min_area_sq_km * 1e6
     half_side = math.sqrt(area_sq_m) / 2
     return (
@@ -155,11 +157,11 @@ def render_segments(
         raise ValueError("No waypoints found in segments")
 
     minx, miny, maxx, maxy = _calculate_bounds(all_points)
-    minx, miny, maxx, maxy, center_x, center_y = _calculate_padded_bounds(
+    minx, miny, maxx, maxy, _, _ = _calculate_padded_bounds(
         minx, miny, maxx, maxy
     )
     minx, miny, maxx, maxy = _enforce_minimum_area(
-        minx, miny, maxx, maxy, center_x, center_y, min_area_sq_km
+        (minx, miny, maxx, maxy), min_area_sq_km
     )
 
     fig_size_inches = image_size / dpi

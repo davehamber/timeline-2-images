@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict, Any
 from collections import defaultdict
 
-import pandas as pd
+from daily_timeline_images.timeline_parser import _parse_semantic_segments_iter
 
 
 def split_timeline_by_year(json_path: str, output_dir: str = "timelines") -> Dict[int, str]:
@@ -35,15 +35,7 @@ def split_timeline_by_year(json_path: str, output_dir: str = "timelines") -> Dic
 
     # Process semanticSegments
     total_segments = 0
-    for seg in data.get("semanticSegments", []):
-        start_str = seg.get("startTime")
-        if not start_str:
-            continue
-
-        dt = pd.to_datetime(start_str, utc=True, errors="coerce")
-        if pd.isna(dt):
-            continue
-
+    for seg, dt in _parse_semantic_segments_iter(data):
         year = dt.year
         yearly_data[year]["semanticSegments"].append(seg)
         total_segments += 1

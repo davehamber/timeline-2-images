@@ -1,5 +1,6 @@
 """CLI for splitting Timeline JSON by year."""
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -26,8 +27,6 @@ def _handle_merge(timeline_dir: str, output: str):
 
 def main():
     """Command-line interface for timeline splitting."""
-    import argparse
-
     parser = argparse.ArgumentParser(
         description="Split or merge Google Timeline exports by year"
     )
