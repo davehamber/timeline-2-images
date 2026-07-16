@@ -85,10 +85,10 @@ class TimelineCache:
             return self.segment_date_index
 
         semantic_segs = self.data.get("semanticSegments", [])
-        for idx, seg in enumerate(semantic_segs):
-            seg_date = _get_segment_start_date(seg)
+        for index, segment in enumerate(semantic_segs):
+            seg_date = _get_segment_start_date(segment)
             if seg_date:
-                self.segment_date_index.setdefault(seg_date, []).append(idx)
+                self.segment_date_index.setdefault(seg_date, []).append(index)
 
         return self.segment_date_index
 
@@ -108,23 +108,23 @@ def _parse_semantic_segments_iter(data: dict):
 
     Yields (segment, datetime) tuples for segments with valid startTime.
     """
-    for seg in data.get("semanticSegments", []):
-        start_str = seg.get("startTime")
+    for segment in data.get("semanticSegments", []):
+        start_str = segment.get("startTime")
         if not start_str:
             continue
-        dt = pd.to_datetime(start_str, utc=True, errors="coerce")
-        if pd.isna(dt):
+        parsed_datetime = pd.to_datetime(start_str, utc=True, errors="coerce")
+        if pd.isna(parsed_datetime):
             continue
-        yield seg, dt.to_pydatetime()
+        yield segment, parsed_datetime.to_pydatetime()
 
 
 def _parse_waypoints(path: list) -> list:
     """Parse waypoints from timeline path with string coordinates."""
     waypoints = []
     for wp in path:
-        pt = wp.get("point")
-        if isinstance(pt, str) and "," in pt:
-            lat_s, lon_s = pt.split(",")
+        point = wp.get("point")
+        if isinstance(point, str) and "," in point:
+            lat_s, lon_s = point.split(",")
             lat_s = lat_s.replace("°", "").strip()
             lon_s = lon_s.replace("°", "").strip()
             try:
@@ -139,8 +139,8 @@ def _parse_segment_datetime(start_str: str, target: date) -> str | None:
     dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
     if pd.isna(dt_timestamp):
         return None
-    dt = datetime.fromisoformat(str(dt_timestamp.isoformat()))  # type: ignore[union-attr]
-    if dt.astimezone(timezone.utc).date() != target:
+    parsed_datetime = datetime.fromisoformat(str(dt_timestamp.isoformat()))  # type: ignore[union-attr]
+    if parsed_datetime.astimezone(timezone.utc).date() != target:
         return None
     return start_str
 
@@ -150,13 +150,13 @@ def _build_segments_with_waypoints(
 ) -> list[dict]:
     """Build segment dicts with parsed waypoints from a segment list."""
     segments = []
-    for seg in segment_list:
-        waypoints = _parse_waypoints(seg.get("timelinePath", []))
+    for segment in segment_list:
+        waypoints = _parse_waypoints(segment.get("timelinePath", []))
         if waypoints:
             segments.append(
                 {
-                    "startTime": seg.get("startTime"),
-                    "endTime": seg.get("endTime"),
+                    "startTime": segment.get("startTime"),
+                    "endTime": segment.get("endTime"),
                     "waypoints": waypoints,
                 }
             )
@@ -206,7 +206,7 @@ def _load_segments_from_json(
     timing["index_lookup"] = time.time() - step_start
 
     step_start = time.time()
-    matching_segments = [semantic_segs[idx] for idx in matching_indices if idx < len(semantic_segs)]
+    matching_segments = [semantic_segs[index] for index in matching_indices if index < len(semantic_segs)]
     segments = _build_segments_with_waypoints(matching_segments, step_start, timing)
     timing["total"] = time.time() - start
     return segments
@@ -240,102 +240,102 @@ def load_segments_for_day(
     return (segments, timing) if profile else segments
 
 
-def _parse_timestamp(ts: str | int | float) -> datetime | None:
+def _parse_timestamp(timestamp_value: str | int | float) -> datetime | None:
     """Parse timestamp in various formats (string or milliseconds)."""
-    if isinstance(ts, str):
-        dt = pd.to_datetime(ts, utc=True, errors="coerce")
-        if pd.isna(dt):
+    if isinstance(timestamp_value, str):
+        parsed_datetime = pd.to_datetime(timestamp_value, utc=True, errors="coerce")
+        if pd.isna(parsed_datetime):
             return None
-        return datetime.fromisoformat(str(dt.isoformat()))  # type: ignore[union-attr]
-    return datetime.fromtimestamp(int(ts) / 1000, tz=timezone.utc)
+        return datetime.fromisoformat(str(parsed_datetime.isoformat()))  # type: ignore[union-attr]
+    return datetime.fromtimestamp(int(timestamp_value) / 1000, tz=timezone.utc)
 
 
-def _extract_location_point(dt: datetime, loc: dict) -> tuple | None:
+def _extract_location_point(parsed_datetime: datetime, location: dict) -> tuple | None:
     """Extract a single location point if valid coordinates exist."""
-    lat: float | None = loc.get("latitudeE7")
-    lon: float | None = loc.get("longitudeE7")
+    lat: float | None = location.get("latitudeE7")
+    lon: float | None = location.get("longitudeE7")
     if lat is not None and lon is not None:
-        return (dt, float(lat) / 1e7, float(lon) / 1e7)
+        return (parsed_datetime, float(lat) / 1e7, float(lon) / 1e7)
     return None
 
 
-def _process_flat_location(loc: dict, target: date) -> tuple | None:
+def _process_flat_location(location: dict, target: date) -> tuple | None:
     """Process a single flat location and return point if in target date."""
-    ts = loc.get("timestamp") or loc.get("timestampMs")
-    if ts is None:
+    timestamp_value = location.get("timestamp") or location.get("timestampMs")
+    if timestamp_value is None:
         return None
-    dt = _parse_timestamp(ts)
-    if dt is None or dt.astimezone(timezone.utc).date() != target:
+    parsed_datetime = _parse_timestamp(timestamp_value)
+    if parsed_datetime is None or parsed_datetime.astimezone(timezone.utc).date() != target:
         return None
-    return _extract_location_point(dt, loc)
+    return _extract_location_point(parsed_datetime, location)
 
 
 def _extract_from_flat_locations(data: dict, target: date) -> list:
     """Extract points from flat locations list."""
     rows = []
-    for loc in data.get("locations", []):
-        point = _process_flat_location(loc, target)
+    for location in data.get("locations", []):
+        point = _process_flat_location(location, target)
         if point:
             rows.append(point)
     return rows
 
 
-def _extract_waypoints_from_segment(dt: datetime, seg: dict) -> list:
+def _extract_waypoints_from_segment(parsed_datetime: datetime, segment: dict) -> list:
     """Extract waypoint rows from a timeline segment."""
     rows = []
-    waypoints = seg.get("waypointPath", {}).get("waypoints", [])
+    waypoints = segment.get("waypointPath", {}).get("waypoints", [])
     for wp in waypoints:
         lat: float | None = wp.get("latE7")
         lon: float | None = wp.get("lngE7")
         if lat is not None and lon is not None:
-            rows.append((dt, float(lat) / 1e7, float(lon) / 1e7))
+            rows.append((parsed_datetime, float(lat) / 1e7, float(lon) / 1e7))
     return rows
 
 
-def _extract_locations_from_segment(dt: datetime, seg: dict) -> list:
+def _extract_locations_from_segment(parsed_datetime: datetime, segment: dict) -> list:
     """Extract start/end location rows from a timeline segment."""
     rows = []
     for key in ("startLocation", "endLocation", "location"):
-        loc = seg.get(key)
-        if loc and "latitudeE7" in loc and "longitudeE7" in loc:
-            rows.append((dt, float(loc["latitudeE7"]) / 1e7, float(loc["longitudeE7"]) / 1e7))
+        location = segment.get(key)
+        if location and "latitudeE7" in location and "longitudeE7" in location:
+            rows.append((parsed_datetime, float(location["latitudeE7"]) / 1e7, float(location["longitudeE7"]) / 1e7))
     return rows
 
 
-def _get_timeline_object_datetime(seg: dict) -> datetime | None:
+def _get_timeline_object_datetime(segment: dict) -> datetime | None:
     """Extract datetime from a timeline object segment."""
-    if not seg:
+    if not segment:
         return None
-    duration = seg.get("duration", {})
+    duration = segment.get("duration", {})
     start_str = duration.get("startTimestamp") or duration.get("startTimestampMs")
     if start_str is None:
         return None
-    dt = pd.to_datetime(start_str, utc=True, errors="coerce")
-    if pd.isna(dt):
+    parsed_datetime = pd.to_datetime(start_str, utc=True, errors="coerce")
+    if pd.isna(parsed_datetime):
         return None
-    return datetime.fromisoformat(str(dt.isoformat()))
+    return datetime.fromisoformat(str(parsed_datetime.isoformat()))
 
 
-def _matches_target_date(dt: datetime | None, target: date) -> bool:
+def _matches_target_date(parsed_datetime: datetime | None, target: date) -> bool:
     """Check if datetime matches target date."""
-    if dt is None:
+    if parsed_datetime is None:
         return False
-    return dt.astimezone(timezone.utc).date() == target
+    return parsed_datetime.astimezone(timezone.utc).date() == target
 
 
 def _process_timeline_object(obj: dict, target: date) -> list:
     """Process a single timeline object and return points if in target date."""
-    seg = obj.get("activitySegment") or obj.get("placeVisit")
-    if not isinstance(seg, dict):
+    segment = obj.get("activitySegment") or obj.get("placeVisit")
+    if not isinstance(segment, dict):
         return []
-    dt = _get_timeline_object_datetime(seg)
-    if not _matches_target_date(dt, target):
+    parsed_datetime = _get_timeline_object_datetime(segment)
+    if not _matches_target_date(parsed_datetime, target):
         return []
-    if dt is None:
+    if parsed_datetime is None:
         return []
     rows = []
-    rows.extend(_extract_waypoints_from_segment(dt, seg))
-    rows.extend(_extract_locations_from_segment(dt, seg))
+    rows.extend(_extract_waypoints_from_segment(parsed_datetime, segment))
+    rows.extend(_extract_locations_from_segment(parsed_datetime, segment))
     return rows
 
 
@@ -347,57 +347,57 @@ def _extract_from_timeline_objects(data: dict, target: date) -> list:
     return rows
 
 
-def _parse_point_string(dt, pt: str) -> tuple | None:
+def _parse_point_string(parsed_datetime, point: str) -> tuple | None:
     """Parse a single point string coordinate."""
-    if not isinstance(pt, str) or "," not in pt:
+    if not isinstance(point, str) or "," not in point:
         return None
-    lat_s, lon_s = pt.split(",")
+    lat_s, lon_s = point.split(",")
     lat_s = lat_s.replace("°", "").strip()
     lon_s = lon_s.replace("°", "").strip()
     try:
-        return (dt, float(lat_s), float(lon_s))
+        return (parsed_datetime, float(lat_s), float(lon_s))
     except ValueError:
         return None
 
 
-def _get_semantic_segment_datetime(seg: dict) -> datetime | None:
+def _get_semantic_segment_datetime(segment: dict) -> datetime | None:
     """Extract datetime from a semantic segment."""
-    start_str = seg.get("startTime")
+    start_str = segment.get("startTime")
     if not start_str:
         return None
-    dt = pd.to_datetime(start_str, utc=True, errors="coerce")
-    if pd.isna(dt):
+    parsed_datetime = pd.to_datetime(start_str, utc=True, errors="coerce")
+    if pd.isna(parsed_datetime):
         return None
-    return datetime.fromisoformat(str(dt.isoformat()))
+    return datetime.fromisoformat(str(parsed_datetime.isoformat()))
 
 
-def _extract_points_from_segment_path(dt, seg: dict) -> list:
+def _extract_points_from_segment_path(parsed_datetime, segment: dict) -> list:
     """Extract all points from a segment's path."""
-    path = seg.get("timelinePath", []) or seg.get("waypointPath", {}).get("waypoints", [])
+    path = segment.get("timelinePath", []) or segment.get("waypointPath", {}).get("waypoints", [])
     rows = []
     for wp in path:
-        pt = wp.get("point")
-        point = _parse_point_string(dt, pt)
+        point = wp.get("point")
+        point = _parse_point_string(parsed_datetime, point)
         if point:
             rows.append(point)
     return rows
 
 
-def _process_semantic_segment(seg: dict, target: date) -> list:
+def _process_semantic_segment(segment: dict, target: date) -> list:
     """Process a single semantic segment and return points if in target date."""
-    dt = _get_semantic_segment_datetime(seg)
-    if not _matches_target_date(dt, target):
+    parsed_datetime = _get_semantic_segment_datetime(segment)
+    if not _matches_target_date(parsed_datetime, target):
         return []
-    if dt is None:
+    if parsed_datetime is None:
         return []
-    return _extract_points_from_segment_path(dt, seg)
+    return _extract_points_from_segment_path(parsed_datetime, segment)
 
 
 def _extract_from_semantic_segments(data: dict, target: date) -> list:
     """Extract points from semanticSegments with string coordinates."""
     rows = []
-    for seg in data.get("semanticSegments", []):
-        rows.extend(_process_semantic_segment(seg, target))
+    for segment in data.get("semanticSegments", []):
+        rows.extend(_process_semantic_segment(segment, target))
     return rows
 
 
@@ -441,37 +441,37 @@ def load_points_for_day(json_path: str, target_date: str) -> pd.DataFrame:
 def _extract_dates_from_locations(data: dict) -> Set[date]:
     """Extract unique dates from flat locations list."""
     dates = set()
-    for loc in data.get("locations", []):
-        ts = loc.get("timestamp") or loc.get("timestampMs")
-        if ts is None:
+    for location in data.get("locations", []):
+        timestamp_value = location.get("timestamp") or location.get("timestampMs")
+        if timestamp_value is None:
             continue
-        dt = _parse_timestamp(ts)
-        if dt is not None:
-            dates.add(dt.astimezone(timezone.utc).date())
+        parsed_datetime = _parse_timestamp(timestamp_value)
+        if parsed_datetime is not None:
+            dates.add(parsed_datetime.astimezone(timezone.utc).date())
     return dates
 
 
-def _get_segment_start_date(seg: dict) -> date | None:
+def _get_segment_start_date(segment: dict) -> date | None:
     """Extract start date from a timeline segment."""
-    duration = seg.get("duration", {})
+    duration = segment.get("duration", {})
     start_str = duration.get("startTimestamp") or duration.get("startTimestampMs")
     if start_str is None:
         return None
     dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
     if pd.isna(dt_timestamp):
         return None
-    dt = datetime.fromisoformat(str(dt_timestamp.isoformat()))
-    return dt.astimezone(timezone.utc).date()
+    parsed_datetime = datetime.fromisoformat(str(dt_timestamp.isoformat()))
+    return parsed_datetime.astimezone(timezone.utc).date()
 
 
 def _extract_dates_from_timeline_objects(data: dict) -> Set[date]:
     """Extract unique dates from timelineObjects."""
     dates = set()
     for obj in data.get("timelineObjects", []):
-        seg = obj.get("activitySegment") or obj.get("placeVisit")
-        if not seg:
+        segment = obj.get("activitySegment") or obj.get("placeVisit")
+        if not segment:
             continue
-        segment_date = _get_segment_start_date(seg)
+        segment_date = _get_segment_start_date(segment)
         if segment_date:
             dates.add(segment_date)
     return dates
@@ -480,8 +480,8 @@ def _extract_dates_from_timeline_objects(data: dict) -> Set[date]:
 def _extract_dates_from_segments(data: dict) -> Set[date]:
     """Extract unique dates from semanticSegments."""
     dates = set()
-    for _, dt in _parse_semantic_segments_iter(data):
-        dates.add(dt.astimezone(timezone.utc).date())
+    for _, parsed_datetime in _parse_semantic_segments_iter(data):
+        dates.add(parsed_datetime.astimezone(timezone.utc).date())
     return dates
 
 

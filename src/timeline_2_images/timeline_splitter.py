@@ -37,9 +37,9 @@ def split_timeline_by_year(json_path: str, output_dir: str = "timelines") -> Dic
 
     # Process semanticSegments
     total_segments = 0
-    for seg, dt in _parse_semantic_segments_iter(data):
-        year = dt.year
-        yearly_data[year]["semanticSegments"].append(seg)
+    for segment, parsed_datetime in _parse_semantic_segments_iter(data):
+        year = parsed_datetime.year
+        yearly_data[year]["semanticSegments"].append(segment)
         total_segments += 1
 
     # Save yearly files

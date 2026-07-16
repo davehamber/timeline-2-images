@@ -70,8 +70,8 @@ def populate_cache(json_path: str, data: dict) -> None:
 
         conn.execute("DELETE FROM segments")
 
-        for seg in data.get("semanticSegments", []):
-            start_str = seg.get("startTime")
+        for segment in data.get("semanticSegments", []):
+            start_str = segment.get("startTime")
             if not start_str:
                 continue
 
@@ -83,14 +83,14 @@ def populate_cache(json_path: str, data: dict) -> None:
 
             from datetime import datetime, timezone
 
-            dt = datetime.fromisoformat(str(dt_timestamp.isoformat()))
-            seg_date = dt.astimezone(timezone.utc).date().isoformat()
+            parsed_datetime = datetime.fromisoformat(str(dt_timestamp.isoformat()))
+            seg_date = parsed_datetime.astimezone(timezone.utc).date().isoformat()
 
             segment_json = json.dumps(
                 {
                     "startTime": start_str,
-                    "endTime": seg.get("endTime"),
-                    "timelinePath": seg.get("timelinePath", []),
+                    "endTime": segment.get("endTime"),
+                    "timelinePath": segment.get("timelinePath", []),
                 },
                 default=str,
             )
