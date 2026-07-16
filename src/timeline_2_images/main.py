@@ -15,6 +15,7 @@ from timeline_2_images.map_renderer import (
     get_tile_cache_stats,
     get_render_cache_info,
 )
+from timeline_2_images.sqlite_cache import clean_all_cache
 
 
 def _print_banner():
@@ -229,7 +230,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Generate daily route maps from Google Timeline exports"
     )
-    parser.add_argument("timeline_json", help="Path to Timeline.json file")
+    parser.add_argument("timeline_json", nargs="?", help="Path to Timeline.json file")
     parser.add_argument("--output-dir", default="output", help="Output directory for JPG images")
     parser.add_argument(
         "--days", type=int, default=14, help="Number of days to process (default: 14)"
@@ -254,14 +255,31 @@ if __name__ == "__main__":
         action="store_true",
         help="Show detailed timing breakdown for each rendering operation",
     )
+    parser.add_argument(
+        "--clean-cache",
+        action="store_true",
+        help="Remove all cached segment data and exit",
+    )
 
     args = parser.parse_args()
-    main(
-        args.timeline_json,
-        args.output_dir,
-        args.days,
-        args.image_size,
-        args.start_date,
-        args.end_date,
-        args.profile,
-    )
+
+    if args.clean_cache:
+        try:
+            clean_all_cache()
+            print("Cache cleaned successfully")
+        except RuntimeError as e:
+            print(f"Error: {e}")
+            sys.exit(1)
+    elif args.timeline_json:
+        main(
+            args.timeline_json,
+            args.output_dir,
+            args.days,
+            args.image_size,
+            args.start_date,
+            args.end_date,
+            args.profile,
+        )
+    else:
+        parser.print_help()
+        sys.exit(1)
