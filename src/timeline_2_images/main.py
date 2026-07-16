@@ -53,7 +53,17 @@ def main(
     print(f"Date range: {available_dates[0]} to {available_dates[-1]}")
     print()
 
-    print("Processing dates...")
+    # Get the dates that will be processed
+    from timeline_2_images.config import DateRangeQuery
+
+    query = DateRangeQuery(start_date=start_date, end_date=end_date, days=days)
+    dates_to_process = app.processor.get_date_range(query)
+
+    if dates_to_process:
+        print(f"Processing dates {dates_to_process[0]} to {dates_to_process[-1]}...")
+    else:
+        print("Processing dates...")
+
     start_time = time.time()
     results = app.process_date_range(start_date=start_date, end_date=end_date, days=days)
     total_time = time.time() - start_time
