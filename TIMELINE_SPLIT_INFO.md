@@ -26,7 +26,7 @@ Your Timeline.json has been split into 11 yearly files for easier processing.
 # 2025 daily maps (all days with data)
 uv run python -m daily_timeline_images.main timelines/timeline_2025.json --days 365
 
-# 2024 daily maps  
+# 2024 daily maps
 uv run python -m daily_timeline_images.main timelines/timeline_2024.json --days 365
 ```
 
@@ -46,8 +46,8 @@ uv run python -m daily_timeline_images.split_timeline merge timelines --output T
 
 ## Benefits of Splitting
 
-✓ Smaller, manageable files (~26-31 MB each)  
-✓ Faster parsing and processing  
-✓ Easy year-by-year analysis  
-✓ Reduced memory usage  
+✓ Smaller, manageable files (~26-31 MB each)
+✓ Faster parsing and processing
+✓ Easy year-by-year analysis
+✓ Reduced memory usage
 ✓ Can selectively process specific years

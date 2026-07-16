@@ -65,8 +65,7 @@ def main(
     print()
 
     success_count = sum(
-        _process_date(date_str, timeline_path, output_path, image_size)
-        for date_str in target_dates
+        _process_date(date_str, timeline_path, output_path, image_size) for date_str in target_dates
     )
 
     print()
@@ -80,12 +79,8 @@ if __name__ == "__main__":
         description="Generate daily route maps from Google Timeline exports"
     )
     parser.add_argument("timeline_json", help="Path to Timeline.json file")
-    parser.add_argument(
-        "--output-dir", default="output", help="Output directory for JPG images"
-    )
-    parser.add_argument(
-        "--days", type=int, default=14, help="Number of recent days to process"
-    )
+    parser.add_argument("--output-dir", default="output", help="Output directory for JPG images")
+    parser.add_argument("--days", type=int, default=14, help="Number of recent days to process")
     parser.add_argument(
         "--image-size", type=int, default=500, help="Output image size in pixels (default: 500)"
     )

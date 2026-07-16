@@ -63,7 +63,7 @@ def _calculate_bounds(all_points: list) -> tuple:
     min_lon, max_lon = min(lons), max(lons)
     bounds_gdf = gpd.GeoDataFrame(
         geometry=[Point(lon, lat) for lat, lon in [(min_lat, min_lon), (max_lat, max_lon)]],
-        crs="EPSG:4326"
+        crs="EPSG:4326",
     ).to_crs(epsg=3857)
     return tuple(bounds_gdf.total_bounds)
 
@@ -157,12 +157,8 @@ def render_segments(
         raise ValueError("No waypoints found in segments")
 
     minx, miny, maxx, maxy = _calculate_bounds(all_points)
-    minx, miny, maxx, maxy, _, _ = _calculate_padded_bounds(
-        minx, miny, maxx, maxy
-    )
-    minx, miny, maxx, maxy = _enforce_minimum_area(
-        (minx, miny, maxx, maxy), min_area_sq_km
-    )
+    minx, miny, maxx, maxy, _, _ = _calculate_padded_bounds(minx, miny, maxx, maxy)
+    minx, miny, maxx, maxy = _enforce_minimum_area((minx, miny, maxx, maxy), min_area_sq_km)
 
     fig_size_inches = image_size / dpi
     fig, ax = plt.subplots(figsize=(fig_size_inches, fig_size_inches), dpi=dpi)

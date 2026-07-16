@@ -30,10 +30,10 @@ graph TD
     A --> B["_extract_dates_from_locations()"]
     A --> C["_extract_dates_from_timeline_objects()"]
     A --> D["_extract_dates_from_segments()"]
-    
+
     C --> C1["_get_segment_start_date()"]
     D --> D1["_get_semantic_segment_datetime()"]
-    
+
     style A fill:#e1f5ff,color:#000000,color:#000000
     style B fill:#f3e5f5,color:#000000,color:#000000
     style C fill:#f3e5f5,color:#000000,color:#000000
@@ -48,23 +48,23 @@ graph TD
     A --> B["_extract_from_flat_locations()"]
     A --> C["_extract_from_timeline_objects()"]
     A --> D["_extract_from_semantic_segments()"]
-    
+
     B --> B1["_process_flat_location()"]
     B1 --> B2["_parse_timestamp()"]
     B1 --> B3["_extract_location_point()"]
-    
+
     C --> C1["_process_timeline_object()"]
     C1 --> C2["_get_timeline_object_datetime()"]
     C1 --> C3["_matches_target_date()"]
     C1 --> C4["_extract_waypoints_from_segment()"]
     C1 --> C5["_extract_locations_from_segment()"]
-    
+
     D --> D1["_process_semantic_segment()"]
     D1 --> D2["_get_semantic_segment_datetime()"]
     D1 --> D3["_matches_target_date()"]
     D1 --> D4["_extract_points_from_segment_path()"]
     D4 --> D5["_parse_point_string()"]
-    
+
     style A fill:#e1f5ff,color:#000000
     style B fill:#f3e5f5,color:#000000
     style C fill:#f3e5f5,color:#000000
@@ -78,7 +78,7 @@ graph TD
     A["load_segments_for_day()"]
     A --> B["_parse_segment_datetime()"]
     A --> C["_parse_waypoints()"]
-    
+
     style A fill:#e1f5ff,color:#000000
     style B fill:#c8e6c9,color:#000000
     style C fill:#c8e6c9,color:#000000
@@ -91,16 +91,16 @@ graph TD
     A["render_segments()"]
     A --> B["_collect_and_simplify_waypoints()"]
     B --> B1["simplify_waypoints()"]
-    
+
     A --> C["_calculate_bounds()"]
     A --> D["_calculate_padded_bounds()"]
     A --> E["_enforce_minimum_area()"]
-    
+
     A --> F["_draw_journey_line()"]
     A --> G["_draw_markers()"]
-    
+
     A --> H["savefig() - Output JPG"]
-    
+
     style A fill:#e1f5ff,color:#000000
     style B1 fill:#fff9c4,color:#000000
     style F fill:#f8bbd0,color:#000000
@@ -115,10 +115,10 @@ graph TD
     A["main()"]
     A --> B["_handle_split()"]
     A --> C["_handle_merge()"]
-    
+
     B --> B1["split_timeline_by_year()"]
     C --> C1["merge_timelines()"]
-    
+
     style A fill:#e1f5ff,color:#000000
     style B fill:#c8e6c9,color:#000000
     style C fill:#c8e6c9,color:#000000
@@ -131,10 +131,10 @@ graph TD
     A["main()"]
     A --> B["get_last_n_days_with_data()"]
     A --> C["_process_date()"]
-    
+
     C --> C1["load_segments_for_day()"]
     C --> C2["render_segments()"]
-    
+
     style A fill:#e1f5ff,color:#000000
     style B fill:#b3e5fc,color:#000000
     style C fill:#c8e6c9,color:#000000
@@ -150,7 +150,7 @@ graph LR
     D --> E["Bounds<br/>Calculation"]
     E --> F["Map<br/>Rendering<br/>Matplotlib + OSM"]
     F --> G["JPG Output<br/>Images"]
-    
+
     style A fill:#ffebee,color:#000000
     style G fill:#c8e6c9,color:#000000
     style D fill:#fff9c4,color:#000000
@@ -190,4 +190,3 @@ graph LR
 3. **Schema Abstraction**: Three schema handlers for different Timeline JSON formats
 4. **Single Responsibility**: Each function does one thing well
 5. **Composition**: Small functions compose into larger workflows
-
