@@ -7,7 +7,11 @@ from pathlib import Path
 import pytest
 import pandas as pd
 
-from daily_timeline_images.timeline_parser import load_points_for_day, get_last_n_days_with_data
+from daily_timeline_images.timeline_parser import (
+    load_points_for_day,
+    get_last_n_days_with_data,
+    get_date_range,
+)
 
 
 @pytest.fixture
@@ -126,5 +130,61 @@ def test_load_segments_for_day():
         assert len(segments) == 1
         assert len(segments[0]["waypoints"]) == 2
         assert segments[0]["waypoints"][0] == (37.0, -122.0)
+    finally:
+        Path(temp_path).unlink()
+
+
+def test_get_date_range_days_only(sample_timeline_flat):
+    """Test get_date_range with days parameter only."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+        json.dump(sample_timeline_flat, f)
+        temp_path = f.name
+
+    try:
+        dates = get_date_range(temp_path, days=2)
+        assert len(dates) == 2
+        assert dates == ["2021-07-02", "2021-07-03"]
+    finally:
+        Path(temp_path).unlink()
+
+
+def test_get_date_range_start_and_end(sample_timeline_flat):
+    """Test get_date_range with both start and end dates."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+        json.dump(sample_timeline_flat, f)
+        temp_path = f.name
+
+    try:
+        dates = get_date_range(temp_path, start_date="2021-07-01", end_date="2021-07-02")
+        assert len(dates) == 2
+        assert dates == ["2021-07-01", "2021-07-02"]
+    finally:
+        Path(temp_path).unlink()
+
+
+def test_get_date_range_start_with_days(sample_timeline_flat):
+    """Test get_date_range with start date and days."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+        json.dump(sample_timeline_flat, f)
+        temp_path = f.name
+
+    try:
+        dates = get_date_range(temp_path, start_date="2021-07-01", days=2)
+        assert len(dates) == 2
+        assert dates == ["2021-07-01", "2021-07-02"]
+    finally:
+        Path(temp_path).unlink()
+
+
+def test_get_date_range_end_with_days(sample_timeline_flat):
+    """Test get_date_range with end date and days."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+        json.dump(sample_timeline_flat, f)
+        temp_path = f.name
+
+    try:
+        dates = get_date_range(temp_path, end_date="2021-07-03", days=2)
+        assert len(dates) == 2
+        assert dates == ["2021-07-02", "2021-07-03"]
     finally:
         Path(temp_path).unlink()
