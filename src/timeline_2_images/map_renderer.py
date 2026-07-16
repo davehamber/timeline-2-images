@@ -3,7 +3,18 @@
 Note: New OOP code should use timeline_2_images.rendering module instead.
 """
 
+import requests_cache
 from shapely.geometry import LineString
+
+# Install requests-cache globally to cache all tile downloads
+# This will intercept all requests from contextily automatically
+_cache_session = requests_cache.install_cache(
+    ".tile_cache/osm-tiles",
+    backend="sqlite",
+    expire_after=None,  # Never expire - tiles don't change
+    match_headers=False,  # Don't vary cache by headers
+    stale_if_error=True,  # Use stale cache on error
+)
 
 
 def simplify_waypoints(waypoints: list[tuple], tolerance_meters: float = 20) -> list[tuple]:
