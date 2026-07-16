@@ -96,7 +96,7 @@ def _process_date_successful(
     )
     cache_after = get_render_cache_info()
 
-    total_points = sum(len(seg.get("waypoints", [])) for seg in segments)
+    total_points = sum(len(segment.get("waypoints", [])) for segment in segments)
     elapsed = time.time() - start_time
 
     cache_info = {

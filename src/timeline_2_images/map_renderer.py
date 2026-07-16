@@ -81,8 +81,8 @@ def _collect_and_simplify_waypoints(segments: list[dict]) -> tuple[list, list]:
     """Collect all waypoints and simplified waypoints from segments."""
     all_points = []
     all_simplified = []
-    for seg in segments:
-        waypoints = seg.get("waypoints", [])
+    for segment in segments:
+        waypoints = segment.get("waypoints", [])
         if waypoints:
             all_points.extend(waypoints)
             simplified = simplify_waypoints(waypoints, tolerance_meters=15)
