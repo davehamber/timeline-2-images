@@ -1585,7 +1585,9 @@ dev = [
 [package.dev-dependencies]
 dev = [
     { name = "pre-commit" },
+    { name = "types-geopandas" },
     { name = "types-requests" },
+    { name = "types-shapely" },
 ]
 
 [package.metadata]
@@ -1613,7 +1615,9 @@ provides-extras = ["dev"]
 [package.metadata.requires-dev]
 dev = [
     { name = "pre-commit", specifier = ">=4.6.0" },
+    { name = "types-geopandas", specifier = ">=1.1.4.20260716" },
     { name = "types-requests", specifier = ">=2.33.0.20260712" },
+    { name = "types-shapely", specifier = ">=2.1.0.20260630" },
 ]
 
 [[package]]
@@ -1626,6 +1630,21 @@ wheels = [
 ]
 
 [[package]]
+name = "types-geopandas"
+version = "1.1.4.20260716"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "pandas-stubs" },
+    { name = "pyproj" },
+    { name = "types-shapely" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3e/91/d78ff35c2996e62b01dc7d6bc7ff03350e907643b181cc277a3e792132e1/types_geopandas-1.1.4.20260716.tar.gz", hash = "sha256:134ff5dd129d67176b4cc6e64795bc7e9bdf5e751ca1c28063546e1cc3628fc1", size = 24352, upload-time = "2026-07-16T04:48:16.944Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/31/22/e644c324baa3dc49e6ae36ab4817840eda827355ae53fa59c0e7d15b50f2/types_geopandas-1.1.4.20260716-py3-none-any.whl", hash = "sha256:a5a7568dd96f031eac74181b8ca0ad6920f74abbc4ed8dff03d8bdf393709e87", size = 31870, upload-time = "2026-07-16T04:48:16.171Z" },
+]
+
+[[package]]
 name = "types-requests"
 version = "2.33.0.20260712"
 source = { registry = "https://pypi.org/simple" }
@@ -1635,6 +1654,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/db/51/703318f7b7be8bee126ec13bf615050f932d0179b8784420f3a0199cc769/types_requests-2.33.0.20260712.tar.gz", hash = "sha256:2141b67ab534a5c5cd2dac5034f2a35f42e699c5bf185eee608c5246a069d7fb", size = 25084, upload-time = "2026-07-12T05:14:20.455Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/62/e7/010c87f559e216d83f9dc51e939633fd0d0ead3377340181ab0e223cd3b5/types_requests-2.33.0.20260712-py3-none-any.whl", hash = "sha256:de027e28c171d3da529689cbfa023b0b4eab188c8dfa22fd834eebd2cee6e7bb", size = 21392, upload-time = "2026-07-12T05:14:19.616Z" },
+]
+
+[[package]]
+name = "types-shapely"
+version = "2.1.0.20260630"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e8/10/fabba1860b907f4ec575e3c159da7adb49456a0d5d843101c6d101c9b8b7/types_shapely-2.1.0.20260630.tar.gz", hash = "sha256:727c8e42b182d9fb6df3a9376d8ac7ade56e5b13fde5bc69b9541ce66ed56eec", size = 27341, upload-time = "2026-06-30T06:00:08.012Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/27/43/d02f2d5a230d3c58cbe473b4efaa0af8a29d8e7fd43c39ea1c6a102e7c89/types_shapely-2.1.0.20260630-py3-none-any.whl", hash = "sha256:43cd568af2ab74c81600bc43ea0560e2f270cdd620bc59dfc1c380186951fd64", size = 38522, upload-time = "2026-06-30T06:00:06.92Z" },
 ]
 
 [[package]]
