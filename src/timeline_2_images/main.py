@@ -18,27 +18,33 @@ from timeline_2_images.map_renderer import (
 
 
 def _print_banner():
-    """Display ASCII art banner with block characters."""
-    banner = """
-╔═════════════════════════════════════════════════════════════════╗
-║                                                                 ║
-║  ████████╗██╗███╗   ███╗███████╗██╗     ██╗███╗   ██╗███████╗   ║
-║  ╚══██╔══╝██║████╗ ████║██╔════╝██║     ██║████╗  ██║██╔════╝   ║
-║     ██║   ██║██╔████╔██║█████╗  ██║     ██║██╔██╗ ██║█████╗     ║
-║     ██║   ██║██║╚██╔╝██║██╔══╝  ██║     ██║██║╚██╗██║██╔══╝     ║
-║     ██║   ██║██║ ╚═╝ ██║███████╗███████╗██║██║ ╚████║███████╗   ║
-║     ╚═╝   ╚═╝╚═╝     ╚═╝╚══════╝╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝   ║
-║                                                                 ║
-║    ███████╗  ██╗███╗   ███╗ █████╗  ██████╗ ███████╗███████║    ║
-║    ╚════██║  ██║████╗ ████║██╔══██╗██╔════╝ ██╔════╝██╔════╝    ║
-║     █████╔╝  ██║██╔████╔██║███████║██║  ███╗█████╗  ███████║    ║
-║    ██╔═══╝   ██║██║╚██╔╝██║██╔══██║██║   ██║██╔══╝  ╚════██║    ║
-║    ███████╗  ██║██║ ╚═╝ ██║██║  ██║╚██████╔╝███████╗███████║    ║
-║    ╚══════╝  ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝    ║
-║                                                                 ║
-║        Generate daily route maps from Google Timeline           ║
-║                                                                 ║
-╚═════════════════════════════════════════════════════════════════╝
+    """Display ASCII art banner with colorized block characters."""
+    # Color codes: Cyan for borders/TIMELINE, Magenta for 2 IMAGES, White for text
+    cyan = "\033[36m"
+    magenta = "\033[35m"
+    white = "\033[37m"
+    reset = "\033[0m"
+
+    banner = f"""
+{cyan}╔═════════════════════════════════════════════════════════════════╗
+║{reset}                                                                 {cyan}║
+║{reset}  {cyan}████████╗{reset}{white}██╗{cyan}███╗   ███╗███████╗{reset}{white}██╗     ██╗{cyan}███╗   ██╗███████╗{reset}   {cyan}║
+║{reset}  {cyan}╚══██╔══╝{reset}{white}██║{cyan}████╗ ████║██╔════╝{reset}{white}██║     ██║{cyan}████╗  ██║██╔════╝{reset}   {cyan}║
+║{reset}     {cyan}██║{reset}   {white}██║{cyan}██╔████╔██║█████╗{reset}  {white}██║     ██║{cyan}██╔██╗ ██║█████╗{reset}     {cyan}║
+║{reset}     {cyan}██║{reset}   {white}██║{cyan}██║╚██╔╝██║██╔══╝{reset}  {white}██║     ██║{cyan}██║╚██╗██║██╔══╝{reset}     {cyan}║
+║{reset}     {cyan}██║{reset}   {white}██║{cyan}██║ ╚═╝ ██║███████╗{reset}{white}███████╗██║{cyan}██║ ╚████║███████╗{reset}   {cyan}║
+║{reset}     {cyan}╚═╝{reset}   {white}╚═╝╚═╝     ╚═╝╚══════╝{reset}{white}╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝{reset}   {cyan}║
+║{reset}                                                                 {cyan}║
+║{reset}    {magenta}███████╗{reset}  {white}██╗{magenta}███╗   ███╗ █████╗  ██████╗ ███████╗███████║{reset}    {cyan}║
+║{reset}    {magenta}╚════██║{reset}  {white}██║{magenta}████╗ ████║██╔══██╗██╔════╝ ██╔════╝██╔════╝{reset}    {cyan}║
+║{reset}     {magenta}█████╔╝{reset}  {white}██║{magenta}██╔████╔██║███████║██║  ███╗█████╗  ███████║{reset}    {cyan}║
+║{reset}    {magenta}██╔═══╝{reset}   {white}██║{magenta}██║╚██╔╝██║██╔══██║██║   ██║██╔══╝  ╚════██║{reset}    {cyan}║
+║{reset}    {magenta}███████╗{reset}  {white}██║{magenta}██║ ╚═╝ ██║██║  ██║╚██████╔╝███████╗███████║{reset}    {cyan}║
+║{reset}    {magenta}╚══════╝{reset}  {white}╚═╝╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝{reset}    {cyan}║
+║{reset}                                                                 {cyan}║
+║{reset}        {white}Generate daily route maps from Google Timeline{reset}           {cyan}║
+║{reset}                                                                 {cyan}║
+╚═════════════════════════════════════════════════════════════════╝{reset}
 """
     print(banner)
 
