@@ -17,7 +17,11 @@ from daily_timeline_images.map_renderer import (
 
 
 def _process_date(
-    date_str: str, timeline_path: Path, output_path: Path, image_size: int
+    date_str: str,
+    timeline_path: Path,
+    output_path: Path,
+    image_size: int,
+    profile: bool = False,
 ) -> tuple[bool, float, dict]:
     """Process a single date and render its map. Returns (success, elapsed_time, cache_info)."""
     start_time = time.time()
@@ -31,7 +35,9 @@ def _process_date(
 
         output_file = output_path / f"timeline_{date_str}.jpg"
         cache_info_before = get_render_cache_info()
-        render_segments(segments, str(output_file), image_size=image_size)
+        render_timing = render_segments(
+            segments, str(output_file), image_size=image_size, profile=profile
+        )
         cache_info_after = get_render_cache_info()
 
         total_points = sum(len(seg.get("waypoints", [])) for seg in segments)
@@ -53,6 +59,16 @@ def _process_date(
             f"({len(segments)} segments, {total_points} points) {elapsed:.2f}s{cache_indicator}"
         )
         print(f"✓ {details} → {output_name}")
+
+        if profile and render_timing:
+            print("      Timing breakdown:")
+            for key, value in sorted(render_timing.items()):
+                if key != "total":
+                    pct = (
+                        (value / render_timing["total"] * 100) if render_timing["total"] > 0 else 0
+                    )
+                    print(f"        {key:.<25} {value:6.2f}s ({pct:5.1f}%)")
+
         return True, elapsed, cache_info
     except ValueError as e:
         print(f"✗ {e}")
@@ -68,6 +84,7 @@ def main(
     image_size: int = 500,
     start_date: str | None = None,
     end_date: str | None = None,
+    profile: bool = False,
 ):
     """
     Generate daily route maps from Timeline JSON export.
@@ -79,6 +96,7 @@ def main(
         image_size: Output image size in pixels (default 500)
         start_date: Start date in YYYY-MM-DD format
         end_date: End date in YYYY-MM-DD format
+        profile: If True, show detailed timing breakdown per operation
     """
     timeline_path = Path(timeline_json)
     if not timeline_path.exists():
@@ -121,7 +139,8 @@ def main(
 
     start_time = time.time()
     results = [
-        _process_date(date_str, timeline_path, output_path, image_size) for date_str in target_dates
+        _process_date(date_str, timeline_path, output_path, image_size, profile)
+        for date_str in target_dates
     ]
     success_count = sum(1 for success, _, _ in results if success)
     total_time = time.time() - start_time
@@ -176,6 +195,11 @@ if __name__ == "__main__":
         "--days is ignored. If set alone with --days, dates N days "
         "before end date are used.",
     )
+    parser.add_argument(
+        "--profile",
+        action="store_true",
+        help="Show detailed timing breakdown for each rendering operation",
+    )
 
     args = parser.parse_args()
     main(
@@ -185,4 +209,5 @@ if __name__ == "__main__":
         args.image_size,
         args.start_date,
         args.end_date,
+        args.profile,
     )
