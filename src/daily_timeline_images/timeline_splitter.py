@@ -71,7 +71,7 @@ def merge_timelines(timeline_dir: str, output_path: str = "Timeline_merged.json"
     timeline_path = Path(timeline_dir)
     output_file = Path(output_path)
 
-    merged_data = {
+    merged_data: Dict[str, Any] = {
         "semanticSegments": [],
         "rawSignals": [],
         "userLocationProfile": {},
@@ -81,9 +81,12 @@ def merge_timelines(timeline_dir: str, output_path: str = "Timeline_merged.json"
     for year_file in sorted(timeline_path.glob("timeline_*.json")):
         print(f"Reading {year_file.name}...", end=" ", flush=True)
         with open(year_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            data: Dict[str, Any] = json.load(f)
 
-        merged_data["semanticSegments"].extend(data.get("semanticSegments", []))
+        semantic_segments: list[Any] = merged_data["semanticSegments"]
+        if not isinstance(semantic_segments, list):
+            semantic_segments = []
+        semantic_segments.extend(data.get("semanticSegments", []))
 
         # Use the first non-empty userLocationProfile found
         if data.get("userLocationProfile") and not merged_data["userLocationProfile"]:
@@ -92,9 +95,11 @@ def merge_timelines(timeline_dir: str, output_path: str = "Timeline_merged.json"
         print(f"✓ ({len(data.get('semanticSegments', []))} segments)")
 
     # Sort by startTime
-    merged_data["semanticSegments"].sort(
-        key=lambda x: x.get("startTime", ""), reverse=True
-    )
+    semantic_segments = merged_data["semanticSegments"]
+    if isinstance(semantic_segments, list):
+        semantic_segments.sort(
+            key=lambda x: x.get("startTime", "") if isinstance(x, dict) else "", reverse=True
+        )
 
     print(f"\nWriting merged timeline to {output_path}...")
     with open(output_file, "w", encoding="utf-8") as f:
