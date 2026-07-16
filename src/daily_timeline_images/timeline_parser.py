@@ -6,6 +6,21 @@ from datetime import datetime, timezone
 import pandas as pd
 
 
+def _parse_semantic_segments_iter(data: dict):
+    """Iterate through semanticSegments with parsed datetimes.
+
+    Yields (segment, datetime) tuples for segments with valid startTime.
+    """
+    for seg in data.get("semanticSegments", []):
+        start_str = seg.get("startTime")
+        if not start_str:
+            continue
+        dt = pd.to_datetime(start_str, utc=True, errors="coerce")
+        if pd.isna(dt):
+            continue
+        yield seg, dt.to_pydatetime()
+
+
 def _parse_waypoints(path: list) -> list:
     """Parse waypoints from timeline path with string coordinates."""
     waypoints = []
@@ -306,13 +321,8 @@ def _extract_dates_from_timeline_objects(data: dict) -> set:
 def _extract_dates_from_segments(data: dict) -> set:
     """Extract unique dates from semanticSegments."""
     dates = set()
-    for seg in data.get("semanticSegments", []):
-        start_str = seg.get("startTime")
-        if not start_str:
-            continue
-        dt = pd.to_datetime(start_str, utc=True, errors="coerce")
-        if not pd.isna(dt):
-            dates.add(dt.to_pydatetime().astimezone(timezone.utc).date())
+    for _, dt in _parse_semantic_segments_iter(data):
+        dates.add(dt.astimezone(timezone.utc).date())
     return dates
 
 
