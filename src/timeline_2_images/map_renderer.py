@@ -6,11 +6,18 @@ Note: New OOP code should use timeline_2_images.rendering module instead.
 import requests_cache
 from shapely.geometry import LineString
 
+from pathlib import Path
+
 # Install requests-cache globally to cache all tile downloads
 # This will intercept all requests from contextily automatically
 try:
+    # Use XDG Base Directory Specification for cache location
+    cache_dir = Path.home() / ".cache" / "timeline-2-images"
+    cache_dir.mkdir(exist_ok=True, parents=True)
+    cache_path = str(cache_dir / "tiles")
+
     _cache_session = requests_cache.install_cache(
-        ".tile_cache/osm-tiles",
+        cache_path,
         backend="sqlite",
         expire_after=None,  # Never expire - tiles don't change
         match_headers=False,  # Don't vary cache by headers
