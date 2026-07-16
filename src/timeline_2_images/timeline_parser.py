@@ -86,20 +86,9 @@ class TimelineCache:
 
         semantic_segs = self.data.get("semanticSegments", [])
         for idx, seg in enumerate(semantic_segs):
-            start_str = seg.get("startTime")
-            if not start_str:
-                continue
-
-            dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
-            if pd.isna(dt_timestamp):
-                continue
-
-            dt = datetime.fromisoformat(str(dt_timestamp.isoformat()))
-            seg_date = dt.astimezone(timezone.utc).date()
-
-            if seg_date not in self.segment_date_index:
-                self.segment_date_index[seg_date] = []
-            self.segment_date_index[seg_date].append(idx)
+            seg_date = _get_segment_start_date(seg)
+            if seg_date:
+                self.segment_date_index.setdefault(seg_date, []).append(idx)
 
         return self.segment_date_index
 
@@ -156,6 +145,71 @@ def _parse_segment_datetime(start_str: str, target: date) -> str | None:
     return start_str
 
 
+def _build_segments_with_waypoints(
+    segment_list: list[dict], step_start: float, timing: dict
+) -> list[dict]:
+    """Build segment dicts with parsed waypoints from a segment list."""
+    segments = []
+    for seg in segment_list:
+        waypoints = _parse_waypoints(seg.get("timelinePath", []))
+        if waypoints:
+            segments.append(
+                {
+                    "startTime": seg.get("startTime"),
+                    "endTime": seg.get("endTime"),
+                    "waypoints": waypoints,
+                }
+            )
+    timing["waypoint_extraction"] = time.time() - step_start
+    return segments
+
+
+def _load_segments_from_sqlite(json_path: str, target_date: str, timing: dict, start: float) -> list[dict] | None:
+    """Try to load segments from SQLite cache."""
+    step_start = time.time()
+    cached_segments = load_segments_for_date(json_path, target_date)
+    timing["sqlite_lookup"] = time.time() - step_start
+
+    if cached_segments is None:
+        return None
+
+    timing["cache_source"] = "sqlite"
+    step_start = time.time()
+    segments = _build_segments_with_waypoints(cached_segments, step_start, timing)
+    timing["total"] = time.time() - start
+    return segments
+
+
+def _load_segments_from_json(json_path: str, target_date: str, timing: dict, start: float) -> list[dict]:
+    """Load segments from JSON and populate cache."""
+    step_start = time.time()
+    data = _cache.load_file(json_path)
+    timing["json_load"] = time.time() - step_start
+    timing["cache_source"] = "json_parsed"
+
+    step_start = time.time()
+    populate_cache(json_path, data)
+    timing["cache_populate"] = time.time() - step_start
+
+    step_start = time.time()
+    segment_date_index = _cache.build_segment_date_index()
+    timing["build_index"] = time.time() - step_start
+
+    step_start = time.time()
+    semantic_segs = data.get("semanticSegments", [])
+    target_date_obj = datetime.strptime(target_date, "%Y-%m-%d").date()
+    matching_indices = segment_date_index.get(target_date_obj, [])
+    timing["index_lookup"] = time.time() - step_start
+
+    step_start = time.time()
+    matching_segments = [
+        semantic_segs[idx] for idx in matching_indices if idx < len(semantic_segs)
+    ]
+    segments = _build_segments_with_waypoints(matching_segments, step_start, timing)
+    timing["total"] = time.time() - start
+    return segments
+
+
 def load_segments_for_day(
     json_path: str, target_date: str, profile: bool = False
 ) -> list[dict] | tuple[list[dict], dict]:
@@ -176,74 +230,12 @@ def load_segments_for_day(
     timing: dict = {}
     start = time.time()
 
-    step_start = time.time()
-    cached_segments = load_segments_for_date(json_path, target_date)
-    timing["sqlite_lookup"] = time.time() - step_start
+    segments = _load_segments_from_sqlite(json_path, target_date, timing, start)
+    if segments is not None:
+        return (segments, timing) if profile else segments
 
-    if cached_segments is not None:
-        timing["cache_source"] = "sqlite"
-        segments = []
-        step_start = time.time()
-        for seg in cached_segments:
-            waypoints = _parse_waypoints(seg.get("timelinePath", []))
-            if waypoints:
-                segments.append(
-                    {
-                        "startTime": seg.get("startTime"),
-                        "endTime": seg.get("endTime"),
-                        "waypoints": waypoints,
-                    }
-                )
-        timing["waypoint_extraction"] = time.time() - step_start
-        timing["total"] = time.time() - start
-
-        if profile:
-            return segments, timing
-        return segments
-
-    step_start = time.time()
-    data = _cache.load_file(json_path)
-    timing["json_load"] = time.time() - step_start
-    timing["cache_source"] = "json_parsed"
-
-    step_start = time.time()
-    populate_cache(json_path, data)
-    timing["cache_populate"] = time.time() - step_start
-
-    step_start = time.time()
-    segment_date_index = _cache.build_segment_date_index()
-    timing["build_index"] = time.time() - step_start
-
-    target = datetime.strptime(target_date, "%Y-%m-%d").date()
-    segments = []
-
-    step_start = time.time()
-    semantic_segs = data.get("semanticSegments", [])
-    matching_indices = segment_date_index.get(target, [])
-    timing["index_lookup"] = time.time() - step_start
-
-    step_start = time.time()
-    for idx in matching_indices:
-        if idx >= len(semantic_segs):
-            continue
-        seg = semantic_segs[idx]
-
-        waypoints = _parse_waypoints(seg.get("timelinePath", []))
-
-        if waypoints:
-            segments.append(
-                {
-                    "startTime": seg.get("startTime"),
-                    "endTime": seg.get("endTime"),
-                    "waypoints": waypoints,
-                }
-            )
-    timing["waypoint_extraction"] = time.time() - step_start
-    timing["total"] = time.time() - start
-
-    if profile:
-        return segments, timing
-    return segments
+    segments = _load_segments_from_json(json_path, target_date, timing, start)
+    return (segments, timing) if profile else segments
 
 
 def _parse_timestamp(ts: str | int | float) -> datetime | None:
@@ -510,6 +502,48 @@ def get_last_n_days_with_data(json_path: str, days: int = 14) -> list[str]:
     return sorted([d.strftime("%Y-%m-%d") for d in last_n])
 
 
+def _get_available_dates(json_path: str) -> list[date]:
+    """Get available dates from cache or JSON file."""
+    cached_dates = get_cached_dates(json_path)
+    if cached_dates:
+        _cache.cache_source = "disk"
+        return [datetime.strptime(d, "%Y-%m-%d").date() for d in cached_dates]
+
+    _cache.load_file(json_path)
+    _cache.build_date_index()
+    if not _cache.date_index:
+        return []
+    return sorted(_cache.date_index.keys())
+
+
+def _parse_date_string(date_str: str) -> date:
+    """Parse YYYY-MM-DD string to date."""
+    return datetime.strptime(date_str, "%Y-%m-%d").date()
+
+
+def _calculate_date_bounds(
+    start_date: str | None, end_date: str | None, days: int
+) -> tuple[date, date] | None:
+    """Calculate start and end dates from parameters. Returns None for day-based fallback."""
+    if start_date and end_date:
+        return _parse_date_string(start_date), _parse_date_string(end_date)
+    if start_date:
+        start = _parse_date_string(start_date)
+        end = start + timedelta(days=days - 1)
+        return start, end
+    if end_date:
+        end = _parse_date_string(end_date)
+        start = end - timedelta(days=days - 1)
+        return start, end
+    return None
+
+
+def _filter_dates_in_range(available_dates: list[date], start: date, end: date) -> list[str]:
+    """Filter dates within range and format as strings."""
+    result = [d for d in available_dates if start <= d <= end]
+    return [d.strftime("%Y-%m-%d") for d in result]
+
+
 def get_date_range(
     json_path: str,
     start_date: str | None = None,
@@ -539,32 +573,16 @@ def get_date_range(
     Returns:
         List of YYYY-MM-DD dates with data, sorted chronologically
     """
-    cached_dates = get_cached_dates(json_path)
+    available_dates = _get_available_dates(json_path)
+    if not available_dates:
+        return []
 
-    if cached_dates:
-        _cache.cache_source = "disk"
-        available_sorted = [datetime.strptime(d, "%Y-%m-%d").date() for d in cached_dates]
-    else:
-        _cache.load_file(json_path)
-        _cache.build_date_index()
-        if not _cache.date_index:
-            return []
-        available_sorted = sorted(_cache.date_index.keys())
-
-    if start_date and end_date:
-        start = datetime.strptime(start_date, "%Y-%m-%d").date()
-        end = datetime.strptime(end_date, "%Y-%m-%d").date()
-    elif start_date and not end_date:
-        start = datetime.strptime(start_date, "%Y-%m-%d").date()
-        end = start + timedelta(days=days - 1)
-    elif end_date and not start_date:
-        end = datetime.strptime(end_date, "%Y-%m-%d").date()
-        start = end - timedelta(days=days - 1)
-    else:
+    bounds = _calculate_date_bounds(start_date, end_date, days)
+    if bounds is None:
         return get_last_n_days_with_data(json_path, days)
 
-    result = [d for d in available_sorted if start <= d <= end]
-    return [d.strftime("%Y-%m-%d") for d in result]
+    start, end = bounds
+    return _filter_dates_in_range(available_dates, start, end)
 
 
 def get_cache_source() -> str:

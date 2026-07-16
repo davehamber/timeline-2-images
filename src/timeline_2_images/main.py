@@ -51,6 +51,105 @@ def _print_banner():
     print(banner)
 
 
+def _load_date_segments(timeline_path: Path, date_str: str, profile: bool):
+    """Load segments for a date, returning (segments, load_timing)."""
+    if profile:
+        result = load_segments_for_day(str(timeline_path), date_str, profile=True)
+        segments, load_timing = cast(tuple[list[dict], dict], result)
+        return segments, load_timing
+    segments = cast(list[dict], load_segments_for_day(str(timeline_path), date_str))
+    return segments, {}
+
+
+def _get_cache_indicator(cache_before: dict, cache_after: dict) -> str:
+    """Return cache indicator if new tiles were cached."""
+    if cache_after.get("total_cached_tiles", 0) > cache_before.get("total_cached_tiles", 0):
+        return " 💾"
+    return ""
+
+
+def _print_timing_breakdown(load_timing: dict, render_timing: dict | None):
+    """Print detailed timing breakdown for profiling."""
+    print("      Timing breakdown:")
+    if load_timing:
+        print("        Load Segments:")
+        _print_timing_section(load_timing)
+    if render_timing:
+        print("        Render Segments:")
+        _print_timing_section(render_timing, exclude_keys=set())
+
+
+def _should_skip_timing_key(key: str, exclude_keys: set) -> bool:
+    """Check if a timing key should be skipped."""
+    return key == "total" or key in exclude_keys or not isinstance(key, str)
+
+
+def _get_timing_percentage(value: float, total: float) -> float:
+    """Calculate percentage of value relative to total."""
+    return (value / total * 100) if total > 0 else 0
+
+
+def _print_timing_line(key: str, value: float, total: float):
+    """Print a single timing line with percentage."""
+    pct = _get_timing_percentage(value, total)
+    print(f"          {key:.<20} {value:6.2f}s ({pct:5.1f}%)")
+
+
+def _print_timing_section(timing: dict, exclude_keys=None):
+    """Print a timing section with percentages."""
+    if exclude_keys is None:
+        exclude_keys = {"cache_source"}
+
+    total = timing.get("total", 0)
+    for key, value in sorted(timing.items()):
+        if _should_skip_timing_key(key, exclude_keys) or not isinstance(value, (int, float)):
+            continue
+        _print_timing_line(key, value, total)
+    print(f"          {('total'):.<20} {total:6.2f}s")
+
+
+def _process_date_successful(
+    date_str: str,
+    output_path: Path,
+    segments: list,
+    image_size: int,
+    profile: bool,
+    start_time: float,
+) -> tuple[bool, float, dict]:
+    """Handle successful date processing."""
+    output_file = output_path / f"timeline_{date_str}.jpg"
+    cache_before = get_render_cache_info()
+    render_timing = render_segments(
+        segments, str(output_file), image_size=image_size, profile=profile
+    )
+    cache_after = get_render_cache_info()
+
+    total_points = sum(len(seg.get("waypoints", [])) for seg in segments)
+    elapsed = time.time() - start_time
+
+    cache_info = {
+        "cache_status": cache_after.get("status", "unknown"),
+        "total_cached": cache_after.get("total_cached_tiles", 0),
+    }
+
+    cache_indicator = _get_cache_indicator(cache_before, cache_after)
+    details = f"({len(segments)} segments, {total_points} points) {elapsed:.2f}s{cache_indicator}"
+    print(f"✓ {details} → {output_file.name}")
+
+    if profile:
+        _print_timing_breakdown({}, render_timing)
+
+    return True, elapsed, cache_info
+
+
+def _handle_date_error(exc: Exception):
+    """Handle and print processing error."""
+    if isinstance(exc, ValueError):
+        print(f"✗ {exc}")
+    else:
+        print(f"✗ Error: {exc}")
+
+
 def _process_date(
     date_str: str,
     timeline_path: Path,
@@ -62,73 +161,131 @@ def _process_date(
     start_time = time.time()
     try:
         print(f"Processing {date_str}...", end=" ", flush=True)
-        load_timing: dict = {}
-        if profile:
-            result = load_segments_for_day(str(timeline_path), date_str, profile=True)
-            segments, load_timing = cast(tuple[list[dict], dict], result)
-        else:
-            segments = cast(list[dict], load_segments_for_day(str(timeline_path), date_str))
+        segments, load_timing = _load_date_segments(timeline_path, date_str, profile)
 
         if not segments:
             print("✗ No segments found")
             return False, time.time() - start_time, {}
 
-        output_file = output_path / f"timeline_{date_str}.jpg"
-        cache_info_before = get_render_cache_info()
-        render_timing = render_segments(
-            segments, str(output_file), image_size=image_size, profile=profile
+        return _process_date_successful(
+            date_str, output_path, segments, image_size, profile, start_time
         )
-        cache_info_after = get_render_cache_info()
+    except (ValueError, OSError, RuntimeError) as e:
+        _handle_date_error(e)
 
-        total_points = sum(len(seg.get("waypoints", [])) for seg in segments)
-        elapsed = time.time() - start_time
-        output_name = output_file.name
-
-        cache_info = {
-            "cache_status": cache_info_after.get("status", "unknown"),
-            "total_cached": cache_info_after.get("total_cached_tiles", 0),
-        }
-
-        cache_indicator = ""
-        if cache_info_after.get("total_cached_tiles", 0) > cache_info_before.get(
-            "total_cached_tiles", 0
-        ):
-            cache_indicator = " 💾"
-
-        details = (
-            f"({len(segments)} segments, {total_points} points) {elapsed:.2f}s{cache_indicator}"
-        )
-        print(f"✓ {details} → {output_name}")
-
-        if profile:
-            print("      Timing breakdown:")
-            if "load_timing" in locals() and load_timing:
-                print("        Load Segments:")
-                for key, value in sorted(load_timing.items()):
-                    if key not in ("total", "cache_source") and isinstance(value, (int, float)):
-                        pct = (
-                            (value / load_timing["total"] * 100) if load_timing["total"] > 0 else 0
-                        )
-                        print(f"          {key:.<20} {value:6.2f}s ({pct:5.1f}%)")
-                print(f"          {('total'):.<20} {load_timing.get('total', 0):6.2f}s")
-            print("        Render Segments:")
-            if render_timing:
-                for key, value in sorted(render_timing.items()):
-                    if key != "total":
-                        pct = (
-                            (value / render_timing["total"] * 100)
-                            if render_timing["total"] > 0
-                            else 0
-                        )
-                        print(f"          {key:.<20} {value:6.2f}s ({pct:5.1f}%)")
-                print(f"          {('total'):.<20} {render_timing.get('total', 0):6.2f}s")
-
-        return True, elapsed, cache_info
-    except ValueError as e:
-        print(f"✗ {e}")
-    except (OSError, RuntimeError) as e:
-        print(f"✗ Error: {e}")
     return False, time.time() - start_time, {}
+
+
+def _get_cache_label(cache_source: str) -> str:
+    """Get human-readable cache label."""
+    labels = {
+        "session": "session cache",
+        "disk": "disk cache",
+        "parsed": "parsed from JSON",
+    }
+    return labels.get(cache_source, "unknown")
+
+
+def _build_date_description(start_date: str | None, end_date: str | None, days: int) -> str:
+    """Build human-readable description of date range."""
+    if start_date and end_date:
+        return f"from {start_date} to {end_date}"
+    if start_date:
+        return f"from {start_date}"
+    if end_date:
+        return f"until {end_date}"
+    return f"in the last {days} days"
+
+
+def _print_performance_stats(day_times: list[float], target_dates: list[str], total_time: float):
+    """Print performance statistics."""
+    print("Performance Statistics:")
+    print(f"  Total time: {total_time:.2f}s")
+    print(f"  Average per day: {total_time / len(target_dates):.2f}s")
+    if day_times:
+        print(f"  Min/Max per day: {min(day_times):.2f}s / {max(day_times):.2f}s")
+
+
+def _print_tile_cache_stats():
+    """Print tile cache statistics if available."""
+    cache_stats = get_tile_cache_stats()
+    if not cache_stats:
+        return
+
+    print()
+    print("Tile Cache Statistics:")
+    disk_cache_info = cache_stats.get("disk_cache", {})
+    tile_count = disk_cache_info.get("tile_count", 0)
+    cache_size = disk_cache_info.get("total_size_mb", 0.0)
+    print(f"  Backend: {cache_stats.get('cache_backend', 'requests-cache')}")
+    print(f"  Cache location: {cache_stats.get('cache_location', '.tile_cache')}")
+    if tile_count > 0:
+        print(f"  Cached tiles: {tile_count} tiles ({cache_size:.1f}MB)")
+    print("  Note: Tiles are automatically reused for overlapping geographic areas")
+
+
+def _validate_timeline_file(timeline_json: str) -> Path:
+    """Validate timeline file exists."""
+    timeline_path = Path(timeline_json)
+    if not timeline_path.exists():
+        print(f"Error: Timeline file not found: {timeline_json}")
+        sys.exit(1)
+    return timeline_path
+
+
+def _load_and_validate_dates(
+    timeline_path: Path, start_date: str | None, end_date: str | None, days: int
+) -> list[str]:
+    """Load dates from timeline and validate we have data."""
+    print(f"Loading timeline data from {timeline_path}...", end=" ", flush=True)
+    load_start = time.time()
+    target_dates = get_date_range(
+        str(timeline_path), start_date=start_date, end_date=end_date, days=days
+    )
+    load_time = time.time() - load_start
+    cache_label = _get_cache_label(get_cache_source())
+    print(f"✓ ({load_time:.2f}s, {cache_label})")
+
+    if not target_dates:
+        date_desc = _build_date_description(start_date, end_date, days)
+        print(f"No timeline data found {date_desc}")
+        sys.exit(1)
+
+    return target_dates
+
+
+def _print_date_range_info(target_dates: list[str]):
+    """Print date range information."""
+    print(f"Found {len(target_dates)} days with data")
+    print(f"Date range: {target_dates[0]} to {target_dates[-1]}")
+    print()
+
+
+def _process_all_dates(
+    target_dates: list[str],
+    timeline_path: Path,
+    output_path: Path,
+    image_size: int,
+    profile: bool,
+) -> list[tuple[bool, float, dict]]:
+    """Process all target dates and return results."""
+    return [
+        _process_date(date_str, timeline_path, output_path, image_size, profile)
+        for date_str in target_dates
+    ]
+
+
+def _print_final_summary(results: list[tuple[bool, float, dict]], target_dates: list[str], output_path: Path):
+    """Print final summary and statistics."""
+    success_count = sum(1 for success, _, _ in results if success)
+    total_time = sum(elapsed for _, elapsed, _ in results)
+    day_times = [elapsed for _, elapsed, _ in results]
+
+    print()
+    print(f"Generated {success_count}/{len(target_dates)} map images in {output_path}")
+    print()
+    _print_performance_stats(day_times, target_dates, total_time)
+    _print_tile_cache_stats()
 
 
 def main(
@@ -153,75 +310,16 @@ def main(
         profile: If True, show detailed timing breakdown per operation
     """
     _print_banner()
-    timeline_path = Path(timeline_json)
-    if not timeline_path.exists():
-        print(f"Error: Timeline file not found: {timeline_json}")
-        sys.exit(1)
+    timeline_path = _validate_timeline_file(timeline_json)
 
     output_path = Path(output_dir)
     output_path.mkdir(exist_ok=True, parents=True)
 
-    print(f"Loading timeline data from {timeline_json}...", end=" ", flush=True)
-    load_start = time.time()
-    target_dates = get_date_range(
-        str(timeline_path), start_date=start_date, end_date=end_date, days=days
-    )
-    load_time = time.time() - load_start
-    cache_source = get_cache_source()
-    cache_label = {
-        "session": "session cache",
-        "disk": "disk cache",
-        "parsed": "parsed from JSON",
-    }.get(cache_source, "unknown")
-    print(f"✓ ({load_time:.2f}s, {cache_label})")
+    target_dates = _load_and_validate_dates(timeline_path, start_date, end_date, days)
+    _print_date_range_info(target_dates)
 
-    if not target_dates:
-        date_desc = (
-            f"from {start_date} to {end_date}"
-            if start_date and end_date
-            else (
-                f"from {start_date}"
-                if start_date
-                else f"until {end_date}" if end_date else f"in the last {days} days"
-            )
-        )
-        print(f"No timeline data found {date_desc}")
-        sys.exit(1)
-
-    print(f"Found {len(target_dates)} days with data")
-    print(f"Date range: {target_dates[0]} to {target_dates[-1]}")
-    print()
-
-    start_time = time.time()
-    results = [
-        _process_date(date_str, timeline_path, output_path, image_size, profile)
-        for date_str in target_dates
-    ]
-    success_count = sum(1 for success, _, _ in results if success)
-    total_time = time.time() - start_time
-    day_times = [elapsed for _, elapsed, _ in results]
-
-    print()
-    print(f"Generated {success_count}/{len(target_dates)} map images in {output_path}")
-    print()
-    print("Performance Statistics:")
-    print(f"  Total time: {total_time:.2f}s")
-    print(f"  Average per day: {total_time / len(target_dates):.2f}s")
-    if day_times:
-        print(f"  Min/Max per day: {min(day_times):.2f}s / {max(day_times):.2f}s")
-
-    cache_stats = get_tile_cache_stats()
-    if cache_stats:
-        print()
-        print("Tile Cache Statistics:")
-        disk_cache_info = cache_stats.get("disk_cache", {})
-        tile_count = disk_cache_info.get("tile_count", 0)
-        cache_size = disk_cache_info.get("total_size_mb", 0.0)
-        print(f"  Backend: {cache_stats.get('cache_backend', 'requests-cache')}")
-        print(f"  Cache location: {cache_stats.get('cache_location', '.tile_cache')}")
-        if tile_count > 0:
-            print(f"  Cached tiles: {tile_count} tiles ({cache_size:.1f}MB)")
-        print("  Note: Tiles are automatically reused for overlapping geographic areas")
+    results = _process_all_dates(target_dates, timeline_path, output_path, image_size, profile)
+    _print_final_summary(results, target_dates, output_path)
 
 
 if __name__ == "__main__":
