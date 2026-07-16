@@ -7,6 +7,29 @@ from daily_timeline_images.timeline_parser import load_segments_for_day, get_las
 from daily_timeline_images.map_renderer import render_segments  # RDP line simplification
 
 
+def _process_date(date_str: str, timeline_path: Path, output_path: Path, image_size: int) -> bool:
+    """Process a single date and render its map."""
+    try:
+        print(f"Processing {date_str}...", end=" ", flush=True)
+        segments = load_segments_for_day(str(timeline_path), date_str)
+
+        if not segments:
+            print("✗ No segments found")
+            return False
+
+        output_file = output_path / f"timeline_{date_str}.jpg"
+        render_segments(segments, str(output_file), image_size=image_size)
+
+        total_points = sum(len(seg.get("waypoints", [])) for seg in segments)
+        print(f"✓ ({len(segments)} segments, {total_points} points) → {output_file.name}")
+        return True
+    except ValueError as e:
+        print(f"✗ {e}")
+    except (OSError, RuntimeError) as e:
+        print(f"✗ Error: {e}")
+    return False
+
+
 def main(
     timeline_json: str,
     output_dir: str = "output",
@@ -41,26 +64,10 @@ def main(
     print(f"Date range: {target_dates[0]} to {target_dates[-1]}")
     print()
 
-    success_count = 0
-    for date_str in target_dates:
-        try:
-            print(f"Processing {date_str}...", end=" ", flush=True)
-            segments = load_segments_for_day(str(timeline_path), date_str)
-
-            if not segments:
-                print("✗ No segments found")
-                continue
-
-            output_file = output_path / f"timeline_{date_str}.jpg"
-            render_segments(segments, str(output_file), image_size=image_size)
-
-            total_points = sum(len(seg.get("waypoints", [])) for seg in segments)
-            print(f"✓ ({len(segments)} segments, {total_points} points) → {output_file.name}")
-            success_count += 1
-        except ValueError as e:
-            print(f"✗ {e}")
-        except (OSError, RuntimeError) as e:
-            print(f"✗ Error: {e}")
+    success_count = sum(
+        _process_date(date_str, timeline_path, output_path, image_size)
+        for date_str in target_dates
+    )
 
     print()
     print(f"Generated {success_count}/{len(target_dates)} map images in {output_path}")
