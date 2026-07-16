@@ -7,15 +7,18 @@ import sqlite3
 class TileCacheManager:
     """Manages tile caching for map rendering."""
 
-    def __init__(self, cache_dir: str = ".tile_cache"):
+    def __init__(self, cache_dir: str | None = None):
         """Initialize tile cache manager.
 
         Args:
-            cache_dir: Directory for tile cache
+            cache_dir: Directory for tile cache. If None, uses ~/.cache/timeline-2-images
         """
+        if cache_dir is None:
+            cache_dir = str(Path.home() / ".cache" / "timeline-2-images")
+
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(exist_ok=True, parents=True)
-        self.db_path = self.cache_dir / "osm-tiles.sqlite"
+        self.db_path = self.cache_dir / "tiles.sqlite"
 
     def get_cache_stats(self) -> dict:
         """Get cache statistics.
