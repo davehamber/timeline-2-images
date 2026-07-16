@@ -96,11 +96,11 @@ Build a single-file portable executable using Nuitka:
 # Build the executable (requires C++ compiler)
 ./build_executable.sh
 
-# The executable will be at: ./dist/main
+# The executable will be at: ./dist/timeline2images
 
 # Test the executable
-./dist/main Timeline.json --start-date 2026-01-01 --days 7
-./dist/main --clean-cache
+./dist/timeline2images Timeline.json --start-date 2026-01-01 --days 7
+./dist/timeline2images --clean-cache
 ```
 
 **Requirements:**
