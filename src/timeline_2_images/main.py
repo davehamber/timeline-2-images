@@ -58,6 +58,20 @@ def main(
     results = app.process_date_range(start_date=start_date, end_date=end_date, days=days)
     total_time = time.time() - start_time
 
+    if not results:
+        print("Warning: No results returned. Checking what dates would be processed...")
+        from timeline_2_images.config import DateRangeQuery
+
+        query = DateRangeQuery(start_date=start_date, end_date=end_date, days=days)
+        query_dates = app.processor.get_date_range(query)
+        print(f"  Dates to process: {query_dates}")
+        if query_dates:
+            print(f"  Testing first date ({query_dates[0]})...")
+            test_segments = app.processor.load_segments_for_day(query_dates[0])
+            print(f"  Segments found: {len(test_segments)}")
+            if not test_segments:
+                print("  ⚠️ No segments found! This might indicate a cache issue.")
+
     success_count = sum(1 for r in results if r.was_successful())
     print()
     print(f"Generated {success_count}/{len(results)} map images in {output_dir}")
