@@ -14,23 +14,27 @@ class TimelineCache:
 
     Caches the full parsed JSON structure in memory for the lifetime of the session,
     avoiding expensive re-parsing when processing multiple dates from the same file.
-    Also tries persistent disk cache (parquet) with hash validation.
+    Also tries persistent disk cache (pickle) with hash validation.
     """
 
     def __init__(self):
         self.file_path: str | None = None
         self.data: dict | None = None
         self.date_index: Dict[date, bool] | None = None
+        self.cache_source: str = "none"  # Track which cache was used
 
     def load_file(self, json_path: str) -> dict:
         """Load and cache Timeline JSON file. Returns cached data if already loaded.
 
         Priority:
         1. Session memory cache (fastest)
-        2. Disk parquet cache if source file hash matches
+        2. Disk pickle cache if source file hash matches
         3. Parse raw JSON and save to disk cache
+
+        Sets cache_source to one of: "session", "disk", "parsed"
         """
         if self.file_path == json_path and self.data is not None:
+            self.cache_source = "session"
             return self.data
 
         self.file_path = json_path
@@ -39,6 +43,7 @@ class TimelineCache:
         if cached_data is not None:
             self.data = cached_data
             self.date_index = None
+            self.cache_source = "disk"
             assert self.data is not None
             return self.data
 
@@ -49,6 +54,7 @@ class TimelineCache:
             save_to_cache(json_path, self.data)
 
         self.date_index = None
+        self.cache_source = "parsed"
         assert self.data is not None
         return self.data
 
@@ -477,6 +483,11 @@ def get_date_range(
 
     result = [d for d in available_sorted if start <= d <= end]
     return [d.strftime("%Y-%m-%d") for d in result]
+
+
+def get_cache_source() -> str:
+    """Return the source of the most recent cache load: 'session', 'disk', or 'parsed'."""
+    return _cache.cache_source
 
 
 def clear_cache() -> None:
