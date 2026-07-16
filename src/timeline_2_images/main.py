@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 from typing import cast
 
+from timeline_2_images.banner import print_banner
 from timeline_2_images.timeline_parser import (
     load_segments_for_day,
     get_date_range,
@@ -16,39 +17,6 @@ from timeline_2_images.map_renderer import (
     get_render_cache_info,
 )
 from timeline_2_images.sqlite_cache import clean_all_cache
-
-
-def _print_banner():
-    """Display ASCII art banner with lilac and deep purple colors."""
-    # RGB True color codes: Lilac for blocks, Deep Purple for borders
-    lilac = "\033[38;2;200;162;200m"      # Light lilac/lavender
-    deep_purple = "\033[38;2;138;43;226m" # Deep purple (blue-violet)
-    white = "\033[38;2;255;255;255m"      # White for "2" block
-    dark_grey = "\033[38;2;100;100;100m"  # Dark grey for "2" drop shadow
-    reset = "\033[0m"
-
-    banner = f"""
-{deep_purple}╔═════════════════════════════════════════════════════════════════╗{reset}
-{deep_purple}║{reset}                                                                 {deep_purple}║{reset}
-{deep_purple}║{reset}  {lilac}████████{reset}{deep_purple}╗{reset}{lilac}██{reset}{deep_purple}╗{reset}{lilac}███{reset}{deep_purple}╗{reset}   {lilac}███{reset}{deep_purple}╗{reset}{lilac}███████{reset}{deep_purple}╗{reset}{lilac}██{reset}{deep_purple}╗{reset}     {lilac}██{reset}{deep_purple}╗{reset}{lilac}███{reset}{deep_purple}╗{reset}   {lilac}██{reset}{deep_purple}╗{reset}{lilac}███████{reset}{deep_purple}╗{reset}   {deep_purple}║{reset}
-{deep_purple}║{reset}  {deep_purple}╚══{lilac}██{reset}{deep_purple}╔══╝{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}████{reset}{deep_purple}╗{reset} {lilac}████{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔════╝{reset}{lilac}██{reset}{deep_purple}║{reset}     {lilac}██{reset}{deep_purple}║{reset}{lilac}████{reset}{deep_purple}╗{reset}  {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔════╝{reset}   {deep_purple}║{reset}
-{deep_purple}║{reset}     {lilac}██{reset}{deep_purple}║{reset}   {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔{reset}{lilac}████{reset}{deep_purple}╔{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}█████{reset}{deep_purple}╗{reset}  {lilac}██{reset}{deep_purple}║{reset}     {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔{reset}{lilac}██{reset}{deep_purple}╗{reset} {lilac}██{reset}{deep_purple}║{reset}{lilac}█████{reset}{deep_purple}╗{reset}     {deep_purple}║{reset}
-{deep_purple}║{reset}     {lilac}██{reset}{deep_purple}║{reset}   {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset}{deep_purple}╚{reset}{lilac}██{reset}{deep_purple}╔╝{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔══╝{reset}  {lilac}██{reset}{deep_purple}║{reset}     {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset}{deep_purple}╚{reset}{lilac}██{reset}{deep_purple}╗{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔══╝{reset}     {deep_purple}║{reset}
-{deep_purple}║{reset}     {lilac}██{reset}{deep_purple}║{reset}   {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset} {deep_purple}╚═╝{reset} {lilac}██{reset}{deep_purple}║{reset}{lilac}███████{reset}{deep_purple}╗{reset}{lilac}███████{reset}{deep_purple}╗{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset} {deep_purple}╚{lilac}████{reset}{deep_purple}║{reset}{lilac}███████{reset}{deep_purple}╗{reset}   {deep_purple}║{reset}
-{deep_purple}║{reset}     {deep_purple}╚═╝{reset}   {deep_purple}╚═╝╚═╝{reset}     {deep_purple}╚═╝╚══════{reset}{deep_purple}╝╚══════╝╚═╝╚═╝{reset}  {deep_purple}╚═══╝╚══════{reset}{deep_purple}╝{reset}   {deep_purple}║{reset}
-{deep_purple}║{reset}                                                                 {deep_purple}║{reset}
-{deep_purple}║{reset}    {dark_grey}╔{reset}{white}██████{reset}{dark_grey}╗{reset}  {lilac}██{reset}{deep_purple}╗{reset}{lilac}███{reset}{deep_purple}╗{reset}   {lilac}███{reset}{deep_purple}╗{reset} {lilac}█████{reset}{deep_purple}╗{reset}  {lilac}██████{reset}{deep_purple}╗{reset} {lilac}███████{reset}{deep_purple}╗{reset}{lilac}███████{reset}{deep_purple}║{reset}    {deep_purple}║{reset}
-{deep_purple}║{reset}    {dark_grey}╚════{white}██{reset}{dark_grey}║{reset}  {lilac}██{reset}{deep_purple}║{reset}{lilac}████{reset}{deep_purple}╗{reset} {lilac}████{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔══{reset}{lilac}██{reset}{deep_purple}╗{reset}{lilac}██{reset}{deep_purple}╔════╝{reset} {lilac}██{reset}{deep_purple}╔════╝{reset}{lilac}██{reset}{deep_purple}╔════╝{reset}    {deep_purple}║{reset}
-{deep_purple}║{reset}     {white}█████{reset}{dark_grey}╔╝{reset}  {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔{reset}{lilac}████{reset}{deep_purple}╔{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}███████{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset}  {lilac}███{reset}{deep_purple}╗{reset}{lilac}█████{reset}{deep_purple}╗{reset}  {lilac}███████{reset}{deep_purple}║{reset}    {deep_purple}║{reset}
-{deep_purple}║{reset}    {white}██{reset}{dark_grey}╔═══╝{reset}   {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║╚{lilac}██{reset}{deep_purple}╔╝{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔══{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset}   {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔══╝{reset}  {deep_purple}╚════{lilac}██{reset}{deep_purple}║{reset}    {deep_purple}║{reset}
-{deep_purple}║{reset}    {white}███████{reset}{dark_grey}╗{reset}  {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset} {deep_purple}╚═╝{reset} {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset}  {lilac}██{reset}{deep_purple}║╚{reset}{lilac}██████{reset}{deep_purple}╔╝{reset}{lilac}███████{reset}{deep_purple}╗{reset}{lilac}███████{reset}{deep_purple}║{reset}    {deep_purple}║{reset}
-{deep_purple}║{reset}    {dark_grey}╚══════╝{reset}  {deep_purple}╚═╝╚═╝{reset}     {deep_purple}╚═╝╚═╝{reset}  {deep_purple}╚═╝{reset} {deep_purple}╚═════╝{reset} {deep_purple}╚══════╝{reset}{deep_purple}╚══════╝{reset}    {deep_purple}║{reset}
-{deep_purple}║{reset}                                                                 {deep_purple}║{reset}
-{deep_purple}║{reset}        Generate daily route maps from Google Timeline           {deep_purple}║{reset}
-{deep_purple}║{reset}                                                                 {deep_purple}║{reset}
-{deep_purple}╚═════════════════════════════════════════════════════════════════╝{reset}
-"""
-    print(banner)
 
 
 def _load_date_segments(timeline_path: Path, date_str: str, profile: bool):
@@ -324,7 +292,7 @@ def main(
 if __name__ == "__main__":
     import argparse
 
-    _print_banner()
+    print_banner()
 
     prog_name = Path(sys.argv[0]).name
     parser = argparse.ArgumentParser(
