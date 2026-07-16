@@ -11,7 +11,16 @@ from daily_timeline_images.timeline_parser import (
     load_points_for_day,
     get_last_n_days_with_data,
     get_date_range,
+    clear_cache,
 )
+
+
+@pytest.fixture(autouse=True)
+def clear_cache_before_test():
+    """Clear cache before each test for test isolation."""
+    clear_cache()
+    yield
+    clear_cache()
 
 
 @pytest.fixture
@@ -188,3 +197,24 @@ def test_get_date_range_end_with_days(sample_timeline_flat):
         assert dates == ["2021-07-02", "2021-07-03"]
     finally:
         Path(temp_path).unlink()
+
+
+def test_caching_behavior(sample_timeline_flat):
+    """Test that file is cached and not re-parsed on subsequent calls."""
+    from daily_timeline_images.timeline_parser import _cache
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+        json.dump(sample_timeline_flat, f)
+        temp_path = f.name
+
+    try:
+        assert _cache.data is None
+        load_points_for_day(temp_path, "2021-07-01")
+        assert _cache.data is not None
+        cached_data = _cache.data
+
+        load_points_for_day(temp_path, "2021-07-02")
+        assert _cache.data is cached_data
+    finally:
+        Path(temp_path).unlink()
+        clear_cache()
