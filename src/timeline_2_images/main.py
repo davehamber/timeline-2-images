@@ -326,7 +326,9 @@ if __name__ == "__main__":
 
     _print_banner()
 
+    prog_name = Path(sys.argv[0]).name
     parser = argparse.ArgumentParser(
+        prog=prog_name,
         description="Generate daily route maps from Google Timeline exports"
     )
     parser.add_argument("timeline_json", nargs="?", help="Path to Timeline.json file")
