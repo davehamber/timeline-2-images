@@ -1,4 +1,8 @@
-"""Parse Google Timeline JSON exports and extract location data."""
+"""Internal timeline parser module (used by TimelineProcessor).
+
+Note: New OOP code should use timeline_2_images.processors.TimelineProcessor instead.
+This module is kept for internal utilities and backward compatibility.
+"""
 
 import json
 import time
@@ -206,7 +210,9 @@ def _load_segments_from_json(
     timing["index_lookup"] = time.time() - step_start
 
     step_start = time.time()
-    matching_segments = [semantic_segs[index] for index in matching_indices if index < len(semantic_segs)]
+    matching_segments = [
+        semantic_segs[index] for index in matching_indices if index < len(semantic_segs)
+    ]
     segments = _build_segments_with_waypoints(matching_segments, step_start, timing)
     timing["total"] = time.time() - start
     return segments
@@ -298,7 +304,13 @@ def _extract_locations_from_segment(parsed_datetime: datetime, segment: dict) ->
     for key in ("startLocation", "endLocation", "location"):
         location = segment.get(key)
         if location and "latitudeE7" in location and "longitudeE7" in location:
-            rows.append((parsed_datetime, float(location["latitudeE7"]) / 1e7, float(location["longitudeE7"]) / 1e7))
+            rows.append(
+                (
+                    parsed_datetime,
+                    float(location["latitudeE7"]) / 1e7,
+                    float(location["longitudeE7"]) / 1e7,
+                )
+            )
     return rows
 
 
