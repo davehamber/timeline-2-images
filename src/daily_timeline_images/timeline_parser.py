@@ -1,7 +1,7 @@
 """Parse Google Timeline JSON exports and extract location data."""
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime, date, timezone
 
 import pandas as pd
 
@@ -37,7 +37,7 @@ def _parse_waypoints(path: list) -> list:
     return waypoints
 
 
-def _parse_segment_datetime(start_str: str, target: object) -> str | None:
+def _parse_segment_datetime(start_str: str, target: date) -> str | None:
     """Parse segment start time and return if it matches target date."""
     dt = pd.to_datetime(start_str, utc=True, errors="coerce")
     if pd.isna(dt):
@@ -87,7 +87,7 @@ def load_segments_for_day(json_path: str, target_date: str) -> list[dict]:
     return segments
 
 
-def _parse_timestamp(ts):
+def _parse_timestamp(ts) -> datetime | None:
     """Parse timestamp in various formats (string or milliseconds)."""
     if isinstance(ts, str):
         dt = pd.to_datetime(ts, utc=True, errors="coerce")
@@ -97,16 +97,16 @@ def _parse_timestamp(ts):
     return datetime.fromtimestamp(int(ts) / 1000, tz=timezone.utc)
 
 
-def _extract_location_point(dt, loc: dict) -> tuple | None:
+def _extract_location_point(dt: datetime, loc: dict) -> tuple | None:
     """Extract a single location point if valid coordinates exist."""
-    lat = loc.get("latitudeE7")
-    lon = loc.get("longitudeE7")
+    lat: float | None = loc.get("latitudeE7")
+    lon: float | None = loc.get("longitudeE7")
     if lat is not None and lon is not None:
-        return (dt, lat / 1e7, lon / 1e7)
+        return (dt, float(lat) / 1e7, float(lon) / 1e7)
     return None
 
 
-def _process_flat_location(loc: dict, target: object) -> tuple | None:
+def _process_flat_location(loc: dict, target: date) -> tuple | None:
     """Process a single flat location and return point if in target date."""
     ts = loc.get("timestamp") or loc.get("timestampMs")
     if ts is None:
@@ -117,7 +117,7 @@ def _process_flat_location(loc: dict, target: object) -> tuple | None:
     return _extract_location_point(dt, loc)
 
 
-def _extract_from_flat_locations(data: dict, target: object) -> list:
+def _extract_from_flat_locations(data: dict, target: date) -> list:
     """Extract points from flat locations list."""
     rows = []
     for loc in data.get("locations", []):
@@ -127,29 +127,29 @@ def _extract_from_flat_locations(data: dict, target: object) -> list:
     return rows
 
 
-def _extract_waypoints_from_segment(dt, seg: dict) -> list:
+def _extract_waypoints_from_segment(dt: datetime, seg: dict) -> list:
     """Extract waypoint rows from a timeline segment."""
     rows = []
     waypoints = seg.get("waypointPath", {}).get("waypoints", [])
     for wp in waypoints:
-        lat = wp.get("latE7")
-        lon = wp.get("lngE7")
+        lat: float | None = wp.get("latE7")
+        lon: float | None = wp.get("lngE7")
         if lat is not None and lon is not None:
-            rows.append((dt, lat / 1e7, lon / 1e7))
+            rows.append((dt, float(lat) / 1e7, float(lon) / 1e7))
     return rows
 
 
-def _extract_locations_from_segment(dt, seg: dict) -> list:
+def _extract_locations_from_segment(dt: datetime, seg: dict) -> list:
     """Extract start/end location rows from a timeline segment."""
     rows = []
     for key in ("startLocation", "endLocation", "location"):
         loc = seg.get(key)
         if loc and "latitudeE7" in loc and "longitudeE7" in loc:
-            rows.append((dt, loc["latitudeE7"] / 1e7, loc["longitudeE7"] / 1e7))
+            rows.append((dt, float(loc["latitudeE7"]) / 1e7, float(loc["longitudeE7"]) / 1e7))
     return rows
 
 
-def _get_timeline_object_datetime(seg: dict) -> object | None:
+def _get_timeline_object_datetime(seg: dict) -> datetime | None:
     """Extract datetime from a timeline object segment."""
     if not seg:
         return None
@@ -163,14 +163,14 @@ def _get_timeline_object_datetime(seg: dict) -> object | None:
     return dt.to_pydatetime()
 
 
-def _matches_target_date(dt: object | None, target: object) -> bool:
+def _matches_target_date(dt: datetime | None, target: date) -> bool:
     """Check if datetime matches target date."""
     if dt is None:
         return False
     return dt.astimezone(timezone.utc).date() == target
 
 
-def _process_timeline_object(obj: dict, target: object) -> list:
+def _process_timeline_object(obj: dict, target: date) -> list:
     """Process a single timeline object and return points if in target date."""
     seg = obj.get("activitySegment") or obj.get("placeVisit")
     dt = _get_timeline_object_datetime(seg)
@@ -182,7 +182,7 @@ def _process_timeline_object(obj: dict, target: object) -> list:
     return rows
 
 
-def _extract_from_timeline_objects(data: dict, target: object) -> list:
+def _extract_from_timeline_objects(data: dict, target: date) -> list:
     """Extract points from timelineObjects (Semantic Location History)."""
     rows = []
     for obj in data.get("timelineObjects", []):
@@ -226,7 +226,7 @@ def _extract_points_from_segment_path(dt, seg: dict) -> list:
     return rows
 
 
-def _process_semantic_segment(seg: dict, target: object) -> list:
+def _process_semantic_segment(seg: dict, target: date) -> list:
     """Process a single semantic segment and return points if in target date."""
     dt = _get_semantic_segment_datetime(seg)
     if not _matches_target_date(dt, target):
@@ -234,7 +234,7 @@ def _process_semantic_segment(seg: dict, target: object) -> list:
     return _extract_points_from_segment_path(dt, seg)
 
 
-def _extract_from_semantic_segments(data: dict, target: object) -> list:
+def _extract_from_semantic_segments(data: dict, target: date) -> list:
     """Extract points from semanticSegments with string coordinates."""
     rows = []
     for seg in data.get("semanticSegments", []):
@@ -312,9 +312,9 @@ def _extract_dates_from_timeline_objects(data: dict) -> set:
         seg = obj.get("activitySegment") or obj.get("placeVisit")
         if not seg:
             continue
-        date = _get_segment_start_date(seg)
-        if date:
-            dates.add(date)
+        segment_date = _get_segment_start_date(seg)
+        if segment_date:
+            dates.add(segment_date)
     return dates
 
 
