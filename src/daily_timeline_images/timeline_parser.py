@@ -7,7 +7,6 @@ from typing import Dict, Set
 
 import pandas as pd
 
-from daily_timeline_images.parquet_cache import load_from_cache, save_to_cache
 from daily_timeline_images.sqlite_cache import (
     load_segments_for_date,
     populate_cache,
@@ -16,11 +15,10 @@ from daily_timeline_images.sqlite_cache import (
 
 
 class TimelineCache:
-    """Session-level cache for Timeline JSON data to avoid re-parsing large files.
+    """Session-level cache for Timeline JSON data.
 
-    Caches the full parsed JSON structure in memory for the lifetime of the session,
-    avoiding expensive re-parsing when processing multiple dates from the same file.
-    Also tries persistent disk cache (pickle) with hash validation.
+    Caches the full parsed JSON structure in memory for the lifetime of the session.
+    SQLite database provides persistent segment caching across sessions.
     """
 
     def __init__(self):
@@ -35,10 +33,9 @@ class TimelineCache:
 
         Priority:
         1. Session memory cache (fastest)
-        2. Disk pickle cache if source file hash matches
-        3. Parse raw JSON and save to disk cache
+        2. Parse raw JSON if not in memory
 
-        Sets cache_source to one of: "session", "disk", "parsed"
+        Sets cache_source to one of: "session", "parsed"
         """
         if self.file_path == json_path and self.data is not None:
             self.cache_source = "session"
@@ -46,19 +43,8 @@ class TimelineCache:
 
         self.file_path = json_path
 
-        cached_data = load_from_cache(json_path)
-        if cached_data is not None:
-            self.data = cached_data
-            self.date_index = None
-            self.cache_source = "disk"
-            assert self.data is not None
-            return self.data
-
         with open(json_path, "r", encoding="utf-8") as f:
             self.data = json.load(f)
-
-        if self.data is not None:
-            save_to_cache(json_path, self.data)
 
         self.date_index = None
         self.cache_source = "parsed"
@@ -216,7 +202,7 @@ def load_segments_for_day(
 
     step_start = time.time()
     data = _cache.load_file(json_path)
-    timing["cache_load"] = time.time() - step_start
+    timing["json_load"] = time.time() - step_start
     timing["cache_source"] = "json_parsed"
 
     step_start = time.time()
