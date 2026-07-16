@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Documentation Guidelines
+
+**All Claude-related documentation should be generated and stored in the `.claude/` directory only.** This keeps the main project directory clean and focused on user-facing documentation.
+
+Documentation in the main directory (ARCHITECTURE.md, README.md, LIBRARY_USAGE.md, etc.) is for end users and should reflect stable project state, not assistant guidance.
+
+Examples of Claude-related documentation that belong in `.claude/`:
+- Project context and history
+- Previous implementation decisions and rationale
+- Development guidelines for working with Claude
+- Session-specific memories and learnings
+- Internal analysis and planning documents
+
 ## Project Overview
 
 **timeline-2-images** generates daily route map images from Google Timeline JSON exports. It takes location history data and renders each day's route on an OpenStreetMap basemap as a JPG image, useful for visualizing movement patterns day by day.
