@@ -24,13 +24,14 @@ class MapRenderer:
     def __init__(
         self,
         config: RenderConfiguration | None = None,
-        tile_cache_dir: str = ".tile_cache",
+        tile_cache_dir: str | None = None,
     ):
         """Initialize map renderer.
 
         Args:
             config: RenderConfiguration object
             tile_cache_dir: Directory for tile caching
+                (uses ~/.cache/timeline-2-images if not provided)
         """
         self.config = config or RenderConfiguration()
         self.tile_cache = TileCacheManager(tile_cache_dir)

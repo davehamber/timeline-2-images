@@ -19,7 +19,7 @@ class TimelineApp:
         output_dir: str = "output",
         config: RenderConfiguration | None = None,
         cache_manager: CacheManager | None = None,
-        cache_dir: str = ".tile_cache",
+        cache_dir: str | None = None,
     ):
         """Initialize timeline app.
 
@@ -28,7 +28,7 @@ class TimelineApp:
             output_dir: Directory for output images
             config: RenderConfiguration (uses defaults if not provided)
             cache_manager: CacheManager for persistent segment caching
-            cache_dir: Directory for tile cache
+            cache_dir: Directory for tile cache (uses ~/.cache/timeline-2-images if not provided)
         """
         self.json_path = json_path
         self.output_dir = Path(output_dir)
