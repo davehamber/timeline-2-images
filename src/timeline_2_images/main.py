@@ -64,11 +64,13 @@ def main(
     print(f"Total time: {total_time:.2f}s")
 
     cache_info = app.renderer.get_cache_info()
-    if cache_info and cache_info.get("status") != "no_cache":
+    if cache_info:
         print()
-        print("Tile Cache Information:")
+        print("Cache Information:")
+        print(f"  Location: {cache_info.get('cache_dir', 'unknown')}")
         print(f"  Status: {cache_info.get('status', 'unknown')}")
-        print(f"  Cached tiles: {cache_info.get('total_cached_tiles', 0)}")
+        if cache_info.get("status") == "cached":
+            print(f"  Cached tiles: {cache_info.get('total_cached_tiles', 0)}")
         print(f"  Size: {cache_info.get('cache_size_mb', 0):.1f}MB")
 
 
