@@ -48,7 +48,7 @@ def main(
             segments = load_segments_for_day(str(timeline_path), date_str)
 
             if not segments:
-                print(f"✗ No segments found")
+                print("✗ No segments found")
                 continue
 
             output_file = output_path / f"timeline_{date_str}.jpg"
@@ -59,7 +59,7 @@ def main(
             success_count += 1
         except ValueError as e:
             print(f"✗ {e}")
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             print(f"✗ Error: {e}")
 
     print()

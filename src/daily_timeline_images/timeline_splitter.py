@@ -1,7 +1,6 @@
 """Split Timeline JSON by year into separate files."""
 
 import json
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any
 from collections import defaultdict

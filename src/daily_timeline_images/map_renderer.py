@@ -38,9 +38,8 @@ def simplify_waypoints(waypoints: list[tuple], tolerance_meters: float = 20) -> 
 
     if isinstance(simplified_line, LineString):
         return list(simplified_line.coords)
-    else:
-        # Handle edge case where simplification results in a point
-        return waypoints
+    # Handle edge case where simplification results in a point
+    return waypoints
 
 
 def render_segments(

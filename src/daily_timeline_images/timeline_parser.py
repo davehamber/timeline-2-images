@@ -1,9 +1,7 @@
 """Parse Google Timeline JSON exports and extract location data."""
 
 import json
-from datetime import datetime, timezone, timedelta
-from pathlib import Path
-from typing import Optional
+from datetime import datetime, timezone
 
 import pandas as pd
 
