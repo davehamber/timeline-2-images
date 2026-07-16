@@ -38,10 +38,17 @@ class TimelineProcessor:
         else:
             raw_segments = raw_segments_result
 
+        if not raw_segments:
+            return []
+
         segments = []
         for raw_segment in raw_segments:
-            segment = self._build_segment_from_raw(raw_segment)
-            segments.append(segment)
+            try:
+                segment = self._build_segment_from_raw(raw_segment)
+                segments.append(segment)
+            except Exception as exception:
+                print(f"Warning: Failed to build segment: {exception}")
+                continue
 
         return segments
 
