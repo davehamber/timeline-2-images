@@ -25,25 +25,25 @@ def _print_banner():
     reset = "\033[0m"
 
     banner = f"""
-{deep_purple}╔═════════════════════════════════════════════════════════════════╗
-║{reset}                                                                 {deep_purple}║
-║{reset}  {lilac}████████╗██╗███╗   ███╗███████╗██╗     ██╗███╗   ██╗███████╗{reset}   {deep_purple}║
-║{reset}  {lilac}╚══██╔══╝██║████╗ ████║██╔════╝██║     ██║████╗  ██║██╔════╝{reset}   {deep_purple}║
-║{reset}     {lilac}██║   ██║██╔████╔██║█████╗  ██║     ██║██╔██╗ ██║█████╗{reset}     {deep_purple}║
-║{reset}     {lilac}██║   ██║██║╚██╔╝██║██╔══╝  ██║     ██║██║╚██╗██║██╔══╝{reset}     {deep_purple}║
-║{reset}     {lilac}██║   ██║██║ ╚═╝ ██║███████╗███████╗██║██║ ╚████║███████╗{reset}   {deep_purple}║
-║{reset}     {lilac}╚═╝   ╚═╝╚═╝     ╚═╝╚══════╝╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝{reset}   {deep_purple}║
-║{reset}                                                                 {deep_purple}║
-║{reset}    {lilac}███████╗  ██╗███╗   ███╗ █████╗  ██████╗ ███████╗███████║{reset}    {deep_purple}║
-║{reset}    {lilac}╚════██║  ██║████╗ ████║██╔══██╗██╔════╝ ██╔════╝██╔════╝{reset}    {deep_purple}║
-║{reset}     {lilac}█████╔╝  ██║██╔████╔██║███████║██║  ███╗█████╗  ███████║{reset}    {deep_purple}║
-║{reset}    {lilac}██╔═══╝   ██║██║╚██╔╝██║██╔══██║██║   ██║██╔══╝  ╚════██║{reset}    {deep_purple}║
-║{reset}    {lilac}███████╗  ██║██║ ╚═╝ ██║██║  ██║╚██████╔╝███████╗███████║{reset}    {deep_purple}║
-║{reset}    {lilac}╚══════╝  ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝{reset}    {deep_purple}║
-║{reset}                                                                 {deep_purple}║
-║{reset}        Generate daily route maps from Google Timeline           {deep_purple}║
-║{reset}                                                                 {deep_purple}║
-╚═════════════════════════════════════════════════════════════════╝{reset}
+{deep_purple}╔═════════════════════════════════════════════════════════════════╗{reset}
+{deep_purple}║{reset}                                                                 {deep_purple}║{reset}
+{deep_purple}║{reset}  {lilac}████████{reset}{deep_purple}╗{reset}{lilac}██{reset}{deep_purple}╗{reset}{lilac}███{reset}{deep_purple}╗{reset}   {lilac}███{reset}{deep_purple}╗{reset}{lilac}███████{reset}{deep_purple}╗{reset}{lilac}██{reset}{deep_purple}╗{reset}     {lilac}██{reset}{deep_purple}╗{reset}{lilac}███{reset}{deep_purple}╗{reset}   {lilac}██{reset}{deep_purple}╗{reset}{lilac}███████{reset}{deep_purple}╗{reset}   {deep_purple}║{reset}
+{deep_purple}║{reset}  {lilac}╚══██{reset}{deep_purple}╔══╝{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}████{reset}{deep_purple}╗{reset} {lilac}████{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔════╝{reset}{lilac}██{reset}{deep_purple}║{reset}     {lilac}██{reset}{deep_purple}║{reset}{lilac}████{reset}{deep_purple}╗{reset}  {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔════╝{reset}   {deep_purple}║{reset}
+{deep_purple}║{reset}     {lilac}██{reset}{deep_purple}║{reset}   {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔████╔██║{reset}{lilac}█████{reset}{deep_purple}╗{reset}  {lilac}██{reset}{deep_purple}║{reset}     {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔██╗{reset} {lilac}██{reset}{deep_purple}║{reset}{lilac}█████{reset}{deep_purple}╗{reset}     {deep_purple}║{reset}
+{deep_purple}║{reset}     {lilac}██{reset}{deep_purple}║{reset}   {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}╚██{reset}{deep_purple}╔╝{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔══╝{reset}  {lilac}██{reset}{deep_purple}║{reset}     {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}╚██{reset}{deep_purple}╗{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔══╝{reset}     {deep_purple}║{reset}
+{deep_purple}║{reset}     {lilac}██{reset}{deep_purple}║{reset}   {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset} {lilac}╚═╝{reset} {lilac}██{reset}{deep_purple}║{reset}{lilac}███████{reset}{deep_purple}╗{reset}{lilac}███████{reset}{deep_purple}╗{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset} {lilac}╚████{reset}{deep_purple}║{reset}{lilac}███████{reset}{deep_purple}╗{reset}   {deep_purple}║{reset}
+{deep_purple}║{reset}     {lilac}╚═╝{reset}   {deep_purple}╚═╝╚═╝{reset}     {deep_purple}╚═╝{reset}{lilac}╚══════{reset}{deep_purple}╝╚══════╝{reset}{lilac}╚═╝╚═╝{reset}  {deep_purple}╚═══╝{reset}{lilac}╚══════{reset}{deep_purple}╝{reset}   {deep_purple}║{reset}
+{deep_purple}║{reset}                                                                 {deep_purple}║{reset}
+{deep_purple}║{reset}    {lilac}███████{reset}{deep_purple}╗{reset}  {lilac}██{reset}{deep_purple}╗{reset}{lilac}███{reset}{deep_purple}╗{reset}   {lilac}███{reset}{deep_purple}╗{reset} {lilac}█████{reset}{deep_purple}╗{reset}  {lilac}██████{reset}{deep_purple}╗{reset} {lilac}███████{reset}{deep_purple}╗{reset}{lilac}███████{reset}{deep_purple}║{reset}    {deep_purple}║{reset}
+{deep_purple}║{reset}    {lilac}╚════██{reset}{deep_purple}║{reset}  {lilac}██{reset}{deep_purple}║{reset}{lilac}████{reset}{deep_purple}╗{reset} {lilac}████{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔══{reset}{lilac}██{reset}{deep_purple}╗{reset}{lilac}██{reset}{deep_purple}╔════╝{reset} {lilac}██{reset}{deep_purple}╔════╝{reset}{lilac}██{reset}{deep_purple}╔════╝{reset}    {deep_purple}║{reset}
+{deep_purple}║{reset}     {lilac}█████{reset}{deep_purple}╔╝{reset}  {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔████╔██║{reset}{lilac}███████{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset}  {lilac}███{reset}{deep_purple}╗{reset}{lilac}█████{reset}{deep_purple}╗{reset}  {lilac}███████{reset}{deep_purple}║{reset}    {deep_purple}║{reset}
+{deep_purple}║{reset}    {lilac}██{reset}{deep_purple}╔═══╝{reset}   {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}╚██{reset}{deep_purple}╔╝{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔══{reset}{lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset}   {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}╔══╝{reset}  {lilac}╚════██{reset}{deep_purple}║{reset}    {deep_purple}║{reset}
+{deep_purple}║{reset}    {lilac}███████{reset}{deep_purple}╗{reset}  {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset} {lilac}╚═╝{reset} {lilac}██{reset}{deep_purple}║{reset}{lilac}██{reset}{deep_purple}║{reset}  {lilac}██{reset}{deep_purple}║{reset}{lilac}╚██████{reset}{deep_purple}╔╝{reset}{lilac}███████{reset}{deep_purple}╗{reset}{lilac}███████{reset}{deep_purple}║{reset}    {deep_purple}║{reset}
+{deep_purple}║{reset}    {lilac}╚══════{reset}{deep_purple}╝{reset}  {deep_purple}╚═╝╚═╝{reset}     {deep_purple}╚═╝{reset}{lilac}╚═╝{reset}  {lilac}╚═╝{reset} {deep_purple}╚═════╝{reset} {lilac}╚══════╝{reset}{deep_purple}╚══════╝{reset}    {deep_purple}║{reset}
+{deep_purple}║{reset}                                                                 {deep_purple}║{reset}
+{deep_purple}║{reset}        Generate daily route maps from Google Timeline           {deep_purple}║{reset}
+{deep_purple}║{reset}                                                                 {deep_purple}║{reset}
+{deep_purple}╚═════════════════════════════════════════════════════════════════╝{reset}
 """
     print(banner)
 
