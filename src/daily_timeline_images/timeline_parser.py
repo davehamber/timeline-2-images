@@ -8,6 +8,11 @@ from typing import Dict, Set
 import pandas as pd
 
 from daily_timeline_images.parquet_cache import load_from_cache, save_to_cache
+from daily_timeline_images.sqlite_cache import (
+    load_segments_for_date,
+    populate_cache,
+    get_cache_stats,
+)
 
 
 class TimelineCache:
@@ -171,7 +176,7 @@ def load_segments_for_day(
     Extract semantic segments for a given date with waypoints.
 
     Each segment represents a distinct journey/stay period.
-    Uses cached date index to avoid re-parsing all segment dates.
+    Uses SQLite cache indexed by date for fast lookups.
 
     Args:
         json_path: Path to Timeline.json file
@@ -181,12 +186,42 @@ def load_segments_for_day(
     Returns:
         List of segment dicts, or (segments, timing) tuple if profile=True
     """
-    timing = {}
+    timing: dict = {}
     start = time.time()
+
+    step_start = time.time()
+    cached_segments = load_segments_for_date(json_path, target_date)
+    timing["sqlite_lookup"] = time.time() - step_start
+
+    if cached_segments is not None:
+        timing["cache_source"] = "sqlite"
+        segments = []
+        step_start = time.time()
+        for seg in cached_segments:
+            waypoints = _parse_waypoints(seg.get("timelinePath", []))
+            if waypoints:
+                segments.append(
+                    {
+                        "startTime": seg.get("startTime"),
+                        "endTime": seg.get("endTime"),
+                        "waypoints": waypoints,
+                    }
+                )
+        timing["waypoint_extraction"] = time.time() - step_start
+        timing["total"] = time.time() - start
+
+        if profile:
+            return segments, timing
+        return segments
 
     step_start = time.time()
     data = _cache.load_file(json_path)
     timing["cache_load"] = time.time() - step_start
+    timing["cache_source"] = "json_parsed"
+
+    step_start = time.time()
+    populate_cache(json_path, data)
+    timing["cache_populate"] = time.time() - step_start
 
     step_start = time.time()
     segment_date_index = _cache.build_segment_date_index()
@@ -543,6 +578,11 @@ def get_date_range(
 def get_cache_source() -> str:
     """Return the source of the most recent cache load: 'session', 'disk', or 'parsed'."""
     return _cache.cache_source
+
+
+def get_sqlite_cache_stats(json_path: str) -> dict:
+    """Return SQLite segment cache statistics."""
+    return get_cache_stats(json_path)
 
 
 def clear_cache() -> None:
