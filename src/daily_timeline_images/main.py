@@ -71,7 +71,7 @@ def _process_date(
             if "load_timing" in locals() and load_timing:
                 print("        Load Segments:")
                 for key, value in sorted(load_timing.items()):
-                    if key != "total":
+                    if key not in ("total", "cache_source") and isinstance(value, (int, float)):
                         pct = (
                             (value / load_timing["total"] * 100) if load_timing["total"] > 0 else 0
                         )
