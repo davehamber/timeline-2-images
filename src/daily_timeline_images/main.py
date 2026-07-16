@@ -1,36 +1,45 @@
 """Entry point for rendering timeline images."""
 
 import sys
+import time
 from pathlib import Path
 
 from daily_timeline_images.timeline_parser import (
     load_segments_for_day,
     get_date_range,
 )
-from daily_timeline_images.map_renderer import render_segments  # RDP line simplification
+from daily_timeline_images.map_renderer import (
+    render_segments,
+    get_tile_cache_stats,
+)
 
 
-def _process_date(date_str: str, timeline_path: Path, output_path: Path, image_size: int) -> bool:
-    """Process a single date and render its map."""
+def _process_date(
+    date_str: str, timeline_path: Path, output_path: Path, image_size: int
+) -> tuple[bool, float]:
+    """Process a single date and render its map. Returns (success, elapsed_time)."""
+    start_time = time.time()
     try:
         print(f"Processing {date_str}...", end=" ", flush=True)
         segments = load_segments_for_day(str(timeline_path), date_str)
 
         if not segments:
             print("✗ No segments found")
-            return False
+            return False, time.time() - start_time
 
         output_file = output_path / f"timeline_{date_str}.jpg"
         render_segments(segments, str(output_file), image_size=image_size)
 
         total_points = sum(len(seg.get("waypoints", [])) for seg in segments)
-        print(f"✓ ({len(segments)} segments, {total_points} points) → {output_file.name}")
-        return True
+        elapsed = time.time() - start_time
+        output_name = output_file.name
+        print(f"✓ ({len(segments)} segments, {total_points} points) {elapsed:.2f}s → {output_name}")
+        return True, elapsed
     except ValueError as e:
         print(f"✗ {e}")
     except (OSError, RuntimeError) as e:
         print(f"✗ Error: {e}")
-    return False
+    return False, time.time() - start_time
 
 
 def main(
@@ -82,12 +91,42 @@ def main(
     print(f"Date range: {target_dates[0]} to {target_dates[-1]}")
     print()
 
-    success_count = sum(
+    start_time = time.time()
+    results = [
         _process_date(date_str, timeline_path, output_path, image_size) for date_str in target_dates
-    )
+    ]
+    success_count = sum(1 for success, _ in results if success)
+    total_time = time.time() - start_time
+    day_times = [elapsed for _, elapsed in results]
 
     print()
     print(f"Generated {success_count}/{len(target_dates)} map images in {output_path}")
+    print()
+    print("Performance Statistics:")
+    print(f"  Total time: {total_time:.2f}s")
+    print(f"  Average per day: {total_time / len(target_dates):.2f}s")
+    if day_times:
+        print(f"  Min/Max per day: {min(day_times):.2f}s / {max(day_times):.2f}s")
+
+    cache_stats = get_tile_cache_stats()
+    if cache_stats:
+        print()
+        print("Tile Cache Statistics:")
+        total_tiles = (
+            cache_stats["memory_cache_hits"]
+            + cache_stats["disk_cache_hits"]
+            + cache_stats["network_requests"]
+        )
+        print(f"  Total tile requests: {total_tiles}")
+        print(f"  Memory cache hits: {cache_stats['memory_cache_hits']}")
+        print(f"  Disk cache hits: {cache_stats['disk_cache_hits']}")
+        print(f"  Network requests: {cache_stats['network_requests']}")
+        print(f"  Cache hit rate: {cache_stats['cache_hit_rate']:.1f}%")
+        if cache_stats["disk_cache"]["tile_count"] > 0:
+            print(
+                f"  Disk cache: {cache_stats['disk_cache']['tile_count']} tiles "
+                f"({cache_stats['disk_cache']['total_size_mb']:.1f}MB)"
+            )
 
 
 if __name__ == "__main__":

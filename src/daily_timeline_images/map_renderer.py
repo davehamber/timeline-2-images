@@ -6,9 +6,29 @@ from shapely.geometry import Point, LineString
 import matplotlib.pyplot as plt
 import matplotlib
 import contextily as cx
+import requests_cache
+
+from daily_timeline_images.tile_cache import MemoryTileCache, DiskTileCache
 
 # Use non-interactive backend for headless rendering
 matplotlib.use("Agg")
+
+_memory_cache = MemoryTileCache()
+_disk_cache = DiskTileCache()
+
+# Track cache statistics for debugging
+_tile_requests: dict[str, int] = {}
+_debug_mode = False
+
+# Install requests-cache globally to cache all tile downloads
+# This will intercept all requests from contextily automatically
+requests_cache.install_cache(
+    ".tile_cache/osm-tiles",
+    backend="sqlite",
+    expire_after=None,  # Never expire - tiles don't change
+    match_headers=False,  # Don't vary cache by headers
+    stale_if_error=True,  # Use stale cache on error
+)
 
 
 def simplify_waypoints(waypoints: list[tuple], tolerance_meters: float = 20) -> list[tuple]:
@@ -168,7 +188,6 @@ def render_segments(
     ax.set_ylim(miny, maxy)
     ax.set_aspect("equal")
 
-    # OpenStreetMap basemap tiles
     osm_url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
     cx.add_basemap(ax, source=osm_url, zoom="auto")
 
@@ -180,3 +199,45 @@ def render_segments(
 
     fig.savefig(out_path, dpi=dpi, format="jpg", facecolor="white")
     plt.close(fig)
+
+
+def get_tile_cache_stats() -> dict:
+    """Get tile cache performance statistics."""
+    disk_size = _disk_cache.get_stats()
+    return {
+        "cache_backend": "requests-cache (SQLite)",
+        "cache_location": ".tile_cache",
+        "disk_cache": disk_size,
+        "note": "Tile caching is handled automatically by requests-cache",
+    }
+
+
+def clear_tile_caches() -> None:
+    """Clear all tile caches."""
+    global _tile_requests
+    _memory_cache.clear()
+    _disk_cache.clear()
+    _tile_requests.clear()
+    # Clear the requests-cache
+    try:
+        import requests_cache
+
+        requests_cache.clear()
+    except Exception:
+        pass
+
+
+def set_debug_mode(enabled: bool) -> None:
+    """Enable/disable debug mode for tile caching."""
+    global _debug_mode
+    _debug_mode = enabled
+    if enabled:
+        print("Debug mode enabled: tile caching via requests-cache in .tile_cache")
+
+
+def get_tile_request_summary() -> dict:
+    """Get summary of tile caching."""
+    return {
+        "cache_backend": "requests-cache (SQLite in .tile_cache directory)",
+        "note": "Tile caching is automatic - requests are cached across multiple days",
+    }
