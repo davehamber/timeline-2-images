@@ -88,6 +88,32 @@ uv run ruff check .      # Check for issues
 uv run ruff format .     # Auto-format code
 ```
 
+### Building Standalone Executable
+
+Build a single-file portable executable using Nuitka:
+
+```bash
+# Build the executable (requires C++ compiler)
+./build_executable.sh
+
+# The executable will be at: ./dist/main
+
+# Test the executable
+./dist/main Timeline.json --start-date 2026-01-01 --days 7
+./dist/main --clean-cache
+```
+
+**Requirements:**
+- Linux: `sudo apt-get install build-essential python3-dev`
+- macOS: `xcode-select --install`
+- Windows: Microsoft C++ Build Tools or Visual Studio Community
+
+**Benefits of Nuitka compilation:**
+- Single self-contained executable (no Python runtime needed)
+- Faster startup and execution
+- Can be distributed to users without Python installed
+- Cache stored in `~/.cache/timeline-2-images/` (XDG Base Directory)
+
 ## Project Structure
 
 ```
