@@ -109,6 +109,36 @@ def populate_cache(json_path: str, data: dict) -> None:
         print(f"Warning: Failed to populate segment cache: {e}")
 
 
+def _validate_cache(db_path: Path, hash_path: Path, json_path: str) -> bool:
+    """Check if cache exists and is valid. Returns False and cleans up if invalid."""
+    if not db_path.exists() or not hash_path.exists():
+        return False
+
+    try:
+        current_hash = _compute_file_hash(json_path)
+        cached_hash = hash_path.read_text().strip()
+        if current_hash != cached_hash:
+            db_path.unlink()
+            hash_path.unlink()
+            return False
+        return True
+    except Exception:
+        return False
+
+
+def _load_segment_rows_from_db(db_path: Path, target_date: str) -> list[str] | None:
+    """Load segment JSON rows from database. Returns None on error."""
+    try:
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+        cursor.execute("SELECT segment_json FROM segments WHERE date = ?", (target_date,))
+        rows = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        return rows
+    except Exception:
+        return None
+
+
 def load_segments_for_date(json_path: str, target_date: str) -> list[dict] | None:
     """Load segments for a specific date from SQLite cache.
 
@@ -117,36 +147,17 @@ def load_segments_for_date(json_path: str, target_date: str) -> list[dict] | Non
     db_path = get_cache_db_path(json_path)
     hash_path = get_hash_path(json_path)
 
-    if not db_path.exists() or not hash_path.exists():
+    if not _validate_cache(db_path, hash_path, json_path):
         return None
 
-    try:
-        current_hash = _compute_file_hash(json_path)
-        cached_hash = hash_path.read_text().strip()
-
-        if current_hash != cached_hash:
-            db_path.unlink()
-            hash_path.unlink()
-            return None
-
-        conn = sqlite3.connect(str(db_path))
-        cursor = conn.cursor()
-
-        cursor.execute("SELECT segment_json FROM segments WHERE date = ?", (target_date,))
-        rows = cursor.fetchall()
-        conn.close()
-
-        if not rows:
-            return []
-
-        segments = []
-        for (segment_json,) in rows:
-            seg = json.loads(segment_json)
-            segments.append(seg)
-
-        return segments
-    except Exception:
+    rows = _load_segment_rows_from_db(db_path, target_date)
+    if rows is None:
         return None
+
+    if not rows:
+        return []
+
+    return [json.loads(segment_json) for segment_json in rows]
 
 
 def get_cache_stats(json_path: str) -> dict:
@@ -180,33 +191,28 @@ def get_cache_stats(json_path: str) -> dict:
         return {"status": "error"}
 
 
+def _load_dates_from_db(db_path: Path) -> list[str] | None:
+    """Load all dates from database. Returns None on error."""
+    try:
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+        cursor.execute("SELECT DISTINCT date FROM segments ORDER BY date")
+        dates = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        return dates if dates else None
+    except Exception:
+        return None
+
+
 def get_cached_dates(json_path: str) -> list[str] | None:
     """Get all dates available in SQLite cache, or None if cache is invalid/missing."""
     db_path = get_cache_db_path(json_path)
     hash_path = get_hash_path(json_path)
 
-    if not db_path.exists() or not hash_path.exists():
+    if not _validate_cache(db_path, hash_path, json_path):
         return None
 
-    try:
-        current_hash = _compute_file_hash(json_path)
-        cached_hash = hash_path.read_text().strip()
-
-        if current_hash != cached_hash:
-            db_path.unlink()
-            hash_path.unlink()
-            return None
-
-        conn = sqlite3.connect(str(db_path))
-        cursor = conn.cursor()
-
-        cursor.execute("SELECT DISTINCT date FROM segments ORDER BY date")
-        dates = [row[0] for row in cursor.fetchall()]
-        conn.close()
-
-        return dates if dates else None
-    except Exception:
-        return None
+    return _load_dates_from_db(db_path)
 
 
 def clear_cache(json_path: str) -> None:

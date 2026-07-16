@@ -62,6 +62,41 @@ def split_timeline_by_year(json_path: str, output_dir: str = "timelines") -> Dic
     return year_to_path
 
 
+def _load_yearly_file(year_file: Path) -> Dict[str, Any]:
+    """Load a yearly timeline file."""
+    with open(year_file, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _merge_year_file_data(merged_data: Dict[str, Any], year_data: Dict[str, Any]):
+    """Merge a single year's data into merged_data."""
+    segments = merged_data.get("semanticSegments", [])
+    if isinstance(segments, list):
+        segments.extend(year_data.get("semanticSegments", []))
+
+    if year_data.get("userLocationProfile") and not merged_data.get("userLocationProfile"):
+        merged_data["userLocationProfile"] = year_data["userLocationProfile"]
+
+
+def _sort_segments_by_starttime(merged_data: Dict[str, Any]):
+    """Sort segments by startTime in descending order."""
+    segments = merged_data.get("semanticSegments", [])
+    if isinstance(segments, list):
+        segments.sort(
+            key=lambda x: x.get("startTime", "") if isinstance(x, dict) else "", reverse=True
+        )
+
+
+def _write_merged_file(output_file: Path, merged_data: Dict[str, Any]):
+    """Write merged data to file and print summary."""
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(merged_data, f)
+
+    file_size = output_file.stat().st_size / 1024 / 1024
+    print(f"Merged file: {output_file.name} ({file_size:.1f}MB)")
+    print(f"Total segments: {len(merged_data.get('semanticSegments', []))}")
+
+
 def merge_timelines(timeline_dir: str, output_path: str = "Timeline_merged.json"):
     """
     Merge yearly timeline files back into a single file.
@@ -79,34 +114,13 @@ def merge_timelines(timeline_dir: str, output_path: str = "Timeline_merged.json"
         "userLocationProfile": {},
     }
 
-    # Read all yearly files and merge
     for year_file in sorted(timeline_path.glob("timeline_*.json")):
         print(f"Reading {year_file.name}...", end=" ", flush=True)
-        with open(year_file, "r", encoding="utf-8") as f:
-            data: Dict[str, Any] = json.load(f)
-
-        semantic_segments: list[Any] = merged_data["semanticSegments"]
-        if not isinstance(semantic_segments, list):
-            semantic_segments = []
-        semantic_segments.extend(data.get("semanticSegments", []))
-
-        # Use the first non-empty userLocationProfile found
-        if data.get("userLocationProfile") and not merged_data["userLocationProfile"]:
-            merged_data["userLocationProfile"] = data["userLocationProfile"]
-
+        data = _load_yearly_file(year_file)
+        _merge_year_file_data(merged_data, data)
         print(f"✓ ({len(data.get('semanticSegments', []))} segments)")
 
-    # Sort by startTime
-    semantic_segments = merged_data["semanticSegments"]
-    if isinstance(semantic_segments, list):
-        semantic_segments.sort(
-            key=lambda x: x.get("startTime", "") if isinstance(x, dict) else "", reverse=True
-        )
+    _sort_segments_by_starttime(merged_data)
 
     print(f"\nWriting merged timeline to {output_path}...")
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(merged_data, f)
-
-    file_size = output_file.stat().st_size / 1024 / 1024
-    print(f"Merged file: {output_file.name} ({file_size:.1f}MB)")
-    print(f"Total segments: {len(merged_data['semanticSegments'])}")
+    _write_merged_file(output_file, merged_data)
