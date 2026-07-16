@@ -19,16 +19,30 @@ _disk_cache = DiskTileCache()
 # Track cache statistics for debugging
 _tile_requests: dict[str, int] = {}
 _debug_mode = False
+_cache_session = None
 
 # Install requests-cache globally to cache all tile downloads
 # This will intercept all requests from contextily automatically
-requests_cache.install_cache(
+_cache_session = requests_cache.install_cache(
     ".tile_cache/osm-tiles",
     backend="sqlite",
     expire_after=None,  # Never expire - tiles don't change
     match_headers=False,  # Don't vary cache by headers
     stale_if_error=True,  # Use stale cache on error
 )
+
+
+def _get_cache_stats() -> dict:
+    """Get current cache statistics."""
+    try:
+        if _cache_session and hasattr(_cache_session.cache, "__getstate__"):
+            # Try to get SQLite cache info
+            return {
+                "cache_db_path": ".tile_cache/osm-tiles.sqlite",
+            }
+    except Exception:
+        pass
+    return {}
 
 
 def simplify_waypoints(waypoints: list[tuple], tolerance_meters: float = 20) -> list[tuple]:
@@ -147,6 +161,31 @@ def _draw_markers(ax, all_simplified_waypoints: list):
             end_point = Point(all_simplified_waypoints[-1][1], all_simplified_waypoints[-1][0])
             gdf_end = gpd.GeoDataFrame(geometry=[end_point], crs="EPSG:4326").to_crs(epsg=3857)
             gdf_end.plot(ax=ax, color="#ea4335", markersize=25, zorder=101, alpha=0.95)
+
+
+def get_render_cache_info() -> dict:
+    """Get cache hit information for the most recent render."""
+    try:
+        from pathlib import Path
+        import sqlite3
+
+        cache_db = Path(".tile_cache/osm-tiles.sqlite")
+        if not cache_db.exists():
+            return {"status": "no_cache"}
+
+        conn = sqlite3.connect(str(cache_db))
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM responses")
+        count = cursor.fetchone()[0]
+        conn.close()
+
+        return {
+            "status": "cached",
+            "total_cached_tiles": count,
+            "cache_enabled": True,
+        }
+    except Exception:
+        return {"status": "unknown"}
 
 
 def render_segments(
