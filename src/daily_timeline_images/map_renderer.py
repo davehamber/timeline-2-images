@@ -1,6 +1,7 @@
 """Render Google Timeline routes on map images."""
 
 import math
+import time
 import geopandas as gpd
 from shapely.geometry import Point, LineString
 import matplotlib.pyplot as plt
@@ -194,7 +195,8 @@ def render_segments(
     image_size: int = 500,
     dpi: int = 150,
     min_area_sq_km: float = 5,
-):
+    profile: bool = False,
+) -> dict:
     """
     Render timeline segments on an OSM basemap using RDP line simplification.
 
@@ -206,38 +208,58 @@ def render_segments(
         image_size: Size of output image (width and height in pixels)
         dpi: DPI for the image
         min_area_sq_km: Minimum area in sq km to display
+        profile: If True, return timing breakdown (default False)
+
+    Returns:
+        Dict with timing breakdown if profile=True, empty dict otherwise
     """
+    timing = {}
+    start = time.time()
+
     if not segments:
         raise ValueError("No segments provided to render")
 
+    step_start = time.time()
     all_points, all_simplified_waypoints = _collect_and_simplify_waypoints(segments)
+    timing["simplify_waypoints"] = time.time() - step_start
 
     if not all_points:
         raise ValueError("No waypoints found in segments")
 
+    step_start = time.time()
     minx, miny, maxx, maxy = _calculate_bounds(all_points)
     minx, miny, maxx, maxy, _, _ = _calculate_padded_bounds(minx, miny, maxx, maxy)
     minx, miny, maxx, maxy = _enforce_minimum_area((minx, miny, maxx, maxy), min_area_sq_km)
+    timing["bounds_calculation"] = time.time() - step_start
 
+    step_start = time.time()
     fig_size_inches = image_size / dpi
     fig, ax = plt.subplots(figsize=(fig_size_inches, fig_size_inches), dpi=dpi)
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0, hspace=0, wspace=0)
-
     ax.set_xlim(minx, maxx)
     ax.set_ylim(miny, maxy)
     ax.set_aspect("equal")
+    timing["figure_setup"] = time.time() - step_start
 
+    step_start = time.time()
     osm_url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
     cx.add_basemap(ax, source=osm_url, zoom="auto")
+    timing["basemap"] = time.time() - step_start
 
+    step_start = time.time()
     _draw_journey_line(ax, all_simplified_waypoints)
     _draw_markers(ax, all_simplified_waypoints)
+    timing["draw_features"] = time.time() - step_start
 
+    step_start = time.time()
     ax.set_axis_off()
     plt.tight_layout(pad=0)
-
     fig.savefig(out_path, dpi=dpi, format="jpg", facecolor="white")
     plt.close(fig)
+    timing["save_and_close"] = time.time() - step_start
+
+    timing["total"] = time.time() - start
+    return timing if profile else {}
 
 
 def get_tile_cache_stats() -> dict:
