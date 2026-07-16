@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from daily_timeline_images.timeline_splitter import split_timeline_by_year, merge_timelines
+from timeline_2_images.timeline_splitter import split_timeline_by_year, merge_timelines
 
 
 @pytest.fixture

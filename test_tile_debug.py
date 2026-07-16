@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Test script to check tile caching between consecutive days."""
 
-from daily_timeline_images.timeline_parser import load_segments_for_day, get_last_n_days_with_data
-from daily_timeline_images.map_renderer import (
+from timeline_2_images.timeline_parser import load_segments_for_day, get_last_n_days_with_data
+from timeline_2_images.map_renderer import (
     render_segments,
     set_debug_mode,
     get_tile_cache_stats,

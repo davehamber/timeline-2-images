@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**daily-timeline-images** generates daily route map images from Google Timeline JSON exports. It takes location history data and renders each day's route on an OpenStreetMap basemap as a JPG image, useful for visualizing movement patterns day by day.
+**timeline-2-images** generates daily route map images from Google Timeline JSON exports. It takes location history data and renders each day's route on an OpenStreetMap basemap as a JPG image, useful for visualizing movement patterns day by day.
 
 The project uses Python 3.13+ and `uv` as the package manager.
 
@@ -27,24 +27,24 @@ uv add --dev <package_name>
 #### Generate Daily Maps
 ```bash
 # Generate maps for last 14 days (default)
-uv run python -m daily_timeline_images.main Timeline.json
+uv run python -m timeline_2_images.main Timeline.json
 
 # Custom number of days and output directory
-uv run python -m daily_timeline_images.main Timeline.json --days 30 --output-dir my_maps
+uv run python -m timeline_2_images.main Timeline.json --days 30 --output-dir my_maps
 
 # Custom image size (default 500 pixels)
-uv run python -m daily_timeline_images.main Timeline.json --image-size 800
+uv run python -m timeline_2_images.main Timeline.json --image-size 800
 
 # Flexible date range parameters:
 
 # Specific date range (ignores --days)
-uv run python -m daily_timeline_images.main Timeline.json --start-date 2026-01-01 --end-date 2026-01-31
+uv run python -m timeline_2_images.main Timeline.json --start-date 2026-01-01 --end-date 2026-01-31
 
 # Start date plus N days
-uv run python -m daily_timeline_images.main Timeline.json --start-date 2026-01-01 --days 10
+uv run python -m timeline_2_images.main Timeline.json --start-date 2026-01-01 --days 10
 
 # End date (N days before, inclusive)
-uv run python -m daily_timeline_images.main Timeline.json --end-date 2026-03-31 --days 10
+uv run python -m timeline_2_images.main Timeline.json --end-date 2026-03-31 --days 10
 ```
 
 Date range parameter precedence:
@@ -58,13 +58,13 @@ For large Timeline.json files, split into yearly files for easier processing:
 
 ```bash
 # Split Timeline.json into yearly files
-uv run python -m daily_timeline_images.split_timeline split Timeline.json --output-dir timelines
+uv run python -m timeline_2_images.split_timeline split Timeline.json --output-dir timelines
 
 # Merge yearly files back into one
-uv run python -m daily_timeline_images.split_timeline merge timelines --output Timeline_merged.json
+uv run python -m timeline_2_images.split_timeline merge timelines --output Timeline_merged.json
 
 # Generate maps from a specific year
-uv run python -m daily_timeline_images.main timelines/timeline_2025.json --days 365
+uv run python -m timeline_2_images.main timelines/timeline_2025.json --days 365
 ```
 
 ### Testing
@@ -91,8 +91,8 @@ uv run ruff format .     # Auto-format code
 ## Project Structure
 
 ```
-daily-timeline-images/
-├── src/daily_timeline_images/
+timeline-2-images/
+├── src/timeline_2_images/
 │   ├── __init__.py           # Package definition
 │   ├── main.py               # CLI entry point
 │   ├── timeline_parser.py    # JSON parsing and date extraction

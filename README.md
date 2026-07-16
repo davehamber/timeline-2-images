@@ -1,4 +1,4 @@
-# Daily Timeline Images
+# Timeline 2 Images
 
 Generate daily route map images from Google Timeline JSON exports. Visualize where you've been each day with beautiful map visualizations.
 
@@ -30,7 +30,7 @@ uv sync
 Export your Google Timeline data from your phone as JSON, then:
 
 ```bash
-uv run python -m daily_timeline_images.main path/to/Timeline.json
+uv run python -m timeline_2_images.main path/to/Timeline.json
 ```
 
 This generates JPG images in the `output/` directory for the last 14 days with location data.
@@ -39,13 +39,13 @@ This generates JPG images in the `output/` directory for the last 14 days with l
 
 ```bash
 # Generate maps for last 30 days
-uv run python -m daily_timeline_images.main Timeline.json --days 30
+uv run python -m timeline_2_images.main Timeline.json --days 30
 
 # Save to a custom directory
-uv run python -m daily_timeline_images.main Timeline.json --output-dir my_maps
+uv run python -m timeline_2_images.main Timeline.json --output-dir my_maps
 
 # Change image resolution (pixels)
-uv run python -m daily_timeline_images.main Timeline.json --image-size 1500
+uv run python -m timeline_2_images.main Timeline.json --image-size 1500
 ```
 
 ### Working with Large Timelines
@@ -54,13 +54,13 @@ If your Timeline.json is very large (60MB+), split it by year for easier process
 
 ```bash
 # Split into yearly files
-uv run python -m daily_timeline_images.split_timeline split Timeline.json --output-dir timelines
+uv run python -m timeline_2_images.split_timeline split Timeline.json --output-dir timelines
 
 # Generate maps from a specific year
-uv run python -m daily_timeline_images.main timelines/timeline_2025.json --days 365
+uv run python -m timeline_2_images.main timelines/timeline_2025.json --days 365
 
 # Merge yearly files back into one
-uv run python -m daily_timeline_images.split_timeline merge timelines --output Timeline_merged.json
+uv run python -m timeline_2_images.split_timeline merge timelines --output Timeline_merged.json
 ```
 
 ## How It Works

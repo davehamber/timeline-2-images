@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document shows the function relationships and data flow through the daily-timeline-images application.
+This document shows the function relationships and data flow through the timeline-2-images application.
 
 ## Main Data Processing Flow
 

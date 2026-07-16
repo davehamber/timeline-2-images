@@ -24,24 +24,24 @@ Your Timeline.json has been split into 11 yearly files for easier processing.
 ### Generate maps for a specific year
 ```bash
 # 2025 daily maps (all days with data)
-uv run python -m daily_timeline_images.main timelines/timeline_2025.json --days 365
+uv run python -m timeline_2_images.main timelines/timeline_2025.json --days 365
 
 # 2024 daily maps
-uv run python -m daily_timeline_images.main timelines/timeline_2024.json --days 365
+uv run python -m timeline_2_images.main timelines/timeline_2024.json --days 365
 ```
 
 ### Analyze specific years
 ```bash
 # Process last 30 days of 2025 data
-uv run python -m daily_timeline_images.main timelines/timeline_2025.json --days 30
+uv run python -m timeline_2_images.main timelines/timeline_2025.json --days 30
 
 # Generate high-res images for 2023
-uv run python -m daily_timeline_images.main timelines/timeline_2023.json --days 365 --image-size 2000
+uv run python -m timeline_2_images.main timelines/timeline_2023.json --days 365 --image-size 2000
 ```
 
 ### Merge back to original format
 ```bash
-uv run python -m daily_timeline_images.split_timeline merge timelines --output Timeline_restored.json
+uv run python -m timeline_2_images.split_timeline merge timelines --output Timeline_restored.json
 ```
 
 ## Benefits of Splitting

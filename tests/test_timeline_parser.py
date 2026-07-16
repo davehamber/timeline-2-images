@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import pandas as pd
 
-from daily_timeline_images.timeline_parser import (
+from timeline_2_images.timeline_parser import (
     load_points_for_day,
     get_last_n_days_with_data,
     get_date_range,
@@ -133,7 +133,7 @@ def test_load_segments_for_day():
         temp_path = f.name
 
     try:
-        from daily_timeline_images.timeline_parser import load_segments_for_day
+        from timeline_2_images.timeline_parser import load_segments_for_day
 
         segments = load_segments_for_day(temp_path, "2021-07-01")
         assert len(segments) == 1
@@ -201,7 +201,7 @@ def test_get_date_range_end_with_days(sample_timeline_flat):
 
 def test_caching_behavior(sample_timeline_flat):
     """Test that file is cached and not re-parsed on subsequent calls."""
-    from daily_timeline_images.timeline_parser import _cache
+    from timeline_2_images.timeline_parser import _cache
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(sample_timeline_flat, f)
