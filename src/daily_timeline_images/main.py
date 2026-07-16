@@ -3,6 +3,7 @@
 import sys
 import time
 from pathlib import Path
+from typing import cast
 
 from daily_timeline_images.timeline_parser import (
     load_segments_for_day,
@@ -27,7 +28,12 @@ def _process_date(
     start_time = time.time()
     try:
         print(f"Processing {date_str}...", end=" ", flush=True)
-        segments = load_segments_for_day(str(timeline_path), date_str)
+        load_timing: dict = {}
+        if profile:
+            result = load_segments_for_day(str(timeline_path), date_str, profile=True)
+            segments, load_timing = cast(tuple[list[dict], dict], result)
+        else:
+            segments = cast(list[dict], load_segments_for_day(str(timeline_path), date_str))
 
         if not segments:
             print("✗ No segments found")
@@ -60,14 +66,28 @@ def _process_date(
         )
         print(f"✓ {details} → {output_name}")
 
-        if profile and render_timing:
+        if profile:
             print("      Timing breakdown:")
-            for key, value in sorted(render_timing.items()):
-                if key != "total":
-                    pct = (
-                        (value / render_timing["total"] * 100) if render_timing["total"] > 0 else 0
-                    )
-                    print(f"        {key:.<25} {value:6.2f}s ({pct:5.1f}%)")
+            if "load_timing" in locals() and load_timing:
+                print("        Load Segments:")
+                for key, value in sorted(load_timing.items()):
+                    if key != "total":
+                        pct = (
+                            (value / load_timing["total"] * 100) if load_timing["total"] > 0 else 0
+                        )
+                        print(f"          {key:.<20} {value:6.2f}s ({pct:5.1f}%)")
+                print(f"          {('total'):.<20} {load_timing.get('total', 0):6.2f}s")
+            print("        Render Segments:")
+            if render_timing:
+                for key, value in sorted(render_timing.items()):
+                    if key != "total":
+                        pct = (
+                            (value / render_timing["total"] * 100)
+                            if render_timing["total"] > 0
+                            else 0
+                        )
+                        print(f"          {key:.<20} {value:6.2f}s ({pct:5.1f}%)")
+                print(f"          {('total'):.<20} {render_timing.get('total', 0):6.2f}s")
 
         return True, elapsed, cache_info
     except ValueError as e:

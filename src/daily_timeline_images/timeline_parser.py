@@ -1,6 +1,7 @@
 """Parse Google Timeline JSON exports and extract location data."""
 
 import json
+import time
 from datetime import datetime, date, timezone, timedelta
 from typing import Dict, Set
 
@@ -129,7 +130,9 @@ def _parse_segment_datetime(start_str: str, target: date) -> str | None:
     return start_str
 
 
-def load_segments_for_day(json_path: str, target_date: str) -> list[dict]:
+def load_segments_for_day(
+    json_path: str, target_date: str, profile: bool = False
+) -> list[dict] | tuple[list[dict], dict]:
     """
     Extract semantic segments for a given date with waypoints.
 
@@ -138,16 +141,27 @@ def load_segments_for_day(json_path: str, target_date: str) -> list[dict]:
     Args:
         json_path: Path to Timeline.json file
         target_date: Date in YYYY-MM-DD format
+        profile: If True, return (segments, timing_dict) instead of just segments
 
     Returns:
-        List of segment dicts with keys: startTime, endTime, waypoints (list of (lat, lon, time))
+        List of segment dicts, or (segments, timing) tuple if profile=True
     """
+    timing = {}
+    start = time.time()
+
+    step_start = time.time()
     data = _cache.load_file(json_path)
+    timing["cache_load"] = time.time() - step_start
 
     segments = []
     target = datetime.strptime(target_date, "%Y-%m-%d").date()
 
-    for seg in data.get("semanticSegments", []):
+    step_start = time.time()
+    semantic_segs = data.get("semanticSegments", [])
+    timing["get_segments_list"] = time.time() - step_start
+
+    step_start = time.time()
+    for seg in semantic_segs:
         start_str = seg.get("startTime")
         if not start_str:
             continue
@@ -165,7 +179,11 @@ def load_segments_for_day(json_path: str, target_date: str) -> list[dict]:
                     "waypoints": waypoints,
                 }
             )
+    timing["segment_parsing"] = time.time() - step_start
+    timing["total"] = time.time() - start
 
+    if profile:
+        return segments, timing
     return segments
 
 
