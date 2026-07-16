@@ -14,7 +14,9 @@ uv run nuitka \
   --remove-output \
   src/timeline_2_images/main.py
 
-if [ -f ./dist/main ]; then
+if [ -f ./dist/main.bin ]; then
+    mv ./dist/main.bin ./dist/main
+    chmod +x ./dist/main
     echo "✓ Executable built successfully at ./dist/main"
     echo ""
     echo "Usage examples:"
