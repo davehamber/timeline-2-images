@@ -558,6 +558,19 @@ def _filter_dates_in_range(available_dates: list[date], start: date, end: date) 
     return [d.strftime("%Y-%m-%d") for d in result]
 
 
+def get_all_available_dates(json_path: str) -> list[str]:
+    """
+    Get ALL dates with data in timeline (no filtering).
+
+    Returns:
+        List of all YYYY-MM-DD dates with data, sorted chronologically
+    """
+    available_dates = _get_available_dates(json_path)
+    if not available_dates:
+        return []
+    return [d.strftime("%Y-%m-%d") for d in sorted(available_dates)]
+
+
 def get_date_range(
     json_path: str,
     start_date: str | None = None,

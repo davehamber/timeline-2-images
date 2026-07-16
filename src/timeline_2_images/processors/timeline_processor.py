@@ -67,9 +67,9 @@ class TimelineProcessor:
         """Get all dates with data in the timeline.
 
         Returns:
-            List of YYYY-MM-DD date strings
+            List of all YYYY-MM-DD date strings (not filtered by days)
         """
-        return parser.get_date_range(self.json_path)
+        return parser.get_all_available_dates(self.json_path)
 
     def get_date_range(self, query: DateRangeQuery) -> list[str]:
         """Get dates matching query parameters.
