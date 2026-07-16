@@ -17,6 +17,27 @@ from timeline_2_images.map_renderer import (
 )
 
 
+def _print_banner():
+    """Display ASCII art banner with block characters."""
+    banner = """
+╔═════════════════════════════════════════════════════════════════╗
+║                                                                 ║
+║  ████████╗██╗███╗   ███╗███████╗██╗     ██╗███╗   ██╗███████╗  ║
+║  ╚══██╔══╝██║████╗ ████║██╔════╝██║     ██║████╗  ██║██╔════╝  ║
+║     ██║   ██║██╔████╔██║█████╗  ██║     ██║██╔██╗ ██║█████╗    ║
+║     ██║   ██║██║╚██╔╝██║██╔══╝  ██║     ██║██║╚██╗██║██╔══╝    ║
+║     ██║   ██║██║ ╚═╝ ██║███████╗███████╗██║██║ ╚████║███████╗  ║
+║     ╚═╝   ╚═╝╚═╝     ╚═╝╚══════╝╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝  ║
+║                                                                 ║
+║                    2 IMAGES                                    ║
+║           Generate daily route maps from                       ║
+║           Google Timeline location history                     ║
+║                                                                 ║
+╚═════════════════════════════════════════════════════════════════╝
+"""
+    print(banner)
+
+
 def _process_date(
     date_str: str,
     timeline_path: Path,
@@ -118,6 +139,7 @@ def main(
         end_date: End date in YYYY-MM-DD format
         profile: If True, show detailed timing breakdown per operation
     """
+    _print_banner()
     timeline_path = Path(timeline_json)
     if not timeline_path.exists():
         print(f"Error: Timeline file not found: {timeline_json}")
