@@ -20,6 +20,9 @@ dependencies = [
     "pyarrow>=14.0.0",
 ]
 
+[project.scripts]
+timeline-2-images = "timeline_2_images.main:cli"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
