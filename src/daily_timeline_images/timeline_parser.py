@@ -6,12 +6,15 @@ from typing import Dict, Set
 
 import pandas as pd
 
+from daily_timeline_images.parquet_cache import load_from_cache, save_to_cache
+
 
 class TimelineCache:
     """Session-level cache for Timeline JSON data to avoid re-parsing large files.
 
     Caches the full parsed JSON structure in memory for the lifetime of the session,
     avoiding expensive re-parsing when processing multiple dates from the same file.
+    Also tries persistent disk cache (parquet) with hash validation.
     """
 
     def __init__(self):
@@ -20,13 +23,31 @@ class TimelineCache:
         self.date_index: Dict[date, bool] | None = None
 
     def load_file(self, json_path: str) -> dict:
-        """Load and cache Timeline JSON file. Returns cached data if already loaded."""
+        """Load and cache Timeline JSON file. Returns cached data if already loaded.
+
+        Priority:
+        1. Session memory cache (fastest)
+        2. Disk parquet cache if source file hash matches
+        3. Parse raw JSON and save to disk cache
+        """
         if self.file_path == json_path and self.data is not None:
             return self.data
 
         self.file_path = json_path
+
+        cached_data = load_from_cache(json_path)
+        if cached_data is not None:
+            self.data = cached_data
+            self.date_index = None
+            assert self.data is not None
+            return self.data
+
         with open(json_path, "r", encoding="utf-8") as f:
             self.data = json.load(f)
+
+        if self.data is not None:
+            save_to_cache(json_path, self.data)
+
         self.date_index = None
         assert self.data is not None
         return self.data
