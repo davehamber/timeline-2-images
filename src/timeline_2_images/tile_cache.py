@@ -141,38 +141,38 @@ class CachedTileProvider:
 
 _memory_cache = MemoryTileCache()
 _disk_cache = DiskTileCache()
-_tile_provider: CachedTileProvider | None = None
+TILE_PROVIDER: CachedTileProvider | None = None
 
 
-def get_cached_tile_provider(
+def get_cachedTILE_PROVIDER(
     url: str = "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
 ) -> CachedTileProvider:
     """Get or create cached tile provider."""
-    global _tile_provider
-    if _tile_provider is None:
-        _tile_provider = CachedTileProvider(url, _memory_cache, _disk_cache)
-    return _tile_provider
+    global TILE_PROVIDER
+    if TILE_PROVIDER is None:
+        TILE_PROVIDER = CachedTileProvider(url, _memory_cache, _disk_cache)
+    return TILE_PROVIDER
 
 
 def get_osm_tile_url(x: int, y: int, z: int) -> bytes:
     """Get OSM tile with caching."""
-    provider = get_cached_tile_provider()
+    provider = get_cachedTILE_PROVIDER()
     return provider.get_tile(x, y, z)
 
 
 def get_cache_stats() -> dict:
     """Get overall cache statistics."""
-    if _tile_provider is None:
+    if TILE_PROVIDER is None:
         return {}
     return {
-        "tile_provider_stats": _tile_provider.get_stats(),
+        "tile_provider_stats": TILE_PROVIDER.get_stats(),
         "disk_cache_stats": _disk_cache.get_stats(),
     }
 
 
 def clear_caches() -> None:
     """Clear all caches."""
-    global _tile_provider
+    global TILE_PROVIDER
     _memory_cache.clear()
     _disk_cache.clear()
-    _tile_provider = None
+    TILE_PROVIDER = None

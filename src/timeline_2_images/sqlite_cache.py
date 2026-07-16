@@ -26,13 +26,13 @@ def _get_cache_dir() -> Path:
     return cache_dir
 
 
-def get_cache_db_path(json_path: str) -> Path:
+def get_cache_db_path(_: str) -> Path:
     """Get SQLite database path for a given JSON file."""
     cache_dir = _get_cache_dir()
     return cache_dir / "segments.db"
 
 
-def get_hash_path(json_path: str) -> Path:
+def get_hash_path(_: str) -> Path:
     """Get hash metadata file path for a given JSON file."""
     cache_dir = _get_cache_dir()
     return cache_dir / "segments.hash"
@@ -105,7 +105,7 @@ def populate_cache(json_path: str, data: dict) -> None:
 
         file_hash = _compute_file_hash(json_path)
         hash_path.write_text(file_hash)
-    except Exception as e:
+    except (OSError, ValueError, sqlite3.Error) as e:
         print(f"Warning: Failed to populate segment cache: {e}")
 
 
@@ -122,7 +122,7 @@ def _validate_cache(db_path: Path, hash_path: Path, json_path: str) -> bool:
             hash_path.unlink()
             return False
         return True
-    except Exception:
+    except (OSError, sqlite3.Error):
         return False
 
 
@@ -238,4 +238,4 @@ def clean_all_cache() -> None:
 
             shutil.rmtree(cache_dir)
     except OSError as e:
-        raise RuntimeError(f"Failed to clean cache: {e}")
+        raise RuntimeError(f"Failed to clean cache: {e}") from e
