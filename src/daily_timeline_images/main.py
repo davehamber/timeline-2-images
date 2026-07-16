@@ -11,13 +11,14 @@ from daily_timeline_images.timeline_parser import (
 from daily_timeline_images.map_renderer import (
     render_segments,
     get_tile_cache_stats,
+    get_render_cache_info,
 )
 
 
 def _process_date(
     date_str: str, timeline_path: Path, output_path: Path, image_size: int
-) -> tuple[bool, float]:
-    """Process a single date and render its map. Returns (success, elapsed_time)."""
+) -> tuple[bool, float, dict]:
+    """Process a single date and render its map. Returns (success, elapsed_time, cache_info)."""
     start_time = time.time()
     try:
         print(f"Processing {date_str}...", end=" ", flush=True)
@@ -25,21 +26,38 @@ def _process_date(
 
         if not segments:
             print("✗ No segments found")
-            return False, time.time() - start_time
+            return False, time.time() - start_time, {}
 
         output_file = output_path / f"timeline_{date_str}.jpg"
+        cache_info_before = get_render_cache_info()
         render_segments(segments, str(output_file), image_size=image_size)
+        cache_info_after = get_render_cache_info()
 
         total_points = sum(len(seg.get("waypoints", [])) for seg in segments)
         elapsed = time.time() - start_time
         output_name = output_file.name
-        print(f"✓ ({len(segments)} segments, {total_points} points) {elapsed:.2f}s → {output_name}")
-        return True, elapsed
+
+        cache_info = {
+            "cache_status": cache_info_after.get("status", "unknown"),
+            "total_cached": cache_info_after.get("total_cached_tiles", 0),
+        }
+
+        cache_indicator = ""
+        if cache_info_after.get("total_cached_tiles", 0) > cache_info_before.get(
+            "total_cached_tiles", 0
+        ):
+            cache_indicator = " 💾"
+
+        details = (
+            f"({len(segments)} segments, {total_points} points) {elapsed:.2f}s{cache_indicator}"
+        )
+        print(f"✓ {details} → {output_name}")
+        return True, elapsed, cache_info
     except ValueError as e:
         print(f"✗ {e}")
     except (OSError, RuntimeError) as e:
         print(f"✗ Error: {e}")
-    return False, time.time() - start_time
+    return False, time.time() - start_time, {}
 
 
 def main(
@@ -69,10 +87,13 @@ def main(
     output_path = Path(output_dir)
     output_path.mkdir(exist_ok=True, parents=True)
 
-    print(f"Loading timeline data from {timeline_json}")
+    print(f"Loading timeline data from {timeline_json}...", end=" ", flush=True)
+    load_start = time.time()
     target_dates = get_date_range(
         str(timeline_path), start_date=start_date, end_date=end_date, days=days
     )
+    load_time = time.time() - load_start
+    print(f"✓ ({load_time:.2f}s)")
 
     if not target_dates:
         date_desc = (
@@ -95,9 +116,9 @@ def main(
     results = [
         _process_date(date_str, timeline_path, output_path, image_size) for date_str in target_dates
     ]
-    success_count = sum(1 for success, _ in results if success)
+    success_count = sum(1 for success, _, _ in results if success)
     total_time = time.time() - start_time
-    day_times = [elapsed for _, elapsed in results]
+    day_times = [elapsed for _, elapsed, _ in results]
 
     print()
     print(f"Generated {success_count}/{len(target_dates)} map images in {output_path}")
@@ -112,21 +133,14 @@ def main(
     if cache_stats:
         print()
         print("Tile Cache Statistics:")
-        total_tiles = (
-            cache_stats["memory_cache_hits"]
-            + cache_stats["disk_cache_hits"]
-            + cache_stats["network_requests"]
-        )
-        print(f"  Total tile requests: {total_tiles}")
-        print(f"  Memory cache hits: {cache_stats['memory_cache_hits']}")
-        print(f"  Disk cache hits: {cache_stats['disk_cache_hits']}")
-        print(f"  Network requests: {cache_stats['network_requests']}")
-        print(f"  Cache hit rate: {cache_stats['cache_hit_rate']:.1f}%")
-        if cache_stats["disk_cache"]["tile_count"] > 0:
-            print(
-                f"  Disk cache: {cache_stats['disk_cache']['tile_count']} tiles "
-                f"({cache_stats['disk_cache']['total_size_mb']:.1f}MB)"
-            )
+        disk_cache_info = cache_stats.get("disk_cache", {})
+        tile_count = disk_cache_info.get("tile_count", 0)
+        cache_size = disk_cache_info.get("total_size_mb", 0.0)
+        print(f"  Backend: {cache_stats.get('cache_backend', 'requests-cache')}")
+        print(f"  Cache location: {cache_stats.get('cache_location', '.tile_cache')}")
+        if tile_count > 0:
+            print(f"  Cached tiles: {tile_count} tiles ({cache_size:.1f}MB)")
+        print("  Note: Tiles are automatically reused for overlapping geographic areas")
 
 
 if __name__ == "__main__":
