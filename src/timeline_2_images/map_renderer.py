@@ -1,6 +1,7 @@
 """Render Google Timeline routes on map images."""
 
 import math
+import sqlite3
 import time
 import geopandas as gpd
 from shapely.geometry import Point, LineString
