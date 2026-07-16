@@ -175,6 +175,35 @@ def get_cache_stats(json_path: str) -> dict:
         return {"status": "error"}
 
 
+def get_cached_dates(json_path: str) -> list[str] | None:
+    """Get all dates available in SQLite cache, or None if cache is invalid/missing."""
+    db_path = get_cache_db_path(json_path)
+    hash_path = get_hash_path(json_path)
+
+    if not db_path.exists() or not hash_path.exists():
+        return None
+
+    try:
+        current_hash = _compute_file_hash(json_path)
+        cached_hash = hash_path.read_text().strip()
+
+        if current_hash != cached_hash:
+            db_path.unlink()
+            hash_path.unlink()
+            return None
+
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT DISTINCT date FROM segments ORDER BY date")
+        dates = [row[0] for row in cursor.fetchall()]
+        conn.close()
+
+        return dates if dates else None
+    except Exception:
+        return None
+
+
 def clear_cache(json_path: str) -> None:
     """Clear SQLite cache for a given JSON file."""
     db_path = get_cache_db_path(json_path)

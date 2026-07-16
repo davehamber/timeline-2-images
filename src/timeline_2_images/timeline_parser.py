@@ -11,6 +11,7 @@ from timeline_2_images.sqlite_cache import (
     load_segments_for_date,
     populate_cache,
     get_cache_stats,
+    get_cached_dates,
 )
 
 
@@ -518,7 +519,8 @@ def get_date_range(
     """
     Get dates with data based on flexible date range parameters.
 
-    Uses session-level caching to avoid re-parsing large files.
+    Uses SQLite cache when available to avoid re-parsing large files.
+    Falls back to session-level caching if SQLite cache is unavailable.
 
     Priority:
     1. If both start_date and end_date: use that range, ignore days
@@ -537,13 +539,17 @@ def get_date_range(
     Returns:
         List of YYYY-MM-DD dates with data, sorted chronologically
     """
-    _cache.load_file(json_path)
-    _cache.build_date_index()
+    cached_dates = get_cached_dates(json_path)
 
-    if not _cache.date_index:
-        return []
-
-    available_sorted = sorted(_cache.date_index.keys())
+    if cached_dates:
+        _cache.cache_source = "disk"
+        available_sorted = [datetime.strptime(d, "%Y-%m-%d").date() for d in cached_dates]
+    else:
+        _cache.load_file(json_path)
+        _cache.build_date_index()
+        if not _cache.date_index:
+            return []
+        available_sorted = sorted(_cache.date_index.keys())
 
     if start_date and end_date:
         start = datetime.strptime(start_date, "%Y-%m-%d").date()
