@@ -164,7 +164,9 @@ def _build_segments_with_waypoints(
     return segments
 
 
-def _load_segments_from_sqlite(json_path: str, target_date: str, timing: dict, start: float) -> list[dict] | None:
+def _load_segments_from_sqlite(
+    json_path: str, target_date: str, timing: dict, start: float
+) -> list[dict] | None:
     """Try to load segments from SQLite cache."""
     step_start = time.time()
     cached_segments = load_segments_for_date(json_path, target_date)
@@ -180,7 +182,9 @@ def _load_segments_from_sqlite(json_path: str, target_date: str, timing: dict, s
     return segments
 
 
-def _load_segments_from_json(json_path: str, target_date: str, timing: dict, start: float) -> list[dict]:
+def _load_segments_from_json(
+    json_path: str, target_date: str, timing: dict, start: float
+) -> list[dict]:
     """Load segments from JSON and populate cache."""
     step_start = time.time()
     data = _cache.load_file(json_path)
@@ -202,9 +206,7 @@ def _load_segments_from_json(json_path: str, target_date: str, timing: dict, sta
     timing["index_lookup"] = time.time() - step_start
 
     step_start = time.time()
-    matching_segments = [
-        semantic_segs[idx] for idx in matching_indices if idx < len(semantic_segs)
-    ]
+    matching_segments = [semantic_segs[idx] for idx in matching_indices if idx < len(semantic_segs)]
     segments = _build_segments_with_waypoints(matching_segments, step_start, timing)
     timing["total"] = time.time() - start
     return segments

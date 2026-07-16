@@ -243,7 +243,9 @@ def _process_all_dates(
     ]
 
 
-def _print_final_summary(results: list[tuple[bool, float, dict]], target_dates: list[str], output_path: Path):
+def _print_final_summary(
+    results: list[tuple[bool, float, dict]], target_dates: list[str], output_path: Path
+):
     """Print final summary and statistics."""
     success_count = sum(1 for success, _, _ in results if success)
     total_time = sum(elapsed for _, elapsed, _ in results)
@@ -296,8 +298,7 @@ if __name__ == "__main__":
 
     prog_name = Path(sys.argv[0]).name
     parser = argparse.ArgumentParser(
-        prog=prog_name,
-        description="Generate daily route maps from Google Timeline exports"
+        prog=prog_name, description="Generate daily route maps from Google Timeline exports"
     )
     parser.add_argument("timeline_json", nargs="?", help="Path to Timeline.json file")
     parser.add_argument("--output-dir", default="output", help="Output directory for JPG images")

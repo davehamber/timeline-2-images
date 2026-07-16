@@ -235,6 +235,7 @@ def clean_all_cache() -> None:
         cache_dir = _get_cache_dir()
         if cache_dir.exists():
             import shutil
+
             shutil.rmtree(cache_dir)
     except OSError as e:
         raise RuntimeError(f"Failed to clean cache: {e}")
