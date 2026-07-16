@@ -309,7 +309,6 @@ def main(
         end_date: End date in YYYY-MM-DD format
         profile: If True, show detailed timing breakdown per operation
     """
-    _print_banner()
     timeline_path = _validate_timeline_file(timeline_json)
 
     output_path = Path(output_dir)
@@ -324,6 +323,8 @@ def main(
 
 if __name__ == "__main__":
     import argparse
+
+    _print_banner()
 
     parser = argparse.ArgumentParser(
         description="Generate daily route maps from Google Timeline exports"
