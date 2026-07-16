@@ -172,7 +172,9 @@ def render_segments(
     ax.set_ylim(miny, maxy)
     ax.set_aspect("equal")
 
-    cx.add_basemap(ax, source=cx.providers.OpenStreetMap.Mapnik, zoom="auto")
+    # OpenStreetMap basemap tiles
+    osm_url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+    cx.add_basemap(ax, source=osm_url, zoom="auto")
 
     _draw_journey_line(ax, all_simplified_waypoints)
     _draw_markers(ax, all_simplified_waypoints)
