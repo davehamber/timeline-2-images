@@ -1,7 +1,7 @@
 """Parse Google Timeline JSON exports and extract location data."""
 
 import json
-from datetime import datetime, date, timezone
+from datetime import datetime, date, timezone, timedelta
 
 import pandas as pd
 
@@ -350,3 +350,60 @@ def get_last_n_days_with_data(json_path: str, days: int = 14) -> list[str]:
     sorted_dates = sorted(all_dates, reverse=True)
     last_n = sorted_dates[:days]
     return sorted([d.strftime("%Y-%m-%d") for d in last_n])
+
+
+def get_date_range(
+    json_path: str,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    days: int = 14,
+) -> list[str]:
+    """
+    Get dates with data based on flexible date range parameters.
+
+    Priority:
+    1. If both start_date and end_date: use that range, ignore days
+    2. If start_date and days: use start_date + days
+    3. If end_date and days: use end_date - days + 1 (inclusive)
+    4. If only days: use last N days with data (default behavior)
+
+    Only returns dates that have data in the timeline.
+
+    Args:
+        json_path: Path to Timeline.json file
+        start_date: Start date in YYYY-MM-DD format
+        end_date: End date in YYYY-MM-DD format
+        days: Number of days (default 14)
+
+    Returns:
+        List of YYYY-MM-DD dates with data, sorted chronologically
+    """
+    all_available_dates = set()
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    all_available_dates.update(_extract_dates_from_locations(data))
+    all_available_dates.update(_extract_dates_from_timeline_objects(data))
+    all_available_dates.update(_extract_dates_from_segments(data))
+
+    available_sorted = sorted(all_available_dates)
+
+    if not available_sorted:
+        return []
+
+    # Determine the date range to search
+    if start_date and end_date:
+        start = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end = datetime.strptime(end_date, "%Y-%m-%d").date()
+    elif start_date and not end_date:
+        start = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end = start + timedelta(days=days - 1)
+    elif end_date and not start_date:
+        end = datetime.strptime(end_date, "%Y-%m-%d").date()
+        start = end - timedelta(days=days - 1)
+    else:
+        return get_last_n_days_with_data(json_path, days)
+
+    # Filter available dates to those within range
+    result = [d for d in available_sorted if start <= d <= end]
+    return [d.strftime("%Y-%m-%d") for d in result]

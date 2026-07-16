@@ -42,6 +42,8 @@ select = ["E", "F", "W"]
 
 [tool.pylint]
 max-line-length = 100
+max-args = 6
+max-positional-arguments = 6
 disable = ["C0111", "C0114", "C0115"]
 
 [tool.radon]
@@ -60,5 +62,9 @@ disallow_untyped_defs = false
 
 [dependency-groups]
 dev = [
+    "black>=26.5.1",
+    "mypy>=2.3.0",
     "pre-commit>=4.6.0",
+    "pylint>=4.0.6",
+    "ruff>=0.15.21",
 ]
