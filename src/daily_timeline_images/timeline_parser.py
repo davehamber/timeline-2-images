@@ -22,6 +22,7 @@ class TimelineCache:
         self.file_path: str | None = None
         self.data: dict | None = None
         self.date_index: Dict[date, bool] | None = None
+        self.segment_date_index: Dict[date, list[int]] | None = None  # date → segment indices
         self.cache_source: str = "none"  # Track which cache was used
 
     def load_file(self, json_path: str) -> dict:
@@ -78,11 +79,44 @@ class TimelineCache:
 
         return self.date_index
 
+    def build_segment_date_index(self) -> Dict[date, list[int]]:
+        """Build an index mapping dates to segment indices for fast lookups.
+
+        Parses all segment dates once and caches the result.
+        Returns dict: {date: [segment_indices]}
+        """
+        if self.segment_date_index is not None:
+            return self.segment_date_index
+
+        self.segment_date_index = {}
+        if not self.data:
+            return self.segment_date_index
+
+        semantic_segs = self.data.get("semanticSegments", [])
+        for idx, seg in enumerate(semantic_segs):
+            start_str = seg.get("startTime")
+            if not start_str:
+                continue
+
+            dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
+            if pd.isna(dt_timestamp):
+                continue
+
+            dt = datetime.fromisoformat(str(dt_timestamp.isoformat()))
+            seg_date = dt.astimezone(timezone.utc).date()
+
+            if seg_date not in self.segment_date_index:
+                self.segment_date_index[seg_date] = []
+            self.segment_date_index[seg_date].append(idx)
+
+        return self.segment_date_index
+
     def clear(self) -> None:
         """Clear the cache."""
         self.file_path = None
         self.data = None
         self.date_index = None
+        self.segment_date_index = None
 
 
 _cache = TimelineCache()
@@ -137,6 +171,7 @@ def load_segments_for_day(
     Extract semantic segments for a given date with waypoints.
 
     Each segment represents a distinct journey/stay period.
+    Uses cached date index to avoid re-parsing all segment dates.
 
     Args:
         json_path: Path to Timeline.json file
@@ -153,33 +188,35 @@ def load_segments_for_day(
     data = _cache.load_file(json_path)
     timing["cache_load"] = time.time() - step_start
 
-    segments = []
+    step_start = time.time()
+    segment_date_index = _cache.build_segment_date_index()
+    timing["build_index"] = time.time() - step_start
+
     target = datetime.strptime(target_date, "%Y-%m-%d").date()
+    segments = []
 
     step_start = time.time()
     semantic_segs = data.get("semanticSegments", [])
-    timing["get_segments_list"] = time.time() - step_start
+    matching_indices = segment_date_index.get(target, [])
+    timing["index_lookup"] = time.time() - step_start
 
     step_start = time.time()
-    for seg in semantic_segs:
-        start_str = seg.get("startTime")
-        if not start_str:
+    for idx in matching_indices:
+        if idx >= len(semantic_segs):
             continue
-
-        if not _parse_segment_datetime(start_str, target):
-            continue
+        seg = semantic_segs[idx]
 
         waypoints = _parse_waypoints(seg.get("timelinePath", []))
 
         if waypoints:
             segments.append(
                 {
-                    "startTime": start_str,
+                    "startTime": seg.get("startTime"),
                     "endTime": seg.get("endTime"),
                     "waypoints": waypoints,
                 }
             )
-    timing["segment_parsing"] = time.time() - step_start
+    timing["waypoint_extraction"] = time.time() - step_start
     timing["total"] = time.time() - start
 
     if profile:
