@@ -19,18 +19,23 @@ def _compute_file_hash(file_path: str) -> str:
     return sha256.hexdigest()
 
 
+def _get_cache_dir() -> Path:
+    """Get cache directory, creating it if needed."""
+    cache_dir = Path.home() / ".cache" / "timeline-2-images"
+    cache_dir.mkdir(exist_ok=True, parents=True)
+    return cache_dir
+
+
 def get_cache_db_path(json_path: str) -> Path:
     """Get SQLite database path for a given JSON file."""
-    json_file = Path(json_path)
-    cache_dir = json_file.parent / ".timeline_cache"
-    cache_dir.mkdir(exist_ok=True, parents=True)
+    cache_dir = _get_cache_dir()
     return cache_dir / "segments.db"
 
 
 def get_hash_path(json_path: str) -> Path:
     """Get hash metadata file path for a given JSON file."""
-    db_path = get_cache_db_path(json_path)
-    return db_path.parent / f"{db_path.stem}.hash"
+    cache_dir = _get_cache_dir()
+    return cache_dir / "segments.hash"
 
 
 def _init_db(db_path: Path) -> sqlite3.Connection:
@@ -216,3 +221,14 @@ def clear_cache(json_path: str) -> None:
             hash_path.unlink()
     except OSError:
         pass
+
+
+def clean_all_cache() -> None:
+    """Remove the entire cache directory."""
+    try:
+        cache_dir = _get_cache_dir()
+        if cache_dir.exists():
+            import shutil
+            shutil.rmtree(cache_dir)
+    except OSError as e:
+        raise RuntimeError(f"Failed to clean cache: {e}")
