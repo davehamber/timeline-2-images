@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from daily_timeline_images.map_renderer import simplify_waypoints, render_segments
+from timeline_2_images.map_renderer import simplify_waypoints, render_segments
 
 
 def test_simplify_waypoints():

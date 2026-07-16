@@ -1,1 +1,1 @@
-"""Tests for daily-timeline-images."""
+"""Tests for timeline-2-images."""

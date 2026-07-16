@@ -1,0 +1,304 @@
+"""Render Google Timeline routes on map images."""
+
+import math
+import time
+import geopandas as gpd
+from shapely.geometry import Point, LineString
+import matplotlib.pyplot as plt
+import matplotlib
+import contextily as cx
+import requests_cache
+
+from timeline_2_images.tile_cache import MemoryTileCache, DiskTileCache
+
+# Use non-interactive backend for headless rendering
+matplotlib.use("Agg")
+
+_memory_cache = MemoryTileCache()
+_disk_cache = DiskTileCache()
+
+# Track cache statistics for debugging
+_tile_requests: dict[str, int] = {}
+_debug_mode = False
+_cache_session = None
+
+# Install requests-cache globally to cache all tile downloads
+# This will intercept all requests from contextily automatically
+_cache_session = requests_cache.install_cache(
+    ".tile_cache/osm-tiles",
+    backend="sqlite",
+    expire_after=None,  # Never expire - tiles don't change
+    match_headers=False,  # Don't vary cache by headers
+    stale_if_error=True,  # Use stale cache on error
+)
+
+
+def _get_cache_stats() -> dict:
+    """Get current cache statistics."""
+    try:
+        if _cache_session and hasattr(_cache_session.cache, "__getstate__"):
+            # Try to get SQLite cache info
+            return {
+                "cache_db_path": ".tile_cache/osm-tiles.sqlite",
+            }
+    except Exception:
+        pass
+    return {}
+
+
+def simplify_waypoints(waypoints: list[tuple], tolerance_meters: float = 20) -> list[tuple]:
+    """
+    Simplify waypoints using Ramer-Douglas-Peucker algorithm.
+
+    Reduces the number of points while preserving the overall path shape.
+    Filters out stationary clusters (repeated or very close points).
+
+    Args:
+        waypoints: List of (lat, lon) tuples
+        tolerance_meters: Simplification tolerance in meters (higher = more simplification)
+
+    Returns:
+        Simplified list of (lat, lon) tuples
+    """
+    if len(waypoints) < 3:
+        return waypoints
+
+    # Convert to LineString (WGS84), simplify, convert back
+    line = LineString(waypoints)
+
+    # Simplify using RDP algorithm (tolerance in degrees, ~111km per degree)
+    # Convert meters to approximate degrees (at equator: 1 degree ≈ 111 km)
+    tolerance_degrees = tolerance_meters / 111000
+    simplified_line = line.simplify(tolerance_degrees)
+
+    if isinstance(simplified_line, LineString):
+        return list(simplified_line.coords)
+    # Handle edge case where simplification results in a point
+    return waypoints
+
+
+def _collect_and_simplify_waypoints(segments: list[dict]) -> tuple[list, list]:
+    """Collect all waypoints and simplified waypoints from segments."""
+    all_points = []
+    all_simplified = []
+    for seg in segments:
+        waypoints = seg.get("waypoints", [])
+        if waypoints:
+            all_points.extend(waypoints)
+            simplified = simplify_waypoints(waypoints, tolerance_meters=15)
+            all_simplified.extend(simplified)
+    return all_points, all_simplified
+
+
+def _calculate_bounds(all_points: list) -> tuple:
+    """Calculate bounds in Web Mercator from lat/lon points."""
+    lats = [p[0] for p in all_points]
+    lons = [p[1] for p in all_points]
+    min_lat, max_lat = min(lats), max(lats)
+    min_lon, max_lon = min(lons), max(lons)
+    bounds_gdf = gpd.GeoDataFrame(
+        geometry=[Point(lon, lat) for lat, lon in [(min_lat, min_lon), (max_lat, max_lon)]],
+        crs="EPSG:4326",
+    ).to_crs(epsg=3857)
+    return tuple(bounds_gdf.total_bounds)
+
+
+def _calculate_padded_bounds(minx: float, miny: float, maxx: float, maxy: float) -> tuple:
+    """Calculate square bounds with padding."""
+    dx = (maxx - minx) or 500
+    dy = (maxy - miny) or 500
+    center_x = (minx + maxx) / 2
+    center_y = (miny + maxy) / 2
+    max_dim = max(dx, dy)
+    pad_ratio = 0.05
+    padded_dim = max_dim * (1 + 2 * pad_ratio)
+    half_side = padded_dim / 2
+    return (
+        center_x - half_side,
+        center_y - half_side,
+        center_x + half_side,
+        center_y + half_side,
+        center_x,
+        center_y,
+    )
+
+
+def _enforce_minimum_area(bounds: tuple, min_area_sq_km: float) -> tuple:
+    """Enforce minimum viewing area."""
+    minx, miny, maxx, maxy = bounds
+    width_m = maxx - minx
+    height_m = maxy - miny
+    area_sq_km = (width_m * height_m) / 1e6
+    if area_sq_km >= min_area_sq_km:
+        return bounds
+    center_x = (minx + maxx) / 2
+    center_y = (miny + maxy) / 2
+    area_sq_m = min_area_sq_km * 1e6
+    half_side = math.sqrt(area_sq_m) / 2
+    return (
+        center_x - half_side,
+        center_y - half_side,
+        center_x + half_side,
+        center_y + half_side,
+    )
+
+
+def _draw_journey_line(ax, all_simplified_waypoints: list):
+    """Draw the contiguous journey line with border."""
+    if len(all_simplified_waypoints) > 1:
+        line = LineString([(lon, lat) for lat, lon in all_simplified_waypoints])
+        gdf_line = gpd.GeoDataFrame(geometry=[line], crs="EPSG:4326").to_crs(epsg=3857)
+        gdf_line.plot(ax=ax, color="#000000", linewidth=4, alpha=0.8, zorder=99)
+        gdf_line.plot(ax=ax, color="#1a73e8", linewidth=2, alpha=0.9, zorder=100)
+
+
+def _draw_markers(ax, all_simplified_waypoints: list):
+    """Draw start and end markers."""
+    if all_simplified_waypoints:
+        start_point = Point(all_simplified_waypoints[0][1], all_simplified_waypoints[0][0])
+        gdf_start = gpd.GeoDataFrame(geometry=[start_point], crs="EPSG:4326").to_crs(epsg=3857)
+        gdf_start.plot(ax=ax, color="#34a853", markersize=35, zorder=101, alpha=0.95)
+        if len(all_simplified_waypoints) > 1:
+            end_point = Point(all_simplified_waypoints[-1][1], all_simplified_waypoints[-1][0])
+            gdf_end = gpd.GeoDataFrame(geometry=[end_point], crs="EPSG:4326").to_crs(epsg=3857)
+            gdf_end.plot(ax=ax, color="#ea4335", markersize=25, zorder=101, alpha=0.95)
+
+
+def get_render_cache_info() -> dict:
+    """Get cache hit information for the most recent render."""
+    try:
+        from pathlib import Path
+        import sqlite3
+
+        cache_db = Path(".tile_cache/osm-tiles.sqlite")
+        if not cache_db.exists():
+            return {"status": "no_cache"}
+
+        conn = sqlite3.connect(str(cache_db))
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM responses")
+        count = cursor.fetchone()[0]
+        conn.close()
+
+        return {
+            "status": "cached",
+            "total_cached_tiles": count,
+            "cache_enabled": True,
+        }
+    except Exception:
+        return {"status": "unknown"}
+
+
+def render_segments(
+    segments: list[dict],
+    out_path: str,
+    image_size: int = 500,
+    dpi: int = 150,
+    min_area_sq_km: float = 5,
+    profile: bool = False,
+) -> dict:
+    """
+    Render timeline segments on an OSM basemap using RDP line simplification.
+
+    Each segment is drawn as a simplified line, avoiding tangled paths from GPS noise.
+
+    Args:
+        segments: List of segment dicts with 'waypoints' (list of (lat, lon) tuples)
+        out_path: Output JPG path
+        image_size: Size of output image (width and height in pixels)
+        dpi: DPI for the image
+        min_area_sq_km: Minimum area in sq km to display
+        profile: If True, return timing breakdown (default False)
+
+    Returns:
+        Dict with timing breakdown if profile=True, empty dict otherwise
+    """
+    timing = {}
+    start = time.time()
+
+    if not segments:
+        raise ValueError("No segments provided to render")
+
+    step_start = time.time()
+    all_points, all_simplified_waypoints = _collect_and_simplify_waypoints(segments)
+    timing["simplify_waypoints"] = time.time() - step_start
+
+    if not all_points:
+        raise ValueError("No waypoints found in segments")
+
+    step_start = time.time()
+    minx, miny, maxx, maxy = _calculate_bounds(all_points)
+    minx, miny, maxx, maxy, _, _ = _calculate_padded_bounds(minx, miny, maxx, maxy)
+    minx, miny, maxx, maxy = _enforce_minimum_area((minx, miny, maxx, maxy), min_area_sq_km)
+    timing["bounds_calculation"] = time.time() - step_start
+
+    step_start = time.time()
+    fig_size_inches = image_size / dpi
+    fig, ax = plt.subplots(figsize=(fig_size_inches, fig_size_inches), dpi=dpi)
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0, hspace=0, wspace=0)
+    ax.set_xlim(minx, maxx)
+    ax.set_ylim(miny, maxy)
+    ax.set_aspect("equal")
+    timing["figure_setup"] = time.time() - step_start
+
+    step_start = time.time()
+    osm_url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+    cx.add_basemap(ax, source=osm_url, zoom="auto")
+    timing["basemap"] = time.time() - step_start
+
+    step_start = time.time()
+    _draw_journey_line(ax, all_simplified_waypoints)
+    _draw_markers(ax, all_simplified_waypoints)
+    timing["draw_features"] = time.time() - step_start
+
+    step_start = time.time()
+    ax.set_axis_off()
+    plt.tight_layout(pad=0)
+    fig.savefig(out_path, dpi=dpi, format="jpg", facecolor="white")
+    plt.close(fig)
+    timing["save_and_close"] = time.time() - step_start
+
+    timing["total"] = time.time() - start
+    return timing if profile else {}
+
+
+def get_tile_cache_stats() -> dict:
+    """Get tile cache performance statistics."""
+    disk_size = _disk_cache.get_stats()
+    return {
+        "cache_backend": "requests-cache (SQLite)",
+        "cache_location": ".tile_cache",
+        "disk_cache": disk_size,
+        "note": "Tile caching is handled automatically by requests-cache",
+    }
+
+
+def clear_tile_caches() -> None:
+    """Clear all tile caches."""
+    global _tile_requests
+    _memory_cache.clear()
+    _disk_cache.clear()
+    _tile_requests.clear()
+    # Clear the requests-cache
+    try:
+        import requests_cache
+
+        requests_cache.clear()
+    except Exception:
+        pass
+
+
+def set_debug_mode(enabled: bool) -> None:
+    """Enable/disable debug mode for tile caching."""
+    global _debug_mode
+    _debug_mode = enabled
+    if enabled:
+        print("Debug mode enabled: tile caching via requests-cache in .tile_cache")
+
+
+def get_tile_request_summary() -> dict:
+    """Get summary of tile caching."""
+    return {
+        "cache_backend": "requests-cache (SQLite in .tile_cache directory)",
+        "note": "Tile caching is automatic - requests are cached across multiple days",
+    }
