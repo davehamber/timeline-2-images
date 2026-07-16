@@ -8,6 +8,10 @@ from timeline_2_images.banner import print_banner
 from timeline_2_images.app import TimelineApp
 from timeline_2_images.config import RenderConfiguration
 from timeline_2_images.sqlite_cache import clean_all_cache
+from timeline_2_images.timeline_validator import (
+    validate_timeline_structure,
+    TimelineValidationError,
+)
 
 
 def main(
@@ -32,8 +36,13 @@ def main(
         profile: If True, show detailed timing breakdown per operation
     """
     timeline_path = Path(timeline_json)
-    if not timeline_path.exists():
-        print(f"Error: Timeline file not found: {timeline_json}")
+
+    # Validate Timeline.json structure
+    try:
+        validate_timeline_structure(timeline_json)
+    except TimelineValidationError as e:
+        print("Error: Invalid Timeline.json structure")
+        print(f"  {e}")
         sys.exit(1)
 
     config = RenderConfiguration(image_size=image_size)
