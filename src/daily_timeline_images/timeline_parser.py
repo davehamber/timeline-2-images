@@ -39,10 +39,10 @@ def _parse_waypoints(path: list) -> list:
 
 def _parse_segment_datetime(start_str: str, target: date) -> str | None:
     """Parse segment start time and return if it matches target date."""
-    dt = pd.to_datetime(start_str, utc=True, errors="coerce")
-    if pd.isna(dt):
+    dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
+    if pd.isna(dt_timestamp):
         return None
-    dt = dt.to_pydatetime()
+    dt = datetime.fromisoformat(str(dt_timestamp.isoformat()))
     if dt.astimezone(timezone.utc).date() != target:
         return None
     return start_str
@@ -87,13 +87,13 @@ def load_segments_for_day(json_path: str, target_date: str) -> list[dict]:
     return segments
 
 
-def _parse_timestamp(ts) -> datetime | None:
+def _parse_timestamp(ts: str | int | float) -> datetime | None:
     """Parse timestamp in various formats (string or milliseconds)."""
     if isinstance(ts, str):
         dt = pd.to_datetime(ts, utc=True, errors="coerce")
         if pd.isna(dt):
             return None
-        return dt.to_pydatetime()
+        return datetime.fromisoformat(str(dt.isoformat()))
     return datetime.fromtimestamp(int(ts) / 1000, tz=timezone.utc)
 
 
@@ -160,7 +160,7 @@ def _get_timeline_object_datetime(seg: dict) -> datetime | None:
     dt = pd.to_datetime(start_str, utc=True, errors="coerce")
     if pd.isna(dt):
         return None
-    return dt.to_pydatetime()
+    return datetime.fromisoformat(str(dt.isoformat()))
 
 
 def _matches_target_date(dt: datetime | None, target: date) -> bool:
@@ -173,8 +173,12 @@ def _matches_target_date(dt: datetime | None, target: date) -> bool:
 def _process_timeline_object(obj: dict, target: date) -> list:
     """Process a single timeline object and return points if in target date."""
     seg = obj.get("activitySegment") or obj.get("placeVisit")
+    if not isinstance(seg, dict):
+        return []
     dt = _get_timeline_object_datetime(seg)
     if not _matches_target_date(dt, target):
+        return []
+    if dt is None:
         return []
     rows = []
     rows.extend(_extract_waypoints_from_segment(dt, seg))
@@ -203,7 +207,7 @@ def _parse_point_string(dt, pt: str) -> tuple | None:
         return None
 
 
-def _get_semantic_segment_datetime(seg: dict) -> object | None:
+def _get_semantic_segment_datetime(seg: dict) -> datetime | None:
     """Extract datetime from a semantic segment."""
     start_str = seg.get("startTime")
     if not start_str:
@@ -211,7 +215,7 @@ def _get_semantic_segment_datetime(seg: dict) -> object | None:
     dt = pd.to_datetime(start_str, utc=True, errors="coerce")
     if pd.isna(dt):
         return None
-    return dt.to_pydatetime()
+    return datetime.fromisoformat(str(dt.isoformat()))
 
 
 def _extract_points_from_segment_path(dt, seg: dict) -> list:
@@ -230,6 +234,8 @@ def _process_semantic_segment(seg: dict, target: date) -> list:
     """Process a single semantic segment and return points if in target date."""
     dt = _get_semantic_segment_datetime(seg)
     if not _matches_target_date(dt, target):
+        return []
+    if dt is None:
         return []
     return _extract_points_from_segment_path(dt, seg)
 
@@ -293,16 +299,17 @@ def _extract_dates_from_locations(data: dict) -> set:
     return dates
 
 
-def _get_segment_start_date(seg: dict) -> object | None:
+def _get_segment_start_date(seg: dict) -> date | None:
     """Extract start date from a timeline segment."""
     duration = seg.get("duration", {})
     start_str = duration.get("startTimestamp") or duration.get("startTimestampMs")
     if start_str is None:
         return None
-    dt = pd.to_datetime(start_str, utc=True, errors="coerce")
-    if pd.isna(dt):
+    dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
+    if pd.isna(dt_timestamp):
         return None
-    return dt.to_pydatetime().astimezone(timezone.utc).date()
+    dt = datetime.fromisoformat(str(dt_timestamp.isoformat()))
+    return dt.astimezone(timezone.utc).date()
 
 
 def _extract_dates_from_timeline_objects(data: dict) -> set:
