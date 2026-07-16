@@ -93,7 +93,12 @@ def main(
         print(f"  Size: {cache_info.get('cache_size_mb', 0):.1f}MB")
 
 
-if __name__ == "__main__":
+def cli() -> None:
+    """CLI entry point called by setuptools console script.
+
+    Parses command-line arguments and calls main().
+    This function is configured in pyproject.toml as the entry point.
+    """
     import argparse
 
     print_banner()
@@ -154,3 +159,7 @@ if __name__ == "__main__":
     else:
         parser.print_help()
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    cli()
