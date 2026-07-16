@@ -2,7 +2,111 @@
 
 ## Overview
 
-This document shows the function relationships and data flow through the timeline-2-images application.
+This document describes the timeline-2-images architecture, which now includes a modern OOP design alongside the legacy functional implementation.
+
+**Note:** The new OOP design is the recommended approach for new development. The legacy functional API remains available for backward compatibility.
+
+## New OOP Architecture (Recommended)
+
+The new object-oriented design provides better encapsulation, testability, and maintainability.
+
+### Application Entry Point
+
+```python
+from timeline_2_images.app import TimelineApp
+from timeline_2_images.config import RenderConfiguration
+
+# Create app with configuration
+config = RenderConfiguration(image_size=800, min_area_sq_km=5.0)
+app = TimelineApp("Timeline.json", output_dir="maps", config=config)
+
+# Process a date range
+results = app.process_date_range(days=14)
+
+# Process specific date
+result = app.process_date("2024-01-15")
+```
+
+### Class Hierarchy
+
+```
+TimelineApp (orchestrator)
+├── TimelineProcessor (data loading)
+├── SegmentProcessor (processing)
+├── MapRenderer (rendering)
+└── RenderConfiguration (settings)
+
+Models
+├── Segment
+├── ProcessedSegment
+├── Bounds
+└── RenderResult
+
+Caching
+├── CacheManager (interface)
+├── TileCacheManager
+└── sqlite_cache (implementation)
+
+Configuration
+├── RenderConfiguration
+└── DateRangeQuery
+```
+
+### Data Flow
+
+```
+TimelineApp.process_date_range()
+  ↓
+DateRangeQuery (parse parameters)
+  ↓
+TimelineProcessor.load_segments_for_day()
+  ↓
+SegmentProcessor.process_segments()
+  ├─ simplify_waypoints()
+  ├─ calculate_bounds()
+  └─ ProcessedSegment objects
+  ↓
+MapRenderer.render_segments()
+  ├─ _calculate_bounds() → Web Mercator projection
+  ├─ _render_map()
+  ├─ _draw_journey_line()
+  ├─ _draw_markers()
+  └─ RenderResult
+```
+
+### Key Components
+
+**TimelineApp** - Master orchestrator
+- Coordinates processing, rendering, caching
+- Unified interface for operations
+- Error handling and statistics
+
+**TimelineProcessor** - Data layer
+- Loads segments from Timeline.json
+- Manages session and persistent caching
+- Handles date range queries
+
+**SegmentProcessor** - Transformation layer
+- Simplifies waypoints (RDP algorithm)
+- Calculates geographic bounds
+- Filters segments by properties
+
+**MapRenderer** - Presentation layer
+- Renders segments to map images
+- Manages tile caching
+- Enforces minimum viewing area
+
+**Models** - Data structures
+- `Segment`: Raw segment with waypoints
+- `ProcessedSegment`: After simplification
+- `Bounds`: Geographic bounding box
+- `RenderResult`: Rendering operation result
+
+---
+
+## Legacy Functional Architecture
+
+The original functional implementation is preserved for backward compatibility.
 
 ## Main Data Processing Flow
 
