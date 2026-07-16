@@ -6,6 +6,24 @@ from pathlib import Path
 from daily_timeline_images.timeline_splitter import split_timeline_by_year, merge_timelines
 
 
+def _handle_split(timeline_json: str, output_dir: str):
+    """Handle split command."""
+    timeline_path = Path(timeline_json)
+    if not timeline_path.exists():
+        print(f"Error: Timeline file not found: {timeline_json}")
+        sys.exit(1)
+    split_timeline_by_year(str(timeline_path), output_dir)
+
+
+def _handle_merge(timeline_dir: str, output: str):
+    """Handle merge command."""
+    path = Path(timeline_dir)
+    if not path.exists():
+        print(f"Error: Timeline directory not found: {timeline_dir}")
+        sys.exit(1)
+    merge_timelines(str(path), output)
+
+
 def main():
     """Command-line interface for timeline splitting."""
     import argparse
@@ -15,14 +33,12 @@ def main():
     )
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
 
-    # Split command
     split_parser = subparsers.add_parser("split", help="Split Timeline.json by year")
     split_parser.add_argument("timeline_json", help="Path to Timeline.json file")
     split_parser.add_argument(
         "--output-dir", default="timelines", help="Output directory for yearly files"
     )
 
-    # Merge command
     merge_parser = subparsers.add_parser("merge", help="Merge yearly timeline files")
     merge_parser.add_argument("timeline_dir", help="Directory containing yearly timeline files")
     merge_parser.add_argument(
@@ -36,20 +52,9 @@ def main():
         sys.exit(1)
 
     if args.command == "split":
-        timeline_path = Path(args.timeline_json)
-        if not timeline_path.exists():
-            print(f"Error: Timeline file not found: {args.timeline_json}")
-            sys.exit(1)
-
-        split_timeline_by_year(str(timeline_path), args.output_dir)
-
+        _handle_split(args.timeline_json, args.output_dir)
     elif args.command == "merge":
-        timeline_dir = Path(args.timeline_dir)
-        if not timeline_dir.exists():
-            print(f"Error: Timeline directory not found: {args.timeline_dir}")
-            sys.exit(1)
-
-        merge_timelines(str(timeline_dir), args.output)
+        _handle_merge(args.timeline_dir, args.output)
 
 
 if __name__ == "__main__":
