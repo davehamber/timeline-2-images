@@ -67,4 +67,6 @@ disallow_untyped_defs = false
 dev = [
     "types-requests>=2.33.0.20260712",
     "pre-commit>=4.6.0",
+    "types-geopandas>=1.1.4.20260716",
+    "types-shapely>=2.1.0.20260630",
 ]
