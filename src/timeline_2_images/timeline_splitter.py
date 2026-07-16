@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict, cast
 from collections import defaultdict
 
 from timeline_2_images.timeline_parser import _parse_semantic_segments_iter
@@ -65,7 +65,7 @@ def split_timeline_by_year(json_path: str, output_dir: str = "timelines") -> Dic
 def _load_yearly_file(year_file: Path) -> Dict[str, Any]:
     """Load a yearly timeline file."""
     with open(year_file, "r", encoding="utf-8") as f:
-        return json.load(f)
+        return cast(Dict[str, Any], json.load(f))
 
 
 def _merge_year_file_data(merged_data: Dict[str, Any], year_data: Dict[str, Any]):
