@@ -1,3 +1,4 @@
+<frozen runpy>:128: RuntimeWarning: 'timeline_2_images.main' found in sys.modules after import of package 'timeline_2_images', but prior to execution of 'timeline_2_images.main'; this may result in unpredictable behaviour
 
 [38;2;138;43;226m╔═════════════════════════════════════════════════════════════════╗[0m
 [38;2;138;43;226m║[0m                                                                 [38;2;138;43;226m║[0m
@@ -241,10 +242,10 @@ Processing dates 2026-01-01 to 2026-07-15...
   Original waypoints: 14
   Simplified waypoints: 13
 
-✓ 2026-01-01_to_2026-07-15: 552.23s (6839 points)
+✓ 2026-01-01_to_2026-07-15: 529.02s (6839 points)
 
 Generated 1/1 map images in output
-Total time: 691.69s
+Total time: 661.56s
 
 Cache Information:
   Location: /home/dave/.cache/timeline-2-images

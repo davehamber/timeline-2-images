@@ -576,7 +576,7 @@ class MapRenderer:
             approx_km = (lat_span + lon_span) * 111
 
             if approx_km > 100:
-                for waypoint in waypoints[1:-1]:
+                for waypoint in waypoints:
                     wp_point = Point(waypoint[1], waypoint[0])
                     gdf_wp = gpd.GeoDataFrame(geometry=[wp_point], crs="EPSG:4326").to_crs(
                         epsg=3857
