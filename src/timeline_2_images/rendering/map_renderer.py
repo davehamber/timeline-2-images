@@ -374,8 +374,15 @@ class MapRenderer:
 
             line = LineString([(lon, lat) for lat, lon in all_waypoints])
             print(f"  LineString coords: {len(line.coords)} points")
+            print(f"  LineString is_ring: {line.is_ring}")
+            print(f"  LineString is_closed: {line.is_closed}")
+            if len(line.coords) <= 5:
+                print(f"  Actual coords: {list(line.coords)}")
 
             gdf_line = gpd.GeoDataFrame(geometry=[line], crs="EPSG:4326").to_crs(epsg=3857)
+            print(f"  After transform - geom type: {gdf_line.geometry[0].geom_type}")
+            print(f"  After transform - coords: {len(gdf_line.geometry[0].coords)}")
+
             gdf_line.plot(ax=ax, color="#000000", linewidth=4, alpha=0.8, zorder=99)
             gdf_line.plot(ax=ax, color="#1a73e8", linewidth=2, alpha=0.9, zorder=100)
 
