@@ -19,8 +19,7 @@
 [38;2;138;43;226m║[0m                                                                 [38;2;138;43;226m║[0m
 [38;2;138;43;226m╚═════════════════════════════════════════════════════════════════╝[0m
 
-Loading timeline data from Timeline.json...
-✓ (0.25s)
+Loading timeline data from Timeline.json... ✓ (0.25s)
 Found 3342 days with data
 Date range: 2016-04-11 to 2026-07-15
 
@@ -242,10 +241,10 @@ Processing dates 2026-01-01 to 2026-07-15...
   Original waypoints: 14
   Simplified waypoints: 13
 
-✓ 2026-01-01_to_2026-07-15: 530.20s (6839 points)
+✓ 2026-01-01_to_2026-07-15: 552.23s (6839 points)
 
 Generated 1/1 map images in output
-Total time: 666.38s
+Total time: 691.69s
 
 Cache Information:
   Location: /home/dave/.cache/timeline-2-images
