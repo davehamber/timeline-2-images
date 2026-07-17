@@ -347,6 +347,23 @@ class MapRenderer:
             gdf_line.plot(ax=ax, color="#000000", linewidth=4, alpha=0.8, zorder=99)
             gdf_line.plot(ax=ax, color="#1a73e8", linewidth=2, alpha=0.9, zorder=100)
 
+    def _draw_combined_journey_line(self, ax: Any, segments: list[ProcessedSegment]) -> None:
+        """Draw journey line for combined routes without closing the loop.
+
+        Args:
+            ax: Matplotlib axis
+            segments: List of ProcessedSegment objects
+        """
+        all_waypoints = []
+        for segment in segments:
+            all_waypoints.extend(segment.simplified_waypoints)
+
+        if len(all_waypoints) > 1:
+            line = LineString([(lon, lat) for lat, lon in all_waypoints])
+            gdf_line = gpd.GeoDataFrame(geometry=[line], crs="EPSG:4326").to_crs(epsg=3857)
+            gdf_line.plot(ax=ax, color="#000000", linewidth=4, alpha=0.8, zorder=99)
+            gdf_line.plot(ax=ax, color="#1a73e8", linewidth=2, alpha=0.9, zorder=100)
+
     def _draw_markers(self, ax: Any, segments: list[ProcessedSegment]) -> None:
         """Draw start and end markers.
 
@@ -514,6 +531,7 @@ class MapRenderer:
         cx.add_basemap(ax, source=osm_url, zoom="auto")
 
         self._draw_segments(ax, segments)
+        self._draw_combined_journey_line(ax, segments)
         self._draw_first_and_last_markers(ax, segments)
 
         ax.set_axis_off()
