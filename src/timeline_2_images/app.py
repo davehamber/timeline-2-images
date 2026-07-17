@@ -7,7 +7,6 @@ from timeline_2_images.processors import TimelineProcessor, SegmentProcessor
 from timeline_2_images.rendering import MapRenderer
 from timeline_2_images.config import RenderConfiguration, DateRangeQuery
 from timeline_2_images.models import RenderResult
-from timeline_2_images.cache import CacheManager
 
 
 class TimelineApp:
@@ -18,7 +17,6 @@ class TimelineApp:
         json_path: str,
         output_dir: str = "output",
         config: RenderConfiguration | None = None,
-        cache_manager: CacheManager | None = None,
         cache_dir: str | None = None,
     ):
         """Initialize timeline app.
@@ -27,7 +25,6 @@ class TimelineApp:
             json_path: Path to Timeline.json file
             output_dir: Directory for output images
             config: RenderConfiguration (uses defaults if not provided)
-            cache_manager: CacheManager for persistent segment caching
             cache_dir: Directory for tile cache (uses ~/.cache/timeline-2-images if not provided)
         """
         self.json_path = json_path
@@ -37,7 +34,7 @@ class TimelineApp:
         self.config = config or RenderConfiguration()
         self.config.validate()
 
-        self.processor = TimelineProcessor(json_path, cache_manager)
+        self.processor = TimelineProcessor(json_path)
         self.segment_processor = SegmentProcessor()
         self.renderer = MapRenderer(config=self.config, tile_cache_dir=cache_dir)
 
