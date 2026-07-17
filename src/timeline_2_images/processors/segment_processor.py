@@ -67,6 +67,18 @@ class SegmentProcessor:
         """
         return simplify_waypoints(waypoints, self.simplification_tolerance_meters)
 
+    def _parse_point_string(self, point_str: str) -> tuple[float, float] | None:
+        """Parse a point string to (lat, lon) tuple."""
+        if not point_str or "," not in point_str:
+            return None
+        try:
+            lat_str, lon_str = point_str.split(",")
+            lat = float(lat_str.replace("°", "").strip())
+            lon = float(lon_str.replace("°", "").strip())
+            return (lat, lon)
+        except (ValueError, AttributeError):
+            return None
+
     def extract_waypoints(self, raw_path: list) -> list[tuple[float, float]]:
         """Extract waypoints from raw timeline path.
 
@@ -79,19 +91,12 @@ class SegmentProcessor:
         waypoints = []
         for item in raw_path:
             point_str = item.get("point") if isinstance(item, dict) else None
-            if not point_str or not isinstance(point_str, str):
+            if not isinstance(point_str, str):
                 continue
 
-            if "," not in point_str:
-                continue
-
-            try:
-                lat_str, lon_str = point_str.split(",")
-                lat_str = lat_str.replace("°", "").strip()
-                lon_str = lon_str.replace("°", "").strip()
-                waypoints.append((float(lat_str), float(lon_str)))
-            except (ValueError, AttributeError):
-                continue
+            point = self._parse_point_string(point_str)
+            if point:
+                waypoints.append(point)
 
         return waypoints
 

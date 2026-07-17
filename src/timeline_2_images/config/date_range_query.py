@@ -27,21 +27,15 @@ class DateRangeQuery:
 
         available_dates_sorted = sorted(available_dates)
 
-        # Both start and end dates specified
         if self.start_date and self.end_date:
             return self._filter_between_dates(
                 available_dates_sorted, self.start_date, self.end_date
             )
-
-        # Start date + days
         if self.start_date:
             return self._filter_from_start_date(available_dates_sorted, self.start_date, self.days)
-
-        # End date + days
         if self.end_date:
             return self._filter_before_end_date(available_dates_sorted, self.end_date, self.days)
 
-        # Last N days (default)
         return available_dates_sorted[-self.days :]
 
     def _filter_between_dates(self, available_dates: list[str], start: str, end: str) -> list[str]:
@@ -72,27 +66,22 @@ class DateRangeQuery:
             d for d in available_dates if start_dt <= datetime.strptime(d, "%Y-%m-%d") <= end_dt
         ]
 
+    def _parse_date(self, date_str: str, field_name: str) -> datetime:
+        """Parse and validate a date string."""
+        try:
+            return datetime.strptime(date_str, "%Y-%m-%d")
+        except ValueError as exc:
+            raise ValueError(f"{field_name} must be in YYYY-MM-DD format") from exc
+
     def validate(self) -> bool:
         """Validate date parameters."""
         if self.days <= 0:
             raise ValueError("days must be positive")
 
-        if self.start_date:
-            try:
-                datetime.strptime(self.start_date, "%Y-%m-%d")
-            except ValueError as exc:
-                raise ValueError("start_date must be in YYYY-MM-DD format") from exc
+        start_dt = self._parse_date(self.start_date, "start_date") if self.start_date else None
+        end_dt = self._parse_date(self.end_date, "end_date") if self.end_date else None
 
-        if self.end_date:
-            try:
-                datetime.strptime(self.end_date, "%Y-%m-%d")
-            except ValueError as exc:
-                raise ValueError("end_date must be in YYYY-MM-DD format") from exc
-
-        if self.start_date and self.end_date:
-            start_dt = datetime.strptime(self.start_date, "%Y-%m-%d")
-            end_dt = datetime.strptime(self.end_date, "%Y-%m-%d")
-            if start_dt > end_dt:
-                raise ValueError("start_date must be before end_date")
+        if start_dt and end_dt and start_dt > end_dt:
+            raise ValueError("start_date must be before end_date")
 
         return True
