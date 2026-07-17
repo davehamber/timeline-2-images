@@ -324,6 +324,14 @@ class TimelineApp:
 
         from timeline_2_images.models import Segment, Bounds
 
+        distance_km = self._calculate_haversine_distance(end_point, start_point)
+        if distance_km > 50:
+            print(
+                f"\n[CONNECTOR] {distance_km:.1f} km: "
+                f"{end_point[0]:.4f}N,{end_point[1]:.4f}E "
+                f"→ {start_point[0]:.4f}N,{start_point[1]:.4f}E"
+            )
+
         connector_seg = Segment(
             start_time=end_segment.segment.end_time,
             end_time=start_segment.segment.start_time,
@@ -344,3 +352,32 @@ class TimelineApp:
             bounds=bounds,
             center=bounds.get_center(),
         )
+
+    def _calculate_haversine_distance(
+        self, point1: tuple[float, float], point2: tuple[float, float]
+    ) -> float:
+        """Calculate distance between two lat/lon points in kilometers.
+
+        Args:
+            point1: (lat, lon) tuple
+            point2: (lat, lon) tuple
+
+        Returns:
+            Distance in kilometers
+        """
+        import math
+
+        lat1, lon1 = point1
+        lat2, lon2 = point2
+
+        R = 6371
+        dlat = math.radians(lat2 - lat1)
+        dlon = math.radians(lon2 - lon1)
+
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
+        )
+        c = 2 * math.asin(math.sqrt(a))
+
+        return R * c
