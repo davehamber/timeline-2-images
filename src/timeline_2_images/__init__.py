@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: EUPL-1.2
+# Copyright (c) 2026 David Hamber
+
 """Daily Timeline Images - Generate daily route maps from Google Timeline exports.
 
 This package provides both:

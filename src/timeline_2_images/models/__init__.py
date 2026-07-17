@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: EUPL-1.2
+# Copyright (c) 2026 David Hamber
+
 """Data models for timeline-2-images."""
 
 from timeline_2_images.models.segment import Segment, ProcessedSegment

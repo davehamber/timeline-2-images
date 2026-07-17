@@ -114,4 +114,17 @@ See [CLAUDE.md](CLAUDE.md) for architecture details and module documentation.
 
 ## License
 
-[Your license here]
+This project is licensed under the **European Union Public Licence (EUPL) v1.2**.
+
+See the [LICENSE](LICENSE) file for the full text.
+
+**SPDX-License-Identifier:** `EUPL-1.2`
+
+### What this means:
+
+- ✓ You can use, modify, and distribute this software freely
+- ✓ Derivative works must also be licensed under EUPL-1.2 (or a compatible license)
+- ✓ You must include a copy of the license with any distribution
+- ✓ You must state what changes were made to the original work
+
+The EUPL is compatible with many other open source licenses including MIT, Apache 2.0, GPL, and others. See the LICENSE file for the full compatibility list.

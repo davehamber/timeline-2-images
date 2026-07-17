@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: EUPL-1.2
+# Copyright (c) 2026 David Hamber
+
 """Processing classes for timeline data."""
 
 from timeline_2_images.processors.timeline_processor import TimelineProcessor
