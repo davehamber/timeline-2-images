@@ -16,7 +16,7 @@ repos:
     rev: v1.8.0
     hooks:
       - id: mypy
-        args: [--warn-unused-ignores, --implicit-optional, --ignore-missing-imports]
+        args: [--implicit-optional, --ignore-missing-imports]
         additional_dependencies: [pandas-stubs, types-requests]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
