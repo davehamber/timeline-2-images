@@ -90,11 +90,19 @@ def populate_cache(json_path: str, data: dict) -> None:
             parsed_datetime = datetime.fromisoformat(str(dt_timestamp.isoformat()))
             seg_date = parsed_datetime.astimezone(timezone.utc).date().isoformat()
 
+            # Determine segment type and extract relevant data
+            activity_type = "UNKNOWN"
+            if "activity" in segment:
+                activity_type = segment["activity"].get("topCandidate", {}).get("type", "UNKNOWN")
+
             segment_json = json.dumps(
                 {
                     "startTime": start_str,
                     "endTime": segment.get("endTime"),
                     "timelinePath": segment.get("timelinePath", []),
+                    "activity": segment.get("activity", {}),
+                    "visit": segment.get("visit", {}),
+                    "activityType": activity_type,
                 },
                 default=str,
             )

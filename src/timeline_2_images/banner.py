@@ -30,6 +30,7 @@ def print_banner():
 {deep_purple}║{reset}    {dark_grey}╚══════╝{reset}  {deep_purple}╚═╝╚═╝{reset}     {deep_purple}╚═╝╚═╝{reset}  {deep_purple}╚═╝{reset} {deep_purple}╚═════╝{reset} {deep_purple}╚══════╝{reset}{deep_purple}╚══════╝{reset}    {deep_purple}║{reset}
 {deep_purple}║{reset}                                                                 {deep_purple}║{reset}
 {deep_purple}║{reset}        Generate daily route maps from Google Timeline           {deep_purple}║{reset}
+{deep_purple}║{reset}   EUPL-1.2, Copyright (c) 2026 David Hamber - Version 0.0.1     {deep_purple}║{reset}
 {deep_purple}║{reset}                                                                 {deep_purple}║{reset}
 {deep_purple}╚═════════════════════════════════════════════════════════════════╝{reset}
 """
