@@ -514,7 +514,6 @@ class MapRenderer:
         cx.add_basemap(ax, source=osm_url, zoom="auto")
 
         self._draw_segments(ax, segments)
-        self._draw_journey_line(ax, segments)
         self._draw_first_and_last_markers(ax, segments)
 
         ax.set_axis_off()
