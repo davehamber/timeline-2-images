@@ -204,46 +204,7 @@ class TimelineApp:
             processed = self.segment_processor.process_segments(segments)
             all_segments.extend(processed)
 
-        self._debug_large_span_segments(all_segments)
         return self._add_day_connectors(all_segments, dates) if all_segments else []
-
-    def _debug_large_span_segments(self, segments: list[Any]) -> None:
-        """Debug: identify segments that span large geographic distances.
-
-        Args:
-            segments: List of ProcessedSegment objects
-        """
-
-        for idx, segment in enumerate(segments):
-            if not segment.simplified_waypoints or len(segment.simplified_waypoints) < 2:
-                continue
-
-            waypoints = segment.simplified_waypoints
-            min_lat = min(wp[0] for wp in waypoints)
-            max_lat = max(wp[0] for wp in waypoints)
-            min_lon = min(wp[1] for wp in waypoints)
-            max_lon = max(wp[1] for wp in waypoints)
-
-            lat_span = max_lat - min_lat
-            lon_span = max_lon - min_lon
-            approx_km = (lat_span + lon_span) * 111
-
-            if approx_km > 50:
-                start_wp = waypoints[0]
-                end_wp = waypoints[-1]
-                seg_type = segment.segment.segment_type
-                start_time = segment.segment.start_time
-                end_time = segment.segment.end_time
-
-                orig_count = len(segment.segment.waypoints)
-                simp_count = len(waypoints)
-                print(f"\n[SEGMENT DEBUG] Large span detected ({approx_km:.1f} km)")
-                print(f"  Segment type: {seg_type}")
-                print(f"  Start: {start_wp[0]:.4f}N, {start_wp[1]:.4f}E")
-                print(f"  End: {end_wp[0]:.4f}N, {end_wp[1]:.4f}E")
-                print(f"  Time: {start_time} to {end_time}")
-                print(f"  Original waypoints: {orig_count}")
-                print(f"  Simplified waypoints: {simp_count}")
 
     def _add_day_connectors(self, segments: list[Any], dates: list[str]) -> list[Any]:
         """Add connector segments between day boundaries.
@@ -258,12 +219,22 @@ class TimelineApp:
         if len(dates) <= 1:
             return segments
 
-        result = []
-        for segment in segments:
-            result.append(segment)
-
         connectors = self._find_day_connectors(dates)
-        result.extend(connectors)
+        if not connectors:
+            return segments
+
+        result = []
+        connector_idx = 0
+
+        for day_idx, date in enumerate(dates):
+            day_segments = self.processor.load_segments_for_day(date)
+            day_processed = self.segment_processor.process_segments(day_segments)
+
+            result.extend(day_processed)
+
+            if connector_idx < len(connectors) and day_idx < len(dates) - 1:
+                result.append(connectors[connector_idx])
+                connector_idx += 1
 
         return result
 
@@ -324,14 +295,6 @@ class TimelineApp:
 
         from timeline_2_images.models import Segment, Bounds
 
-        distance_km = self._calculate_haversine_distance(end_point, start_point)
-        if distance_km > 50:
-            print(
-                f"\n[CONNECTOR] {distance_km:.1f} km: "
-                f"{end_point[0]:.4f}N,{end_point[1]:.4f}E "
-                f"→ {start_point[0]:.4f}N,{start_point[1]:.4f}E"
-            )
-
         connector_seg = Segment(
             start_time=end_segment.segment.end_time,
             end_time=start_segment.segment.start_time,
@@ -352,32 +315,3 @@ class TimelineApp:
             bounds=bounds,
             center=bounds.get_center(),
         )
-
-    def _calculate_haversine_distance(
-        self, point1: tuple[float, float], point2: tuple[float, float]
-    ) -> float:
-        """Calculate distance between two lat/lon points in kilometers.
-
-        Args:
-            point1: (lat, lon) tuple
-            point2: (lat, lon) tuple
-
-        Returns:
-            Distance in kilometers
-        """
-        import math
-
-        lat1, lon1 = point1
-        lat2, lon2 = point2
-
-        R = 6371
-        dlat = math.radians(lat2 - lat1)
-        dlon = math.radians(lon2 - lon1)
-
-        a = (
-            math.sin(dlat / 2) ** 2
-            + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
-        )
-        c = 2 * math.asin(math.sqrt(a))
-
-        return R * c

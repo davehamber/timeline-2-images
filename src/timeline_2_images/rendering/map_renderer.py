@@ -324,20 +324,7 @@ class MapRenderer:
             ax: Matplotlib axis
             segments: List of ProcessedSegment objects
         """
-        print(f"\n[DRAW_SEGMENTS] Total segments to draw: {len(segments)}")
-        for idx, segment in enumerate(segments):
-            seg_type = segment.segment.segment_type
-            waypoint_count = len(segment.simplified_waypoints)
-            if waypoint_count > 1:
-                start_wp = segment.simplified_waypoints[0]
-                end_wp = segment.simplified_waypoints[-1]
-                print(
-                    f"  Segment {idx}: {seg_type} with {waypoint_count} waypoints, "
-                    f"{start_wp[0]:.4f}N,{start_wp[1]:.4f}E → {end_wp[0]:.4f}N,{end_wp[1]:.4f}E"
-                )
-                line = LineString([(lon, lat) for lat, lon in segment.simplified_waypoints])
-                gdf_line = gpd.GeoDataFrame(geometry=[line], crs="EPSG:4326").to_crs(epsg=3857)
-                gdf_line.plot(ax=ax, color="#1a73e8", linewidth=2, alpha=0.9, zorder=100)
+        pass
 
     def _draw_journey_line(self, ax: Any, segments: list[ProcessedSegment]) -> None:
         """Draw journey line with border.
@@ -368,20 +355,8 @@ class MapRenderer:
             all_waypoints.extend(segment.simplified_waypoints)
 
         if len(all_waypoints) > 1:
-            print(f"\n[JOURNEY LINE] Total waypoints: {len(all_waypoints)}")
-            print(f"  First: {all_waypoints[0][0]:.4f}N, {all_waypoints[0][1]:.4f}E")
-            print(f"  Last: {all_waypoints[-1][0]:.4f}N, {all_waypoints[-1][1]:.4f}E")
-
             line = LineString([(lon, lat) for lat, lon in all_waypoints])
-            print(f"  LineString coords: {len(line.coords)} points")
-            print(f"  LineString is_ring: {line.is_ring}")
-            print(f"  LineString is_closed: {line.is_closed}")
-            if len(line.coords) <= 5:
-                print(f"  Actual coords: {list(line.coords)}")
-
             gdf_line = gpd.GeoDataFrame(geometry=[line], crs="EPSG:4326").to_crs(epsg=3857)
-            print(f"  After transform - geom type: {gdf_line.geometry[0].geom_type}")
-            print(f"  After transform - coords: {len(gdf_line.geometry[0].coords)}")
 
             gdf_line.plot(ax=ax, color="#000000", linewidth=4, alpha=0.8, zorder=99)
             gdf_line.plot(ax=ax, color="#1a73e8", linewidth=2, alpha=0.9, zorder=100)
@@ -582,33 +557,7 @@ class MapRenderer:
             ax: Matplotlib axis
             segments: List of ProcessedSegment objects
         """
-        for segment in segments:
-            if not segment.simplified_waypoints or len(segment.simplified_waypoints) < 3:
-                continue
-
-            waypoints = segment.simplified_waypoints
-            min_lat = min(wp[0] for wp in waypoints)
-            max_lat = max(wp[0] for wp in waypoints)
-            min_lon = min(wp[1] for wp in waypoints)
-            max_lon = max(wp[1] for wp in waypoints)
-
-            lat_span = max_lat - min_lat
-            lon_span = max_lon - min_lon
-            approx_km = (lat_span + lon_span) * 111
-
-            if approx_km > 100:
-                for waypoint in waypoints:
-                    wp_point = Point(waypoint[1], waypoint[0])
-                    gdf_wp = gpd.GeoDataFrame(geometry=[wp_point], crs="EPSG:4326").to_crs(
-                        epsg=3857
-                    )
-                    gdf_wp.plot(
-                        ax=ax,
-                        color="#ff00ff",
-                        markersize=80,
-                        zorder=105,
-                        alpha=0.8,
-                    )
+        pass
 
     def _draw_first_and_last_markers(self, ax: Any, segments: list[ProcessedSegment]) -> None:
         """Draw start marker at first point and end marker at last point.
