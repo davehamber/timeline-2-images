@@ -36,9 +36,15 @@ wheels/
 .coverage
 htmlcov/
 
+# Tool caches
+.mypy_cache/
+.ruff_cache/
+
 # Project specific
 output/
 timelines/
+.tile_cache/
+.timeline_cache/
 *.jpg
 Timeline.json
 Timeline_merged.json

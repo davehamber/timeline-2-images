@@ -107,7 +107,7 @@ class TimelineApp:
             result = self.renderer.render_segments(processed_segments, str(output_path))
             return result
 
-        except Exception as exception:
+        except (ValueError, OSError, IOError, RuntimeError) as exception:
             return RenderResult(
                 date=date,
                 output_path=self.output_dir / f"{date}.jpg",

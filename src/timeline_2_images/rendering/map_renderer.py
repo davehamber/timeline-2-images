@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 from shapely.geometry import Point, LineString
 import contextily as cx
+from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
 
 from timeline_2_images.config import RenderConfiguration
 from timeline_2_images.models import ProcessedSegment, RenderResult
@@ -36,6 +38,7 @@ class MapRenderer:
         self.config = config or RenderConfiguration()
         self.tile_cache = TileCacheManager(tile_cache_dir)
         self.config.validate()
+        self.geocoder = Nominatim(user_agent="timeline-2-images")
 
     def render_segments(
         self, segments: list[ProcessedSegment], output_path: str | Path
@@ -78,7 +81,7 @@ class MapRenderer:
                 render_time=render_time,
                 success=True,
             )
-        except Exception as exception:
+        except (ValueError, OSError, IOError, RuntimeError) as exception:
             render_time = time.time() - start_time
             return RenderResult(
                 date=output_path.stem,
@@ -89,6 +92,70 @@ class MapRenderer:
                 success=False,
                 error_message=str(exception),
             )
+
+    def _get_place_name(self, lat: float, lon: float) -> str:
+        """Fetch place name from coordinates using Nominatim.
+
+        Args:
+            lat: Latitude coordinate
+            lon: Longitude coordinate
+
+        Returns:
+            Place name string (city/town/village/district), or empty string if unavailable
+        """
+        try:
+            location = self.geocoder.reverse(f"{lat}, {lon}", language="en", timeout=5)
+            if location and hasattr(location, "raw") and location.raw:
+                address = location.raw.get("address", {})
+
+                priority_keys = ["city", "town", "village", "borough", "district", "suburb"]
+                for key in priority_keys:
+                    if key in address:
+                        return str(address[key])
+
+            address_str = location.address if location else ""
+            if address_str:
+                parts = [p.strip() for p in address_str.split(",")]
+                for part in parts[1:-1]:
+                    if part and not part.isdigit() and len(part) > 2:
+                        return str(part)
+                return str(parts[0].strip()) if parts else ""
+        except (GeocoderTimedOut, GeocoderUnavailable):
+            pass
+        except Exception:  # pylint: disable=broad-except
+            pass
+        return ""
+
+    def _get_location_label(self, segments: list[ProcessedSegment]) -> str:
+        """Get location label with start and end place names.
+
+        Args:
+            segments: List of ProcessedSegment objects
+
+        Returns:
+            Location label string (e.g., "New York - Boston" or just "Boston")
+        """
+        all_waypoints = []
+        for segment in segments:
+            all_waypoints.extend(segment.simplified_waypoints)
+
+        if not all_waypoints:
+            return ""
+
+        start_lat, start_lon = all_waypoints[0]
+        start_place = self._get_place_name(start_lat, start_lon)
+
+        end_place = ""
+        if len(all_waypoints) > 1:
+            end_lat, end_lon = all_waypoints[-1]
+            end_place = self._get_place_name(end_lat, end_lon)
+
+        if not start_place and not end_place:
+            return ""
+
+        if start_place == end_place or not end_place:
+            return start_place
+        return f"{start_place} - {end_place}"
 
     def _collect_waypoints(self, segments: list[ProcessedSegment]) -> list[tuple[float, float]]:
         """Collect all waypoints from segments.
@@ -195,6 +262,26 @@ class MapRenderer:
         self._draw_segments(ax, segments)
         self._draw_journey_line(ax, segments)
         self._draw_markers(ax, segments)
+
+        if self.config.add_place_names:
+            location_label = self._get_location_label(segments)
+            if location_label:
+                fig.text(
+                    0.98,
+                    0.98,
+                    location_label,
+                    ha="right",
+                    va="top",
+                    fontsize=11,
+                    fontweight="bold",
+                    bbox={
+                        "boxstyle": "round,pad=0.5",
+                        "facecolor": "white",
+                        "alpha": 0.85,
+                        "edgecolor": "gray",
+                    },
+                    zorder=200,
+                )
 
         ax.set_axis_off()
         plt.tight_layout(pad=0)

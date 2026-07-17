@@ -41,16 +41,20 @@ def get_hash_path(_: str) -> Path:
 def _init_db(db_path: Path) -> sqlite3.Connection:
     """Initialize or open the segments database."""
     conn = sqlite3.connect(str(db_path))
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS segments (
             id INTEGER PRIMARY KEY,
             date TEXT NOT NULL,
             segment_json TEXT NOT NULL
         )
-        """)
-    conn.execute("""
+        """
+    )
+    conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_date ON segments(date)
-        """)
+        """
+    )
     conn.commit()
     return conn
 
@@ -75,13 +79,13 @@ def populate_cache(json_path: str, data: dict) -> None:
             if not start_str:
                 continue
 
-            import pandas as pd
+            import pandas as pd  # pylint: disable=import-outside-toplevel
 
             dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
             if pd.isna(dt_timestamp):
                 continue
 
-            from datetime import datetime, timezone
+            from datetime import datetime, timezone  # pylint: disable=import-outside-toplevel
 
             parsed_datetime = datetime.fromisoformat(str(dt_timestamp.isoformat()))
             seg_date = parsed_datetime.astimezone(timezone.utc).date().isoformat()
@@ -135,7 +139,7 @@ def _load_segment_rows_from_db(db_path: Path, target_date: str) -> list[str] | N
         rows = [row[0] for row in cursor.fetchall()]
         conn.close()
         return rows
-    except Exception:
+    except sqlite3.Error:
         return None
 
 
@@ -187,7 +191,7 @@ def get_cache_stats(json_path: str) -> dict:
             "date_count": date_count,
             "size_mb": db_size_mb,
         }
-    except Exception:
+    except sqlite3.Error:
         return {"status": "error"}
 
 
@@ -200,7 +204,7 @@ def _load_dates_from_db(db_path: Path) -> list[str] | None:
         dates = [row[0] for row in cursor.fetchall()]
         conn.close()
         return dates if dates else None
-    except Exception:
+    except sqlite3.Error:
         return None
 
 
@@ -234,7 +238,7 @@ def clean_all_cache() -> None:
     try:
         cache_dir = _get_cache_dir()
         if cache_dir.exists():
-            import shutil
+            import shutil  # pylint: disable=import-outside-toplevel
 
             shutil.rmtree(cache_dir)
     except OSError as e:

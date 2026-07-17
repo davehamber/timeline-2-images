@@ -80,14 +80,14 @@ class DateRangeQuery:
         if self.start_date:
             try:
                 datetime.strptime(self.start_date, "%Y-%m-%d")
-            except ValueError:
-                raise ValueError("start_date must be in YYYY-MM-DD format")
+            except ValueError as exc:
+                raise ValueError("start_date must be in YYYY-MM-DD format") from exc
 
         if self.end_date:
             try:
                 datetime.strptime(self.end_date, "%Y-%m-%d")
-            except ValueError:
-                raise ValueError("end_date must be in YYYY-MM-DD format")
+            except ValueError as exc:
+                raise ValueError("end_date must be in YYYY-MM-DD format") from exc
 
         if self.start_date and self.end_date:
             start_dt = datetime.strptime(self.start_date, "%Y-%m-%d")

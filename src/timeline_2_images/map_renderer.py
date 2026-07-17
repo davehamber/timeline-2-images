@@ -3,10 +3,10 @@
 Note: New OOP code should use timeline_2_images.rendering module instead.
 """
 
+from pathlib import Path
+
 import requests_cache
 from shapely.geometry import LineString
-
-from pathlib import Path
 
 # Install requests-cache globally to cache all tile downloads
 # This will intercept all requests from contextily automatically
@@ -14,18 +14,18 @@ try:
     # Use XDG Base Directory Specification for cache location
     cache_dir = Path.home() / ".cache" / "timeline-2-images"
     cache_dir.mkdir(exist_ok=True, parents=True)
-    cache_path = str(cache_dir / "tiles")
+    CACHE_PATH = str(cache_dir / "tiles")
 
-    _cache_session = requests_cache.install_cache(
-        cache_path,
+    _CACHE_SESSION = requests_cache.install_cache(  # pylint: disable=assignment-from-no-return  # type: ignore[assignment]
+        CACHE_PATH,
         backend="sqlite",
         expire_after=None,  # Never expire - tiles don't change
         match_headers=False,  # Don't vary cache by headers
         stale_if_error=True,  # Use stale cache on error
     )
-except Exception as e:
+except (OSError, IOError) as e:
     print(f"Warning: Failed to install requests-cache: {e}")
-    _cache_session = None
+    _CACHE_SESSION = None
 
 
 def simplify_waypoints(waypoints: list[tuple], tolerance_meters: float = 20) -> list[tuple]:

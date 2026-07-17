@@ -16,6 +16,7 @@ class RenderConfiguration:
     line_alpha: float = 0.9
     start_marker_size: int = 35
     end_marker_size: int = 25
+    add_place_names: bool = True
 
     def get_figure_size(self) -> tuple[float, float]:
         """Get figure size in inches."""
@@ -39,6 +40,6 @@ class RenderConfiguration:
             raise ValueError("dpi must be positive")
         if self.min_area_sq_km < 0:
             raise ValueError("min_area_sq_km must be non-negative")
-        if not (0 <= self.line_alpha <= 1):
+        if not 0 <= self.line_alpha <= 1:
             raise ValueError("line_alpha must be between 0 and 1")
         return True
