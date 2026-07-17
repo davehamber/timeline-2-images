@@ -153,18 +153,37 @@ def _parse_segment_datetime(start_str: str, target: date) -> str | None:
 def _build_segments_with_waypoints(
     segment_list: list[dict], step_start: float, timing: dict
 ) -> list[dict]:
-    """Build segment dicts with parsed waypoints from a segment list."""
+    """Build segment dicts with parsed waypoints from a segment list.
+
+    Handles both traditional timelinePath and activity-based segments.
+    """
     segments = []
     for segment in segment_list:
+        start_time = segment.get("startTime")
+        end_time = segment.get("endTime")
+
+        # Try traditional timelinePath first
         waypoints = _parse_waypoints(segment.get("timelinePath", []))
+
+        # If no waypoints from timelinePath, check for activity
+        if not waypoints and "activity" in segment:
+            activity = segment["activity"]
+            wp_coords = _get_activity_waypoints(activity)
+            if wp_coords:
+                # Convert (lat, lon) tuples to waypoint format for consistency
+                waypoints = [{"point": f"{lon},{lat}"} for lat, lon in wp_coords]
+                waypoints = _parse_waypoints(waypoints)
+
         if waypoints:
             segments.append(
                 {
-                    "startTime": segment.get("startTime"),
-                    "endTime": segment.get("endTime"),
+                    "startTime": start_time,
+                    "endTime": end_time,
                     "waypoints": waypoints,
+                    "activityType": segment.get("activityType", "unknown"),
                 }
             )
+
     timing["waypoint_extraction"] = time.time() - step_start
     return segments
 
@@ -406,11 +425,115 @@ def _process_semantic_segment(segment: dict, target: date) -> list:
     return _extract_points_from_segment_path(parsed_datetime, segment)
 
 
+def _extract_activity_type(segment: dict) -> str:
+    """Extract activity type (FLYING, IN_TRAIN, etc.) from segment."""
+    if "activity" in segment:
+        activity_type = segment["activity"].get("topCandidate", {}).get("type", "UNKNOWN")
+        return str(activity_type) if activity_type else "UNKNOWN"
+    return "UNKNOWN"
+
+
+def _parse_latlng_string(latlng_str: str) -> tuple[float, float] | None:
+    """Parse latLng string format 'lat°, lon°' into (lat, lon) tuple.
+
+    Google Timeline uses format like "52.5101734°, 13.4496576°"
+    """
+    if not latlng_str:
+        return None
+    try:
+        parts = latlng_str.replace("°", "").split(",")
+        if len(parts) == 2:
+            lat = float(parts[0].strip())
+            lon = float(parts[1].strip())
+            return (lat, lon)
+    except (ValueError, AttributeError, IndexError):
+        pass
+    return None
+
+
+def _get_activity_waypoints(activity: dict) -> list[tuple[float, float]] | None:
+    """Extract waypoints from an activity segment.
+
+    Returns list of (lat, lon) tuples, or None if no waypoints available.
+    Handles both detailed waypointPath and simple start/end coordinates.
+    """
+    # Try detailed waypoint path first (for activities with GPS data)
+    if "waypointPath" in activity:
+        waypoints = activity["waypointPath"].get("waypoints", [])
+        if waypoints:
+            result = []
+            for wp in waypoints:
+                try:
+                    latlng_str = wp.get("latLng", "")
+                    coords = _parse_latlng_string(latlng_str)
+                    if coords:
+                        result.append(coords)
+                except (ValueError, AttributeError):
+                    continue
+            if result:
+                return result
+
+    # Fallback: create synthetic waypoints from start/end (for flights, etc.)
+    start = activity.get("start", {})
+    end = activity.get("end", {})
+
+    start_coords = start.get("latLng")
+    end_coords = end.get("latLng")
+
+    if start_coords and end_coords:
+        start_tuple = _parse_latlng_string(start_coords)
+        end_tuple = _parse_latlng_string(end_coords)
+
+        if start_tuple and end_tuple:
+            # Create synthetic waypoint path (start + end)
+            return [start_tuple, end_tuple]
+
+    return None
+
+
 def _extract_from_semantic_segments(data: dict, target: date) -> list:
-    """Extract points from semanticSegments with string coordinates."""
+    """Extract points from semanticSegments, handling both visits and activities."""
     rows = []
     for segment in data.get("semanticSegments", []):
-        rows.extend(_process_semantic_segment(segment, target))
+        # Try to extract points using the existing method (for visits with timelinePath)
+        segment_rows = _process_semantic_segment(segment, target)
+        if segment_rows:
+            rows.extend(segment_rows)
+            continue
+
+        # If no timelinePath, check if this is an activity segment
+        if "activity" in segment:
+            start_str = segment.get("startTime")
+            if not start_str or target.isoformat() not in start_str:
+                continue
+
+            activity = segment["activity"]
+            waypoints = _get_activity_waypoints(activity)
+            if not waypoints:
+                continue
+
+            # Parse the start timestamp for consistent ordering
+            start_dt = pd.to_datetime(start_str, utc=True, errors="coerce")
+            if pd.isna(start_dt):
+                continue
+
+            # Create timestamp for each waypoint (interpolate for synthetic waypoints)
+            end_str = segment.get("endTime")
+            end_dt = pd.to_datetime(end_str, utc=True, errors="coerce")
+            if pd.isna(end_dt):
+                end_dt = start_dt
+
+            time_per_point = (
+                (end_dt - start_dt) / max(1, len(waypoints) - 1)
+                if len(waypoints) > 1
+                else pd.Timedelta(0)
+            )
+
+            for idx, (lat, lon) in enumerate(waypoints):
+                point_time = start_dt + (time_per_point * idx)
+                timestamp = datetime.fromisoformat(str(point_time.isoformat()))
+                rows.append((timestamp, lat, lon))
+
     return rows
 
 
