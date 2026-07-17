@@ -93,6 +93,36 @@ class MapRenderer:
                 error_message=str(exception),
             )
 
+    def _extract_from_structured_address(self, address: dict) -> str:
+        """Extract place name from structured address dict.
+
+        Args:
+            address: Address dict from Nominatim
+
+        Returns:
+            Place name or empty string
+        """
+        priority_keys = ["city", "town", "village", "borough", "district", "suburb"]
+        for key in priority_keys:
+            if key in address:
+                return str(address[key])
+        return ""
+
+    def _extract_from_address_string(self, address_str: str) -> str:
+        """Extract place name from comma-separated address string.
+
+        Args:
+            address_str: Address string from Nominatim
+
+        Returns:
+            Place name or empty string
+        """
+        parts = [p.strip() for p in address_str.split(",")]
+        for part in parts[1:-1]:
+            if part and not part.isdigit() and len(part) > 2:
+                return str(part)
+        return str(parts[0].strip()) if parts else ""
+
     def _get_place_name(self, lat: float, lon: float) -> str:
         """Fetch place name from coordinates using Nominatim.
 
@@ -107,24 +137,26 @@ class MapRenderer:
             location = self.geocoder.reverse(f"{lat}, {lon}", language="en", timeout=5)
             if location and hasattr(location, "raw") and location.raw:
                 address = location.raw.get("address", {})
-
-                priority_keys = ["city", "town", "village", "borough", "district", "suburb"]
-                for key in priority_keys:
-                    if key in address:
-                        return str(address[key])
+                place = self._extract_from_structured_address(address)
+                if place:
+                    return place
 
             address_str = location.address if location else ""
             if address_str:
-                parts = [p.strip() for p in address_str.split(",")]
-                for part in parts[1:-1]:
-                    if part and not part.isdigit() and len(part) > 2:
-                        return str(part)
-                return str(parts[0].strip()) if parts else ""
+                return self._extract_from_address_string(address_str)
         except (GeocoderTimedOut, GeocoderUnavailable):
             pass
         except Exception:  # pylint: disable=broad-except
             pass
         return ""
+
+    def _format_location_label(self, start_place: str, end_place: str) -> str:
+        """Format start and end place names into a label."""
+        if not start_place and not end_place:
+            return ""
+        if start_place == end_place or not end_place:
+            return start_place
+        return f"{start_place} - {end_place}"
 
     def _get_location_label(self, segments: list[ProcessedSegment]) -> str:
         """Get location label with start and end place names.
@@ -150,12 +182,7 @@ class MapRenderer:
             end_lat, end_lon = all_waypoints[-1]
             end_place = self._get_place_name(end_lat, end_lon)
 
-        if not start_place and not end_place:
-            return ""
-
-        if start_place == end_place or not end_place:
-            return start_place
-        return f"{start_place} - {end_place}"
+        return self._format_location_label(start_place, end_place)
 
     def _collect_waypoints(self, segments: list[ProcessedSegment]) -> list[tuple[float, float]]:
         """Collect all waypoints from segments.

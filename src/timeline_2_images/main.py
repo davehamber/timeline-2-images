@@ -14,6 +14,52 @@ from timeline_2_images.timeline_validator import (
 )
 
 
+def _load_and_validate_app(
+    timeline_json: str, output_dir: str, image_size: int, place_names: bool
+) -> TimelineApp:
+    """Validate Timeline.json and initialize TimelineApp."""
+    try:
+        validate_timeline_structure(timeline_json)
+    except TimelineValidationError as e:
+        print("Error: Invalid Timeline.json structure")
+        print(f"  {e}")
+        sys.exit(1)
+
+    config = RenderConfiguration(image_size=image_size, add_place_names=place_names)
+    return TimelineApp(str(timeline_json), output_dir=output_dir, config=config)
+
+
+def _load_available_dates(app: TimelineApp, timeline_path: Path) -> list[str]:
+    """Load available dates from timeline."""
+    print(f"Loading timeline data from {timeline_path}...", end=" ", flush=True)
+    load_start = time.time()
+    available_dates = app.get_available_dates()
+    load_time = time.time() - load_start
+    print(f"✓ ({load_time:.2f}s)")
+
+    if not available_dates:
+        print("No timeline data found")
+        sys.exit(1)
+
+    print(f"Found {len(available_dates)} days with data")
+    print(f"Date range: {available_dates[0]} to {available_dates[-1]}")
+    print()
+    return available_dates
+
+
+def _print_cache_info(cache_info: dict) -> None:
+    """Print cache information."""
+    if not cache_info:
+        return
+    print()
+    print("Cache Information:")
+    print(f"  Location: {cache_info.get('cache_dir', 'unknown')}")
+    print(f"  Status: {cache_info.get('status', 'unknown')}")
+    if cache_info.get("status") == "cached":
+        print(f"  Cached tiles: {cache_info.get('total_cached_tiles', 0)}")
+    print(f"  Size: {cache_info.get('cache_size_mb', 0):.1f}MB")
+
+
 def main(
     timeline_json: str,
     output_dir: str = "output",
@@ -38,33 +84,9 @@ def main(
         place_names: If True, add place names to maps (default: True)
     """
     timeline_path = Path(timeline_json)
+    app = _load_and_validate_app(timeline_json, output_dir, image_size, place_names)
+    _load_available_dates(app, timeline_path)
 
-    # Validate Timeline.json structure
-    try:
-        validate_timeline_structure(timeline_json)
-    except TimelineValidationError as e:
-        print("Error: Invalid Timeline.json structure")
-        print(f"  {e}")
-        sys.exit(1)
-
-    config = RenderConfiguration(image_size=image_size, add_place_names=place_names)
-    app = TimelineApp(str(timeline_path), output_dir=output_dir, config=config)
-
-    print(f"Loading timeline data from {timeline_path}...", end=" ", flush=True)
-    load_start = time.time()
-    available_dates = app.get_available_dates()
-    load_time = time.time() - load_start
-    print(f"✓ ({load_time:.2f}s)")
-
-    if not available_dates:
-        print("No timeline data found")
-        sys.exit(1)
-
-    print(f"Found {len(available_dates)} days with data")
-    print(f"Date range: {available_dates[0]} to {available_dates[-1]}")
-    print()
-
-    # Get the dates that will be processed
     from timeline_2_images.config import DateRangeQuery  # pylint: disable=import-outside-toplevel
 
     query = DateRangeQuery(start_date=start_date, end_date=end_date, days=days)
@@ -84,15 +106,7 @@ def main(
     print(f"Generated {success_count}/{len(results)} map images in {output_dir}")
     print(f"Total time: {total_time:.2f}s")
 
-    cache_info = app.renderer.get_cache_info()
-    if cache_info:
-        print()
-        print("Cache Information:")
-        print(f"  Location: {cache_info.get('cache_dir', 'unknown')}")
-        print(f"  Status: {cache_info.get('status', 'unknown')}")
-        if cache_info.get("status") == "cached":
-            print(f"  Cached tiles: {cache_info.get('total_cached_tiles', 0)}")
-        print(f"  Size: {cache_info.get('cache_size_mb', 0):.1f}MB")
+    _print_cache_info(app.renderer.get_cache_info())
 
 
 def cli() -> None:
