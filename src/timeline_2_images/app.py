@@ -204,7 +204,43 @@ class TimelineApp:
             processed = self.segment_processor.process_segments(segments)
             all_segments.extend(processed)
 
+        self._debug_large_span_segments(all_segments)
         return self._add_day_connectors(all_segments, dates) if all_segments else []
+
+    def _debug_large_span_segments(self, segments: list[Any]) -> None:
+        """Debug: identify segments that span large geographic distances.
+
+        Args:
+            segments: List of ProcessedSegment objects
+        """
+
+        for idx, segment in enumerate(segments):
+            if not segment.simplified_waypoints or len(segment.simplified_waypoints) < 2:
+                continue
+
+            waypoints = segment.simplified_waypoints
+            min_lat = min(wp[0] for wp in waypoints)
+            max_lat = max(wp[0] for wp in waypoints)
+            min_lon = min(wp[1] for wp in waypoints)
+            max_lon = max(wp[1] for wp in waypoints)
+
+            lat_span = max_lat - min_lat
+            lon_span = max_lon - min_lon
+            approx_km = (lat_span + lon_span) * 111
+
+            if approx_km > 50:
+                start_wp = waypoints[0]
+                end_wp = waypoints[-1]
+                seg_type = segment.segment.segment_type
+                start_time = segment.segment.start_time
+                end_time = segment.segment.end_time
+
+                print(f"\n[SEGMENT DEBUG] Large span detected ({approx_km:.1f} km)")
+                print(f"  Segment type: {seg_type}")
+                print(f"  Start: {start_wp[0]:.4f}N, {start_wp[1]:.4f}E")
+                print(f"  End: {end_wp[0]:.4f}N, {end_wp[1]:.4f}E")
+                print(f"  Time: {start_time} to {end_time}")
+                print(f"  Waypoint count: {len(waypoints)}")
 
     def _add_day_connectors(self, segments: list[Any], dates: list[str]) -> list[Any]:
         """Add connector segments between day boundaries.
