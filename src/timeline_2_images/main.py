@@ -103,6 +103,17 @@ def main(
 
     success_count = sum(1 for r in results if r.was_successful())
     print()
+
+    for result in results:
+        status = "✓" if result.was_successful() else "✗"
+        if result.was_successful():
+            print(
+                f"{status} {result.date}: {result.render_time:.2f}s ({result.point_count} points)"
+            )
+        else:
+            print(f"{status} {result.date}: {result.error_message}")
+
+    print()
     print(f"Generated {success_count}/{len(results)} map images in {output_dir}")
     print(f"Total time: {total_time:.2f}s")
 
