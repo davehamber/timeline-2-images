@@ -350,8 +350,11 @@ class MapRenderer:
             ax: Matplotlib axis
             segments: List of ProcessedSegment objects
         """
+        # Sort segments by start time to ensure chronological order
+        sorted_segments = sorted(segments, key=lambda s: s.segment.start_time)
+
         all_waypoints = []
-        for segment in segments:
+        for segment in sorted_segments:
             all_waypoints.extend(segment.simplified_waypoints)
 
         if len(all_waypoints) > 1:
