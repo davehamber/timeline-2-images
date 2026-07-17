@@ -324,8 +324,17 @@ class MapRenderer:
             ax: Matplotlib axis
             segments: List of ProcessedSegment objects
         """
-        for segment in segments:
-            if len(segment.simplified_waypoints) > 1:
+        print(f"\n[DRAW_SEGMENTS] Total segments to draw: {len(segments)}")
+        for idx, segment in enumerate(segments):
+            seg_type = segment.segment.segment_type
+            waypoint_count = len(segment.simplified_waypoints)
+            if waypoint_count > 1:
+                start_wp = segment.simplified_waypoints[0]
+                end_wp = segment.simplified_waypoints[-1]
+                print(
+                    f"  Segment {idx}: {seg_type} with {waypoint_count} waypoints, "
+                    f"{start_wp[0]:.4f}N,{start_wp[1]:.4f}E → {end_wp[0]:.4f}N,{end_wp[1]:.4f}E"
+                )
                 line = LineString([(lon, lat) for lat, lon in segment.simplified_waypoints])
                 gdf_line = gpd.GeoDataFrame(geometry=[line], crs="EPSG:4326").to_crs(epsg=3857)
                 gdf_line.plot(ax=ax, color="#1a73e8", linewidth=2, alpha=0.9, zorder=100)
