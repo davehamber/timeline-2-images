@@ -1,7 +1,7 @@
 """Process timeline segments."""
 
 from timeline_2_images.models import Segment, ProcessedSegment, Bounds
-from timeline_2_images.map_renderer import simplify_waypoints
+from timeline_2_images.utils import simplify_waypoints
 
 
 class SegmentProcessor:
