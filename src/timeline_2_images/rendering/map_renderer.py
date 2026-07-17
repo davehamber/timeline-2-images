@@ -359,7 +359,13 @@ class MapRenderer:
             all_waypoints.extend(segment.simplified_waypoints)
 
         if len(all_waypoints) > 1:
+            print(f"\n[JOURNEY LINE] Total waypoints: {len(all_waypoints)}")
+            print(f"  First: {all_waypoints[0][0]:.4f}N, {all_waypoints[0][1]:.4f}E")
+            print(f"  Last: {all_waypoints[-1][0]:.4f}N, {all_waypoints[-1][1]:.4f}E")
+
             line = LineString([(lon, lat) for lat, lon in all_waypoints])
+            print(f"  LineString coords: {len(line.coords)} points")
+
             gdf_line = gpd.GeoDataFrame(geometry=[line], crs="EPSG:4326").to_crs(epsg=3857)
             gdf_line.plot(ax=ax, color="#000000", linewidth=4, alpha=0.8, zorder=99)
             gdf_line.plot(ax=ax, color="#1a73e8", linewidth=2, alpha=0.9, zorder=100)
