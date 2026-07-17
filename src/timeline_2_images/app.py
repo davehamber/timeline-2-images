@@ -235,12 +235,15 @@ class TimelineApp:
                 start_time = segment.segment.start_time
                 end_time = segment.segment.end_time
 
+                orig_count = len(segment.segment.waypoints)
+                simp_count = len(waypoints)
                 print(f"\n[SEGMENT DEBUG] Large span detected ({approx_km:.1f} km)")
                 print(f"  Segment type: {seg_type}")
                 print(f"  Start: {start_wp[0]:.4f}N, {start_wp[1]:.4f}E")
                 print(f"  End: {end_wp[0]:.4f}N, {end_wp[1]:.4f}E")
                 print(f"  Time: {start_time} to {end_time}")
-                print(f"  Waypoint count: {len(waypoints)}")
+                print(f"  Original waypoints: {orig_count}")
+                print(f"  Simplified waypoints: {simp_count}")
 
     def _add_day_connectors(self, segments: list[Any], dates: list[str]) -> list[Any]:
         """Add connector segments between day boundaries.
