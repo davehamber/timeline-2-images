@@ -171,7 +171,8 @@ def _build_segments_with_waypoints(
             wp_coords = _get_activity_waypoints(activity)
             if wp_coords:
                 # Convert (lat, lon) tuples to waypoint format for consistency
-                waypoints = [{"point": f"{lon},{lat}"} for lat, lon in wp_coords]
+                # _parse_waypoints expects "lat,lon" format
+                waypoints = [{"point": f"{lat},{lon}"} for lat, lon in wp_coords]
                 waypoints = _parse_waypoints(waypoints)
 
         if waypoints:
