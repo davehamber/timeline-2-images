@@ -9,9 +9,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import geopandas as gpd
 from shapely.geometry import Point, LineString
-import contextily as cx
-from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
+import contextily as cx  # type: ignore
+from geopy.geocoders import Nominatim  # type: ignore
+from geopy.exc import GeocoderTimedOut, GeocoderUnavailable  # type: ignore
 
 from timeline_2_images.config import RenderConfiguration
 from timeline_2_images.models import ProcessedSegment, RenderResult
