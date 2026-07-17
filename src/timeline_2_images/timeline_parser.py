@@ -466,8 +466,10 @@ def _extract_dates_from_locations(data: dict) -> Set[date]:
 
 def _get_segment_start_date(segment: dict) -> date | None:
     """Extract start date from a timeline segment."""
-    duration = segment.get("duration", {})
-    start_str = duration.get("startTimestamp") or duration.get("startTimestampMs")
+    start_str = segment.get("startTime")
+    if not start_str:
+        duration = segment.get("duration", {})
+        start_str = duration.get("startTimestamp") or duration.get("startTimestampMs")
     if start_str is None:
         return None
     dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
