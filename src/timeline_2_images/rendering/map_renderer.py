@@ -391,3 +391,156 @@ class MapRenderer:
             Dictionary with cache stats
         """
         return self.tile_cache.get_info()
+
+    def render_combined_segments(
+        self, segments: list[ProcessedSegment], output_path: str | Path
+    ) -> RenderResult:
+        """Render combined segments from multiple days into single image.
+
+        Args:
+            segments: List of ProcessedSegment objects (may include connectors)
+            output_path: Path to save output image
+
+        Returns:
+            RenderResult with rendering info
+        """
+        output_path = Path(output_path)
+        start_time = time.time()
+
+        try:
+            if not segments:
+                raise ValueError("No segments provided to render")
+
+            all_waypoints = self._collect_waypoints(segments)
+            if not all_waypoints:
+                raise ValueError("No waypoints found in segments")
+
+            bounds = self._calculate_combined_bounds(all_waypoints)
+
+            self._render_combined_map(segments, bounds, output_path)
+
+            render_time = time.time() - start_time
+            point_count = sum(len(s.simplified_waypoints) for s in segments)
+
+            return RenderResult(
+                date=output_path.stem,
+                output_path=output_path,
+                segment_count=len(segments),
+                point_count=point_count,
+                render_time=render_time,
+                success=True,
+            )
+        except (ValueError, OSError, IOError, RuntimeError) as exception:
+            render_time = time.time() - start_time
+            return RenderResult(
+                date=output_path.stem,
+                output_path=output_path,
+                segment_count=0,
+                point_count=0,
+                render_time=render_time,
+                success=False,
+                error_message=str(exception),
+            )
+
+    def _calculate_combined_bounds(self, waypoints: list[tuple[float, float]]) -> tuple:
+        """Calculate bounds with ~5 pixel border around waypoints.
+
+        Args:
+            waypoints: List of (lat, lon) tuples
+
+        Returns:
+            Tuple of (minx, miny, maxx, maxy) in Web Mercator
+        """
+        lats = [p[0] for p in waypoints]
+        lons = [p[1] for p in waypoints]
+        min_lat, max_lat = min(lats), max(lats)
+        min_lon, max_lon = min(lons), max(lons)
+
+        bounds_gdf = gpd.GeoDataFrame(
+            geometry=[
+                Point(min_lon, min_lat),
+                Point(max_lon, max_lat),
+            ],
+            crs="EPSG:4326",
+        ).to_crs(epsg=3857)
+
+        minx, miny, maxx, maxy = bounds_gdf.total_bounds
+
+        dx = maxx - minx or 500
+        dy = maxy - miny or 500
+
+        pixel_size_x = dx / (self.config.image_size or 1000)
+        pixel_size_y = dy / (self.config.image_size or 1000)
+
+        border_x = 5 * pixel_size_x
+        border_y = 5 * pixel_size_y
+
+        return (minx - border_x, miny - border_y, maxx + border_x, maxy + border_y)
+
+    def _render_combined_map(
+        self, segments: list[ProcessedSegment], bounds: tuple, output_path: Path
+    ) -> None:
+        """Render combined segments on map and save to file.
+
+        Args:
+            segments: List of ProcessedSegment objects
+            bounds: (minx, miny, maxx, maxy) in Web Mercator
+            output_path: Output file path
+        """
+        minx, miny, maxx, maxy = bounds
+
+        fig_size = self.config.get_figure_size()
+        fig, ax = plt.subplots(figsize=fig_size, dpi=self.config.dpi)
+        fig.subplots_adjust(left=0, right=1, top=1, bottom=0, hspace=0, wspace=0)
+        ax.set_xlim(minx, maxx)
+        ax.set_ylim(miny, maxy)
+        ax.set_aspect("equal")
+
+        osm_url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        cx.add_basemap(ax, source=osm_url, zoom="auto")
+
+        self._draw_segments(ax, segments)
+        self._draw_journey_line(ax, segments)
+        self._draw_first_and_last_markers(ax, segments)
+
+        ax.set_axis_off()
+        plt.tight_layout(pad=0)
+        fig.savefig(
+            output_path, dpi=self.config.dpi, format=self.config.output_format, facecolor="white"
+        )
+        plt.close(fig)
+
+    def _draw_first_and_last_markers(self, ax: Any, segments: list[ProcessedSegment]) -> None:
+        """Draw start marker at first point and end marker at last point.
+
+        Args:
+            ax: Matplotlib axis
+            segments: List of ProcessedSegment objects
+        """
+        all_waypoints = []
+        for segment in segments:
+            all_waypoints.extend(segment.simplified_waypoints)
+
+        if not all_waypoints:
+            return
+
+        start_point = Point(all_waypoints[0][1], all_waypoints[0][0])
+        gdf_start = gpd.GeoDataFrame(geometry=[start_point], crs="EPSG:4326").to_crs(epsg=3857)
+        gdf_start.plot(
+            ax=ax,
+            color="#34a853",
+            markersize=self.config.start_marker_size,
+            zorder=101,
+            alpha=0.95,
+        )
+
+        if len(all_waypoints) > 1:
+            end_point = Point(all_waypoints[-1][1], all_waypoints[-1][0])
+            gdf_end = gpd.GeoDataFrame(geometry=[end_point], crs="EPSG:4326").to_crs(epsg=3857)
+            gdf_end.plot(
+                ax=ax,
+                color="#ea4335",
+                markersize=self.config.end_marker_size,
+                zorder=101,
+                alpha=0.95,
+            )
