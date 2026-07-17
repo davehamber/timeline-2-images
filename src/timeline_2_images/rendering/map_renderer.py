@@ -544,6 +544,7 @@ class MapRenderer:
 
         self._draw_segments(ax, segments)
         self._draw_combined_journey_line(ax, segments)
+        self._draw_large_span_waypoint_markers(ax, segments)
         self._draw_first_and_last_markers(ax, segments)
 
         ax.set_axis_off()
@@ -552,6 +553,41 @@ class MapRenderer:
             output_path, dpi=self.config.dpi, format=self.config.output_format, facecolor="white"
         )
         plt.close(fig)
+
+    def _draw_large_span_waypoint_markers(self, ax: Any, segments: list[ProcessedSegment]) -> None:
+        """Draw waypoint markers for segments spanning >100km.
+
+        Args:
+            ax: Matplotlib axis
+            segments: List of ProcessedSegment objects
+        """
+        for segment in segments:
+            if not segment.simplified_waypoints or len(segment.simplified_waypoints) < 3:
+                continue
+
+            waypoints = segment.simplified_waypoints
+            min_lat = min(wp[0] for wp in waypoints)
+            max_lat = max(wp[0] for wp in waypoints)
+            min_lon = min(wp[1] for wp in waypoints)
+            max_lon = max(wp[1] for wp in waypoints)
+
+            lat_span = max_lat - min_lat
+            lon_span = max_lon - min_lon
+            approx_km = (lat_span + lon_span) * 111
+
+            if approx_km > 100:
+                for waypoint in waypoints[1:-1]:
+                    wp_point = Point(waypoint[1], waypoint[0])
+                    gdf_wp = gpd.GeoDataFrame(geometry=[wp_point], crs="EPSG:4326").to_crs(
+                        epsg=3857
+                    )
+                    gdf_wp.plot(
+                        ax=ax,
+                        color="#9c27b0",
+                        markersize=8,
+                        zorder=50,
+                        alpha=0.5,
+                    )
 
     def _draw_first_and_last_markers(self, ax: Any, segments: list[ProcessedSegment]) -> None:
         """Draw start marker at first point and end marker at last point.
