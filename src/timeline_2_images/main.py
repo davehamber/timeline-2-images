@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: EUPL-1.2
+# Copyright (c) 2026 David Hamber
+
 """Entry point for rendering timeline images using the OOP architecture."""
 
 import sys
