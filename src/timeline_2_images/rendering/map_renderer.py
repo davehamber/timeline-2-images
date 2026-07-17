@@ -583,10 +583,10 @@ class MapRenderer:
                     )
                     gdf_wp.plot(
                         ax=ax,
-                        color="#9c27b0",
-                        markersize=8,
-                        zorder=50,
-                        alpha=0.5,
+                        color="#ff00ff",
+                        markersize=80,
+                        zorder=105,
+                        alpha=0.8,
                     )
 
     def _draw_first_and_last_markers(self, ax: Any, segments: list[ProcessedSegment]) -> None:
