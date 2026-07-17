@@ -469,13 +469,27 @@ class MapRenderer:
         dx = maxx - minx or 500
         dy = maxy - miny or 500
 
+        center_x = (minx + maxx) / 2
+        center_y = (miny + maxy) / 2
+
         pixel_size_x = dx / (self.config.image_size or 1000)
         pixel_size_y = dy / (self.config.image_size or 1000)
 
         border_x = 5 * pixel_size_x
         border_y = 5 * pixel_size_y
 
-        return (minx - border_x, miny - border_y, maxx + border_x, maxy + border_y)
+        padded_dx = dx + 2 * border_x
+        padded_dy = dy + 2 * border_y
+
+        max_dim = max(padded_dx, padded_dy)
+        half_side = max_dim / 2
+
+        return (
+            center_x - half_side,
+            center_y - half_side,
+            center_x + half_side,
+            center_y + half_side,
+        )
 
     def _render_combined_map(
         self, segments: list[ProcessedSegment], bounds: tuple, output_path: Path
