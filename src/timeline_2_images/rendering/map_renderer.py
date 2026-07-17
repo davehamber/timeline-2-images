@@ -402,12 +402,24 @@ class MapRenderer:
         self.tile_cache.clear()
 
     def get_cache_info(self) -> dict:
-        """Get cache information.
+        """Get cache information including contextily tiles.
 
         Returns:
             Dictionary with cache stats
         """
-        return self.tile_cache.get_info()
+        info = self.tile_cache.get_info()
+
+        contextily_cache_dir = Path.home() / ".cache" / "contextily"
+        if contextily_cache_dir.exists():
+            cache_files = list(contextily_cache_dir.rglob("*"))
+            cached_tiles = sum(1 for f in cache_files if f.is_file())
+            cache_size_bytes = sum(f.stat().st_size for f in cache_files if f.is_file())
+            cache_size_mb = cache_size_bytes / 1024 / 1024
+
+            info["contextily_tiles"] = cached_tiles
+            info["contextily_cache_size_mb"] = round(cache_size_mb, 2)
+
+        return info
 
     def render_combined_segments(
         self, segments: list[ProcessedSegment], output_path: str | Path
