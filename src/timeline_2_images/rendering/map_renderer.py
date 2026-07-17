@@ -564,7 +564,6 @@ class MapRenderer:
         osm_url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         cx.add_basemap(ax, source=osm_url, zoom="auto")
 
-        self._draw_segments(ax, segments)
         self._draw_combined_journey_line(ax, segments)
         self._draw_large_span_waypoint_markers(ax, segments)
         self._draw_first_and_last_markers(ax, segments)
