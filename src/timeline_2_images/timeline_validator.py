@@ -7,8 +7,6 @@ from pathlib import Path
 class TimelineValidationError(Exception):
     """Raised when Timeline.json structure is invalid."""
 
-    pass
-
 
 def validate_timeline_structure(json_path: str) -> dict:
     """
@@ -69,8 +67,7 @@ def validate_timeline_structure(json_path: str) -> dict:
     if "semanticSegments" in data:
         if not isinstance(data["semanticSegments"], list):
             errors.append(
-                "semanticSegments must be an array, "
-                f"got {type(data['semanticSegments']).__name__}"
+                f"semanticSegments must be an array, got {type(data['semanticSegments']).__name__}"
             )
         else:
             has_data = True
@@ -79,7 +76,7 @@ def validate_timeline_structure(json_path: str) -> dict:
     if "timelineObjects" in data:
         if not isinstance(data["timelineObjects"], list):
             errors.append(
-                "timelineObjects must be an array, " f"got {type(data['timelineObjects']).__name__}"
+                f"timelineObjects must be an array, got {type(data['timelineObjects']).__name__}"
             )
         else:
             has_data = True
@@ -87,7 +84,7 @@ def validate_timeline_structure(json_path: str) -> dict:
     # Validate locations (if present)
     if "locations" in data:
         if not isinstance(data["locations"], list):
-            errors.append("locations must be an array, " f"got {type(data['locations']).__name__}")
+            errors.append(f"locations must be an array, got {type(data['locations']).__name__}")
         else:
             has_data = True
 
@@ -125,7 +122,7 @@ def validate_segment_structure(segment: dict, segment_index: int = 0) -> None:
     """
     if not isinstance(segment, dict):
         raise TimelineValidationError(
-            f"Segment {segment_index} must be an object, " f"got {type(segment).__name__}"
+            f"Segment {segment_index} must be an object, got {type(segment).__name__}"
         )
 
     errors = []

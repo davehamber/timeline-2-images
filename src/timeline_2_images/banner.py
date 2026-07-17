@@ -1,4 +1,6 @@
 """ASCII art banner for timeline-2-images application."""
+
+# ruff: noqa: E501
 # pylint: disable=line-too-long
 
 

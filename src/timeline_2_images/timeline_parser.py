@@ -143,7 +143,8 @@ def _parse_segment_datetime(start_str: str, target: date) -> str | None:
     dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
     if pd.isna(dt_timestamp):
         return None
-    parsed_datetime = datetime.fromisoformat(str(dt_timestamp.isoformat()))  # type: ignore[union-attr]
+    iso_str = str(dt_timestamp.isoformat())  # type: ignore[union-attr]
+    parsed_datetime = datetime.fromisoformat(iso_str)
     if parsed_datetime.astimezone(timezone.utc).date() != target:
         return None
     return start_str

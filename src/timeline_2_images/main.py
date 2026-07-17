@@ -21,7 +21,8 @@ def main(
     image_size: int = 500,
     start_date: str | None = None,
     end_date: str | None = None,
-    profile: bool = False,
+    profile: bool = False,  # pylint: disable=unused-argument
+    place_names: bool = True,
 ):
     """
     Generate daily route maps from Timeline JSON export.
@@ -34,6 +35,7 @@ def main(
         start_date: Start date in YYYY-MM-DD format
         end_date: End date in YYYY-MM-DD format
         profile: If True, show detailed timing breakdown per operation
+        place_names: If True, add place names to maps (default: True)
     """
     timeline_path = Path(timeline_json)
 
@@ -45,7 +47,7 @@ def main(
         print(f"  {e}")
         sys.exit(1)
 
-    config = RenderConfiguration(image_size=image_size)
+    config = RenderConfiguration(image_size=image_size, add_place_names=place_names)
     app = TimelineApp(str(timeline_path), output_dir=output_dir, config=config)
 
     print(f"Loading timeline data from {timeline_path}...", end=" ", flush=True)
@@ -63,7 +65,7 @@ def main(
     print()
 
     # Get the dates that will be processed
-    from timeline_2_images.config import DateRangeQuery
+    from timeline_2_images.config import DateRangeQuery  # pylint: disable=import-outside-toplevel
 
     query = DateRangeQuery(start_date=start_date, end_date=end_date, days=days)
     dates_to_process = app.processor.get_date_range(query)
@@ -99,7 +101,7 @@ def cli() -> None:
     Parses command-line arguments and calls main().
     This function is configured in pyproject.toml as the entry point.
     """
-    import argparse
+    import argparse  # pylint: disable=import-outside-toplevel
 
     print_banner()
 
@@ -136,6 +138,11 @@ def cli() -> None:
         action="store_true",
         help="Remove all cached segment data and exit",
     )
+    parser.add_argument(
+        "--no-place-names",
+        action="store_true",
+        help="Disable adding place names to maps",
+    )
 
     args = parser.parse_args()
 
@@ -155,6 +162,7 @@ def cli() -> None:
             args.start_date,
             args.end_date,
             args.profile,
+            not args.no_place_names,
         )
     else:
         parser.print_help()
