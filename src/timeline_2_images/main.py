@@ -69,6 +69,7 @@ def main(
     end_date: str | None = None,
     profile: bool = False,  # pylint: disable=unused-argument
     place_names: bool = True,
+    single_image: bool = False,
 ):
     """
     Generate daily route maps from Timeline JSON export.
@@ -82,6 +83,7 @@ def main(
         end_date: End date in YYYY-MM-DD format
         profile: If True, show detailed timing breakdown per operation
         place_names: If True, add place names to maps (default: True)
+        single_image: If True, combine all dates into single image (default: False)
     """
     timeline_path = Path(timeline_json)
     app = _load_and_validate_app(timeline_json, output_dir, image_size, place_names)
@@ -99,17 +101,33 @@ def main(
 
     start_time = time.time()
     results = []
-    for date in dates_to_process:
-        result = app.process_date(date)
+
+    if single_image:
+        result = app.process_date_range_single_image(
+            start_date=start_date, end_date=end_date, days=days
+        )
         results.append(result)
 
         status = "✓" if result.was_successful() else "✗"
+        print()
         if result.was_successful():
             print(
                 f"{status} {result.date}: {result.render_time:.2f}s ({result.point_count} points)"
             )
         else:
             print(f"{status} {result.date}: {result.error_message}")
+    else:
+        for date in dates_to_process:
+            result = app.process_date(date)
+            results.append(result)
+
+            status = "✓" if result.was_successful() else "✗"
+            if result.was_successful():
+                time_str = f"{result.render_time:.2f}s"
+                points_str = f"({result.point_count} points)"
+                print(f"{status} {result.date}: {time_str} {points_str}")
+            else:
+                print(f"{status} {result.date}: {result.error_message}")
 
     total_time = time.time() - start_time
     success_count = sum(1 for r in results if r.was_successful())
@@ -169,6 +187,11 @@ def cli() -> None:
         action="store_true",
         help="Disable adding place names to maps",
     )
+    parser.add_argument(
+        "--single-image",
+        action="store_true",
+        help="Combine all dates into single image with connected routes",
+    )
 
     args = parser.parse_args()
 
@@ -189,6 +212,7 @@ def cli() -> None:
             args.end_date,
             args.profile,
             not args.no_place_names,
+            args.single_image,
         )
     else:
         parser.print_help()
