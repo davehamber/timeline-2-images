@@ -168,7 +168,6 @@ class TestTimelineProcessor:
         json_path = str(tmp_path / "test.json")
         processor = TimelineProcessor(json_path)
         assert processor.json_path == json_path
-        assert processor.cache_manager is None
 
     def test_clear_cache(self, tmp_path):
         """Test clearing cache."""

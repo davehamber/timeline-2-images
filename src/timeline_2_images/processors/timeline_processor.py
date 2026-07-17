@@ -6,22 +6,19 @@ import pandas as pd
 
 from timeline_2_images.models import Segment
 from timeline_2_images.config import DateRangeQuery
-from timeline_2_images.cache import CacheManager
 import timeline_2_images.timeline_parser as parser
 
 
 class TimelineProcessor:
     """Processes timeline JSON data and provides access to segments and points."""
 
-    def __init__(self, json_path: str, cache_manager: CacheManager | None = None):
+    def __init__(self, json_path: str):
         """Initialize processor with timeline JSON path.
 
         Args:
             json_path: Path to Timeline.json file
-            cache_manager: Optional CacheManager for persistent caching
         """
         self.json_path = json_path
-        self.cache_manager = cache_manager
 
     def load_segments_for_day(self, date: str) -> list[Segment]:
         """Load segments for a specific date.
