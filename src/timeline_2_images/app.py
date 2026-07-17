@@ -286,17 +286,14 @@ class TimelineApp:
         from timeline_2_images.models import Segment, Bounds
 
         distance_km = self._calculate_distance_km(end_point, start_point)
-        is_long_connector = distance_km > 50
 
-        if is_long_connector:
-            print(f"\n[DEBUG] Long-distance connector detected ({distance_km:.1f} km)")
-            print(f"  End point: {end_point[0]:.4f}°N, {end_point[1]:.4f}°E")
-            print(f"  Start point: {start_point[0]:.4f}°N, {start_point[1]:.4f}°E")
-            print(f"  End segment time: {end_segment.segment.end_time}")
-            print(f"  Start segment time: {start_segment.segment.start_time}")
-            print(
-                f"  Gap duration: {start_segment.segment.start_time - end_segment.segment.end_time}"
-            )
+        print(f"[DEBUG] Connector: {distance_km:.1f} km")
+        end_time = end_segment.segment.end_time
+        print(f"  End: {end_point[0]:.4f}N, {end_point[1]:.4f}E @ {end_time}")
+        start_time = start_segment.segment.start_time
+        print(f"  Start: {start_point[0]:.4f}N, {start_point[1]:.4f}E @ {start_time}")
+        gap = start_segment.segment.start_time - end_segment.segment.end_time
+        print(f"  Gap: {gap}")
 
         connector_seg = Segment(
             start_time=end_segment.segment.end_time,
