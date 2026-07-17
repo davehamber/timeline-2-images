@@ -98,13 +98,11 @@ def main(
         print("Processing dates...")
 
     start_time = time.time()
-    results = app.process_date_range(start_date=start_date, end_date=end_date, days=days)
-    total_time = time.time() - start_time
+    results = []
+    for date in dates_to_process:
+        result = app.process_date(date)
+        results.append(result)
 
-    success_count = sum(1 for r in results if r.was_successful())
-    print()
-
-    for result in results:
         status = "✓" if result.was_successful() else "✗"
         if result.was_successful():
             print(
@@ -112,6 +110,9 @@ def main(
             )
         else:
             print(f"{status} {result.date}: {result.error_message}")
+
+    total_time = time.time() - start_time
+    success_count = sum(1 for r in results if r.was_successful())
 
     print()
     print(f"Generated {success_count}/{len(results)} map images in {output_dir}")
