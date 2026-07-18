@@ -6,19 +6,21 @@ import pandas as pd
 
 from timeline_2_images.models import Segment
 from timeline_2_images.config import DateRangeQuery
-import timeline_2_images.timeline_parser as parser
+from timeline_2_images.timeline_parser import TimelineParserFacade
 
 
 class TimelineProcessor:
     """Processes timeline JSON data and provides access to segments and points."""
 
-    def __init__(self, json_path: str):
-        """Initialize processor with timeline JSON path.
+    def __init__(self, json_path: str, parser_facade: TimelineParserFacade | None = None):
+        """Initialize processor with timeline JSON path and optional parser facade.
 
         Args:
             json_path: Path to Timeline.json file
+            parser_facade: TimelineParserFacade instance (created if not provided)
         """
         self.json_path = json_path
+        self._parser = parser_facade or TimelineParserFacade()
 
     def load_segments_for_day(self, date: str) -> list[Segment]:
         """Load segments for a specific date.
@@ -29,7 +31,7 @@ class TimelineProcessor:
         Returns:
             List of Segment objects
         """
-        raw_segments_result = parser.load_segments_for_day(self.json_path, date)
+        raw_segments_result = self._parser.load_segments_for_day(self.json_path, date)
         if isinstance(raw_segments_result, tuple):
             raw_segments = raw_segments_result[0]
         else:
@@ -54,7 +56,7 @@ class TimelineProcessor:
         Returns:
             DataFrame with columns: timestamp, lat, lon
         """
-        return parser.load_points_for_day(self.json_path, date)
+        return self._parser.load_points_for_day(self.json_path, date)
 
     def get_available_dates(self) -> list[str]:
         """Get all dates with data in the timeline.
@@ -62,7 +64,7 @@ class TimelineProcessor:
         Returns:
             List of all YYYY-MM-DD date strings (not filtered by days)
         """
-        return parser.get_all_available_dates(self.json_path)
+        return self._parser.get_all_available_dates(self.json_path)
 
     def get_date_range(self, query: DateRangeQuery) -> list[str]:
         """Get dates matching query parameters.
@@ -102,8 +104,8 @@ class TimelineProcessor:
 
     def clear_cache(self) -> None:
         """Clear session cache."""
-        parser.clear_cache()
+        self._parser.clear_cache()
 
     def get_cache_source(self) -> str:
         """Get source of last cache operation."""
-        return parser.get_cache_source()
+        return self._parser.get_cache_source()
