@@ -165,15 +165,8 @@ def _build_segments_with_waypoints(
         # Try traditional timelinePath first
         waypoints = _parse_waypoints(segment.get("timelinePath", []))
 
-        # If no waypoints from timelinePath, check for activity
-        if not waypoints and "activity" in segment:
-            activity = segment["activity"]
-            wp_coords = _get_activity_waypoints(activity)
-            if wp_coords:
-                # Convert (lat, lon) tuples to waypoint format for consistency
-                # _parse_waypoints expects "lat,lon" format
-                waypoints = [{"point": f"{lat},{lon}"} for lat, lon in wp_coords]
-                waypoints = _parse_waypoints(waypoints)
+        # Activity segment extraction disabled - causes spurious overlapping lines
+        # Original implementation relied only on timelinePath data
 
         if waypoints:
             segments.append(
