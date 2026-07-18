@@ -12,7 +12,7 @@ from typing import Any
 from timeline_2_images.banner import print_banner
 from timeline_2_images.app import TimelineApp
 from timeline_2_images.config import RenderConfiguration, DateRangeQuery
-from timeline_2_images.sqlite_cache import clean_all_cache
+from timeline_2_images.sqlite_cache import SegmentCache
 from timeline_2_images.timeline_validator import (
     validate_timeline_structure,
     TimelineValidationError,
@@ -224,7 +224,8 @@ class CLIRunner:
     def _handle_clean_cache() -> None:
         """Handle cache cleaning operation."""
         try:
-            clean_all_cache()
+            cache = SegmentCache()
+            cache.clean_all_cache()
             print("Cache cleaned successfully")
         except RuntimeError as exception:
             print(f"Error: {exception}")

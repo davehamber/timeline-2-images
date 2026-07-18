@@ -8,10 +8,7 @@ import pytest
 
 from timeline_2_images.app import TimelineApp
 from timeline_2_images.config import RenderConfiguration
-from timeline_2_images.sqlite_cache import (
-    get_cache_stats,
-    clear_cache,
-)
+from timeline_2_images.sqlite_cache import SegmentCache
 
 
 @pytest.fixture
@@ -25,7 +22,11 @@ def cache_dir(tmp_path, monkeypatch):
     def mock_get_cache_dir():
         return cache_path
 
-    monkeypatch.setattr(sqlite_module, "_get_cache_dir", mock_get_cache_dir)
+    monkeypatch.setattr(
+        sqlite_module.CachePathManager,
+        "get_cache_dir",
+        staticmethod(mock_get_cache_dir),
+    )
     yield cache_path
 
 
@@ -76,8 +77,8 @@ class TestSegmentCacheFunctional:
         with tempfile.TemporaryDirectory() as cache_dir_tmp:
             import timeline_2_images.sqlite_cache as sqlite_module
 
-            original_get_cache_dir = sqlite_module._get_cache_dir
-            sqlite_module._get_cache_dir = lambda: Path(cache_dir_tmp)
+            original_get_cache_dir = sqlite_module.CachePathManager.get_cache_dir
+            sqlite_module.CachePathManager.get_cache_dir = staticmethod(lambda: Path(cache_dir_tmp))
 
             try:
                 with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
@@ -105,15 +106,15 @@ class TestSegmentCacheFunctional:
 
                 Path(json_path).unlink()
             finally:
-                sqlite_module._get_cache_dir = original_get_cache_dir
+                sqlite_module.CachePathManager.get_cache_dir = original_get_cache_dir
 
     def test_segment_cache_provides_stats(self, tmp_path):
         """Test that segment cache statistics are available."""
         with tempfile.TemporaryDirectory() as cache_dir_tmp:
             import timeline_2_images.sqlite_cache as sqlite_module
 
-            original_get_cache_dir = sqlite_module._get_cache_dir
-            sqlite_module._get_cache_dir = lambda: Path(cache_dir_tmp)
+            original_get_cache_dir = sqlite_module.CachePathManager.get_cache_dir
+            sqlite_module.CachePathManager.get_cache_dir = staticmethod(lambda: Path(cache_dir_tmp))
 
             try:
                 with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
@@ -133,14 +134,15 @@ class TestSegmentCacheFunctional:
                 app = TimelineApp(json_path, output_dir=output_dir)
                 app.process_date("2024-01-15")
 
-                stats = get_cache_stats(json_path)
+                cache = SegmentCache()
+                stats = cache.get_cache_stats(json_path)
                 assert stats["status"] == "cached"
                 assert stats["segment_count"] > 0
                 assert stats["date_count"] > 0
 
                 Path(json_path).unlink()
             finally:
-                sqlite_module._get_cache_dir = original_get_cache_dir
+                sqlite_module.CachePathManager.get_cache_dir = original_get_cache_dir
 
     def test_segment_cache_handles_multiple_dates(self, sample_timeline_json, cache_dir, tmp_path):
         """Test that cache correctly handles multiple dates."""
@@ -155,7 +157,8 @@ class TestSegmentCacheFunctional:
         assert result2.success
         assert result3.success
 
-        stats = get_cache_stats(sample_timeline_json)
+        cache = SegmentCache()
+        stats = cache.get_cache_stats(sample_timeline_json)
         assert stats["date_count"] >= 3
         assert stats["segment_count"] >= 3
 
@@ -167,7 +170,8 @@ class TestSegmentCacheFunctional:
         app.process_date("2024-01-15")
         assert (cache_dir / "segments.db").exists()
 
-        clear_cache(sample_timeline_json)
+        cache = SegmentCache()
+        cache.clear_cache(sample_timeline_json)
         assert not (cache_dir / "segments.db").exists()
 
     def test_segment_cache_with_date_range(self, sample_timeline_json, cache_dir, tmp_path):
@@ -180,7 +184,8 @@ class TestSegmentCacheFunctional:
         assert len(results) == 3
         assert all(r.success for r in results)
 
-        stats = get_cache_stats(sample_timeline_json)
+        cache = SegmentCache()
+        stats = cache.get_cache_stats(sample_timeline_json)
         assert stats["segment_count"] == 3
 
 
