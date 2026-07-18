@@ -11,12 +11,7 @@ from typing import Dict, Set
 
 import pandas as pd
 
-from timeline_2_images.sqlite_cache import (
-    load_segments_for_date,
-    populate_cache,
-    get_cache_stats,
-    get_cached_dates,
-)
+from timeline_2_images.sqlite_cache import SegmentCache
 
 
 class TimelineCache:
@@ -155,7 +150,8 @@ class SegmentParser:
     ) -> list[dict] | None:
         """Try to load segments from SQLite cache."""
         step_start = time.time()
-        cached_segments = load_segments_for_date(json_path, target_date)
+        cache = SegmentCache()
+        cached_segments = cache.load_segments_for_date(json_path, target_date)
         timing["sqlite_lookup"] = time.time() - step_start
 
         if cached_segments is None:
@@ -177,7 +173,8 @@ class SegmentParser:
         timing["cache_source"] = "json_parsed"
 
         step_start = time.time()
-        populate_cache(json_path, data)
+        cache = SegmentCache()
+        cache.populate_cache(json_path, data)
         timing["cache_populate"] = time.time() - step_start
 
         step_start = time.time()
@@ -522,7 +519,8 @@ def get_last_n_days_with_data(json_path: str, days: int = 14) -> list[str]:
 
 def _get_available_dates(json_path: str) -> list[date]:
     """Get available dates from cache or JSON file."""
-    cached_dates = get_cached_dates(json_path)
+    cache = SegmentCache()
+    cached_dates = cache.get_cached_dates(json_path)
     if cached_dates:
         _cache.cache_source = "disk"
         return [datetime.strptime(d, "%Y-%m-%d").date() for d in cached_dates]
@@ -568,7 +566,8 @@ def get_cache_source() -> str:
 
 def get_sqlite_cache_stats(json_path: str) -> dict:
     """Return SQLite segment cache statistics."""
-    return get_cache_stats(json_path)
+    cache = SegmentCache()
+    return cache.get_cache_stats(json_path)
 
 
 def clear_cache() -> None:
