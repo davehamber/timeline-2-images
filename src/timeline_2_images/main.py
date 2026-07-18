@@ -221,11 +221,12 @@ class CLIRunner:
             sys.exit(1)
 
     @staticmethod
-    def _handle_clean_cache() -> None:
+    def _handle_clean_cache(segment_cache: SegmentCache | None = None) -> None:
         """Handle cache cleaning operation."""
         try:
-            cache = SegmentCache()
-            cache.clean_all_cache()
+            if segment_cache is None:
+                segment_cache = SegmentCache()
+            segment_cache.clean_all_cache()
             print("Cache cleaned successfully")
         except RuntimeError as exception:
             print(f"Error: {exception}")

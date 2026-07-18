@@ -91,8 +91,9 @@ class TimelineCache:
 class SegmentParser:
     """Parses timeline segments from JSON data."""
 
-    def __init__(self, cache: TimelineCache):
+    def __init__(self, cache: TimelineCache, segment_cache: SegmentCache | None = None):
         self.cache = cache
+        self.segment_cache = segment_cache or SegmentCache()
 
     @staticmethod
     def parse_waypoints(path: list) -> list:
@@ -150,8 +151,7 @@ class SegmentParser:
     ) -> list[dict] | None:
         """Try to load segments from SQLite cache."""
         step_start = time.time()
-        cache = SegmentCache()
-        cached_segments = cache.load_segments_for_date(json_path, target_date)
+        cached_segments = self.segment_cache.load_segments_for_date(json_path, target_date)
         timing["sqlite_lookup"] = time.time() - step_start
 
         if cached_segments is None:
@@ -173,8 +173,7 @@ class SegmentParser:
         timing["cache_source"] = "json_parsed"
 
         step_start = time.time()
-        cache = SegmentCache()
-        cache.populate_cache(json_path, data)
+        self.segment_cache.populate_cache(json_path, data)
         timing["cache_populate"] = time.time() - step_start
 
         step_start = time.time()
@@ -517,10 +516,11 @@ def get_last_n_days_with_data(json_path: str, days: int = 14) -> list[str]:
     return sorted([d.strftime("%Y-%m-%d") for d in last_n])
 
 
-def _get_available_dates(json_path: str) -> list[date]:
+def _get_available_dates(json_path: str, segment_cache: SegmentCache | None = None) -> list[date]:
     """Get available dates from cache or JSON file."""
-    cache = SegmentCache()
-    cached_dates = cache.get_cached_dates(json_path)
+    if segment_cache is None:
+        segment_cache = SegmentCache()
+    cached_dates = segment_cache.get_cached_dates(json_path)
     if cached_dates:
         _cache.cache_source = "disk"
         return [datetime.strptime(d, "%Y-%m-%d").date() for d in cached_dates]
@@ -564,10 +564,11 @@ def get_cache_source() -> str:
     return _cache.cache_source
 
 
-def get_sqlite_cache_stats(json_path: str) -> dict:
+def get_sqlite_cache_stats(json_path: str, segment_cache: SegmentCache | None = None) -> dict:
     """Return SQLite segment cache statistics."""
-    cache = SegmentCache()
-    return cache.get_cache_stats(json_path)
+    if segment_cache is None:
+        segment_cache = SegmentCache()
+    return segment_cache.get_cache_stats(json_path)
 
 
 def clear_cache() -> None:

@@ -25,20 +25,21 @@ class MapRenderer:
 
     def __init__(
         self,
-        config: RenderConfiguration | None = None,
-        tile_cache_dir: str | None = None,
+        config: RenderConfiguration,
+        tile_cache: TileCacheManager,
+        geocoder: Nominatim,
     ):
-        """Initialize map renderer.
+        """Initialize map renderer with injected dependencies.
 
         Args:
             config: RenderConfiguration object
-            tile_cache_dir: Directory for tile caching
-                (uses ~/.cache/timeline-2-images if not provided)
+            tile_cache: TileCacheManager instance
+            geocoder: Nominatim geocoder instance
         """
-        self.config = config or RenderConfiguration()
-        self.tile_cache = TileCacheManager(tile_cache_dir)
+        self.config = config
+        self.tile_cache = tile_cache
+        self.geocoder = geocoder
         self.config.validate()
-        self.geocoder = Nominatim(user_agent="timeline-2-images")
 
     def render_segments(
         self, segments: list[ProcessedSegment], output_path: str | Path

@@ -8,8 +8,10 @@ from typing import Any
 
 from timeline_2_images.processors import TimelineProcessor, SegmentProcessor
 from timeline_2_images.rendering import MapRenderer
+from timeline_2_images.rendering.tile_cache_manager import TileCacheManager
 from timeline_2_images.config import RenderConfiguration, DateRangeQuery
 from timeline_2_images.models import RenderResult
+from geopy.geocoders import Nominatim
 
 
 class TimelineApp:
@@ -21,25 +23,45 @@ class TimelineApp:
         output_dir: str = "output",
         config: RenderConfiguration | None = None,
         cache_dir: str | None = None,
+        processor: TimelineProcessor | None = None,
+        segment_processor: SegmentProcessor | None = None,
+        renderer: MapRenderer | None = None,
     ):
-        """Initialize timeline app.
+        """Initialize timeline app with dependency injection.
 
         Args:
             json_path: Path to Timeline.json file
             output_dir: Directory for output images
             config: RenderConfiguration (uses defaults if not provided)
             cache_dir: Directory for tile cache (uses ~/.cache/timeline-2-images if not provided)
+            processor: TimelineProcessor instance (created if not provided)
+            segment_processor: SegmentProcessor instance (created if not provided)
+            renderer: MapRenderer instance (created if not provided)
         """
         self.json_path = json_path
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True, parents=True)
 
-        self.config = config or RenderConfiguration()
+        # Use provided config or create default
+        if config is None:
+            config = RenderConfiguration()
+        self.config = config
         self.config.validate()
 
-        self.processor = TimelineProcessor(json_path)
-        self.segment_processor = SegmentProcessor()
-        self.renderer = MapRenderer(config=self.config, tile_cache_dir=cache_dir)
+        # Use provided dependencies or create them with defaults
+        if processor is None:
+            processor = TimelineProcessor(json_path)
+        self.processor = processor
+
+        if segment_processor is None:
+            segment_processor = SegmentProcessor()
+        self.segment_processor = segment_processor
+
+        if renderer is None:
+            tile_cache = TileCacheManager(cache_dir)
+            geocoder = Nominatim(user_agent="timeline-2-images")
+            renderer = MapRenderer(config=self.config, tile_cache=tile_cache, geocoder=geocoder)
+        self.renderer = renderer
 
     def process_date_range(
         self,
