@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - If end date < start date: start date automatically becomes end date
   - If start date > end date: end date automatically becomes start date
   - Prevents invalid date ranges with immediate visual feedback
+
+### Changed
+- Reduced GUI window size and removed excessive empty space (more compact layout)
 - GUI architecture foundation (Phase 1): Proper layering for desktop interface
   - `gui/models/interfaces.py`: ITimelineProcessor interface (GUI depends on this)
   - `gui/models/timeline_adapter.py`: Adapter wrapping TimelineApp (decouples GUI from core)
