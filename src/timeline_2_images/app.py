@@ -9,7 +9,7 @@ from typing import Any, Callable
 from timeline_2_images.processors import TimelineProcessor, SegmentProcessor
 from timeline_2_images.rendering import MapRenderer
 from timeline_2_images.rendering.tile_cache_manager import TileCacheManager
-from timeline_2_images.config import RenderConfiguration, DateRangeQuery, BatchConfig
+from timeline_2_images.config import RenderConfiguration, DateRangeQuery, BatchConfig, CacheConfig
 from timeline_2_images.models import RenderResult
 from timeline_2_images.validators import TimelineValidator, TimelineValidationError
 from timeline_2_images.day_connector_builder import DayConnectorBuilder
@@ -31,6 +31,7 @@ class TimelineApp:
         segment_processor: SegmentProcessor | None = None,
         renderer: MapRenderer | None = None,
         batch_config: BatchConfig | None = None,
+        cache_config: CacheConfig | None = None,
         validate: bool = True,
     ):
         """Initialize timeline app with dependency injection.
@@ -44,6 +45,7 @@ class TimelineApp:
             segment_processor: SegmentProcessor instance (created if not provided)
             renderer: MapRenderer instance (created if not provided, ignored if batch_config is provided)
             batch_config: BatchConfig with shared resources for batch processing (overrides config/cache_dir/renderer)
+            cache_config: CacheConfig for controlling in-memory caching behavior
             validate: Whether to validate Timeline.json structure on init (default: True)
 
         Raises:
@@ -84,6 +86,13 @@ class TimelineApp:
                 geocoder = Nominatim(user_agent="timeline-2-images")
                 renderer = MapRenderer(config=self.config, tile_cache=tile_cache, geocoder=geocoder)
         self.renderer = renderer
+
+        # Use provided cache config or create default
+        if cache_config is None:
+            cache_config = CacheConfig()
+        else:
+            cache_config.validate()
+        self.cache_config = cache_config
 
         # Initialize connector builder for multi-day rendering
         self.connector_builder = DayConnectorBuilder(self.processor, self.segment_processor)
@@ -321,6 +330,7 @@ class TimelineApp:
             "output_dir": str(self.output_dir),
             "image_size": self.config.image_size,
             "tile_cache": self.renderer.get_cache_info(),
+            "cache_config": str(self.cache_config),
         }
 
     def clear_caches(self) -> None:

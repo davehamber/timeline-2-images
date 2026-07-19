@@ -6,5 +6,6 @@
 from timeline_2_images.config.render_configuration import RenderConfiguration
 from timeline_2_images.config.date_range_query import DateRangeQuery
 from timeline_2_images.config.batch_config import BatchConfig
+from timeline_2_images.config.cache_config import CacheConfig
 
-__all__ = ["RenderConfiguration", "DateRangeQuery", "BatchConfig"]
+__all__ = ["RenderConfiguration", "DateRangeQuery", "BatchConfig", "CacheConfig"]
