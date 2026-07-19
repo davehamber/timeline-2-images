@@ -73,7 +73,7 @@ class TimelineProcessorAdapter(ITimelineProcessor):
             # Only load file if not already loaded in this session
             # This preserves the original cache_source (parsed/persistent/session)
             # instead of overwriting it
-            cache = app.processor.cache
+            cache = app.processor._parser._timeline_cache
             json_path_normalized = str(Path(config.timeline_path).resolve())
             cache_path_normalized = str(Path(cache.file_path).resolve()) if cache.file_path else None
 
