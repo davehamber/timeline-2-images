@@ -39,8 +39,21 @@ class ProgressPanel(QWidget):
     def start(self) -> None:
         """Start progress tracking."""
         self._progress_bar.setValue(0)
-        self._status_label.setText("Processing...")
+        self._status_label.setText("Loading file...")
         self._details_label.setText("")
+
+    def set_loading_file(self, is_cached: bool = False) -> None:
+        """Show file loading status.
+
+        Args:
+            is_cached: True if using cached file, False if parsing from disk
+        """
+        if is_cached:
+            self._status_label.setText("Loading file (using cache)...")
+            self._details_label.setText("File already in memory from previous operation")
+        else:
+            self._status_label.setText("Loading file (parsing JSON)...")
+            self._details_label.setText("Reading and parsing Timeline.json")
 
     def update_progress(self, completed: int, total: int) -> None:
         """Update progress.
