@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Smart date picker auto-adjustment in date range selector
+  - If end date < start date: start date automatically becomes end date
+  - If start date > end date: end date automatically becomes start date
+  - Prevents invalid date ranges with immediate visual feedback
 - GUI architecture foundation (Phase 1): Proper layering for desktop interface
   - `gui/models/interfaces.py`: ITimelineProcessor interface (GUI depends on this)
   - `gui/models/timeline_adapter.py`: Adapter wrapping TimelineApp (decouples GUI from core)
