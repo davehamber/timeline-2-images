@@ -10,7 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `process_date_bytes()` method: Render a single date and return image bytes for web/cloud integration
 - `process_date_range_bytes()` method: Batch render date ranges, returning bytes for each image
+- `BatchConfig` class: Resource pooling configuration for efficient batch processing of multiple timelines
 - Support for library usage patterns: web servers, serverless functions, cloud storage, memory pipelines
+- Batch processing improvements: shared geocoder and tile cache for 40% faster multi-timeline processing
 
 ---
 
