@@ -80,6 +80,10 @@ class DateRangePanel(QWidget):
         self._days_radio.toggled.connect(self._on_days_toggled)
         self._range_radio.toggled.connect(self._on_range_toggled)
 
+        # Connect date changes for auto-adjustment
+        self._start_date.dateChanged.connect(self._on_start_date_changed)
+        self._end_date.dateChanged.connect(self._on_end_date_changed)
+
     def _on_days_toggled(self, checked: bool) -> None:
         """Handle days radio button toggle."""
         self._days_spin.setEnabled(checked)
@@ -88,6 +92,20 @@ class DateRangePanel(QWidget):
         """Handle range radio button toggle."""
         self._start_date.setEnabled(checked)
         self._end_date.setEnabled(checked)
+
+    def _on_start_date_changed(self) -> None:
+        """Handle start date change - adjust end date if needed."""
+        if self._start_date.date() > self._end_date.date():
+            self._end_date.blockSignals(True)
+            self._end_date.setDate(self._start_date.date())
+            self._end_date.blockSignals(False)
+
+    def _on_end_date_changed(self) -> None:
+        """Handle end date change - adjust start date if needed."""
+        if self._end_date.date() < self._start_date.date():
+            self._start_date.blockSignals(True)
+            self._start_date.setDate(self._end_date.date())
+            self._start_date.blockSignals(False)
 
     def set_available_dates(self, dates: list[str]) -> None:
         """Set available dates from timeline."""
