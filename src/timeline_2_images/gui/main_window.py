@@ -114,6 +114,7 @@ class TimelineWindow(QMainWindow):
         self._presenter.on_validation_result(self._on_validation_result)
         self._presenter.on_available_dates(self._on_available_dates)
         self._presenter.on_generation_complete(self._on_generation_complete)
+        self._presenter.on_file_loading(self._on_file_loading)
 
     def _on_validation_result(self, is_valid: bool, error: Optional[str]) -> None:
         """Handle file validation result."""
@@ -123,6 +124,14 @@ class TimelineWindow(QMainWindow):
             self._generate_btn.setEnabled(False)
             if error:
                 QMessageBox.warning(self, "Invalid Timeline File", error)
+
+    def _on_file_loading(self, is_loading: bool) -> None:
+        """Handle file loading state.
+
+        Args:
+            is_loading: True if file is being loaded, False if complete
+        """
+        self._file_selector.set_loading(is_loading)
 
     def _on_available_dates(self, dates: list[str]) -> None:
         """Handle available dates loaded."""
