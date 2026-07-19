@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from timeline_2_images.timeline_validation_error import TimelineValidationError
+from timeline_2_images.validators.timeline_validation_error import TimelineValidationError
 
 
 class TimelineValidator:

@@ -43,7 +43,7 @@ class TimelineCache:
         if not self.data:
             return self.date_index
 
-        from timeline_2_images.date_extractor import DateExtractor
+        from timeline_2_images.parsers.date_extractor import DateExtractor
 
         extractor = DateExtractor(self.data)
         all_dates = set()
@@ -65,7 +65,7 @@ class TimelineCache:
         if not self.data:
             return self.segment_date_index
 
-        from timeline_2_images.date_extractor import DateExtractor
+        from timeline_2_images.parsers.date_extractor import DateExtractor
 
         semantic_segs = self.data.get("semanticSegments", [])
         for index, segment in enumerate(semantic_segs):
