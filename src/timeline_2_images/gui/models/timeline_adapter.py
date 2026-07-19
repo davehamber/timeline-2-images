@@ -156,6 +156,12 @@ class TimelineProcessorAdapter(ITimelineProcessor):
             json_path: Path to Timeline.json file
             output_dir: Output directory for images
         """
-        if self._app is None or self._app.json_path != json_path or self._app.output_dir != output_dir:
+        # Compare output directories as Path objects to handle both str and Path types
+        output_dir_path = Path(output_dir)
+        if (
+            self._app is None
+            or self._app.json_path != json_path
+            or self._app.output_dir != output_dir_path
+        ):
             self._app = TimelineApp(json_path, output_dir=output_dir, validate=True)
         return self._app
