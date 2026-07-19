@@ -67,7 +67,20 @@ class TimelineProcessorAdapter(ITimelineProcessor):
                     days=config.days,
                     on_progress=on_progress,
                 )
-                success = result.was_successful()
+                if result.was_successful():
+                    return GenerationResult(
+                        success=True,
+                        output_dir=Path(config.output_dir),
+                        image_count=1,
+                    )
+                else:
+                    error = f"Failed to generate combined image: {result.error or 'Unknown error'}"
+                    return GenerationResult(
+                        success=False,
+                        output_dir=Path(config.output_dir),
+                        image_count=0,
+                        error_message=error,
+                    )
             else:
                 results = app.process_date_range(
                     start_date=config.start_date,
@@ -78,21 +91,29 @@ class TimelineProcessorAdapter(ITimelineProcessor):
                 success = all(r.was_successful() for r in results)
                 image_count = sum(1 for r in results if r.was_successful())
 
-            if success:
-                image_count = 1 if config.single_image else len(results)
-                return GenerationResult(
-                    success=True,
-                    output_dir=Path(config.output_dir),
-                    image_count=image_count,
-                )
-            else:
-                error = "Some images failed to render"
-                return GenerationResult(
-                    success=False,
-                    output_dir=Path(config.output_dir),
-                    image_count=0,
-                    error_message=error,
-                )
+                if success:
+                    return GenerationResult(
+                        success=True,
+                        output_dir=Path(config.output_dir),
+                        image_count=image_count,
+                    )
+                else:
+                    # Collect error details for failed dates
+                    failed_dates = [r.date for r in results if not r.was_successful()]
+                    error_details = ", ".join(failed_dates[:5])  # Show first 5 failed dates
+                    if len(failed_dates) > 5:
+                        error_details += f" (and {len(failed_dates) - 5} more)"
+
+                    error = (
+                        f"Generated {image_count} of {len(results)} images. "
+                        f"Failed dates: {error_details}"
+                    )
+                    return GenerationResult(
+                        success=False,
+                        output_dir=Path(config.output_dir),
+                        image_count=image_count,
+                        error_message=error,
+                    )
 
         except Exception as e:
             return GenerationResult(

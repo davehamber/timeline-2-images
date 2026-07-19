@@ -18,6 +18,7 @@ from timeline_2_images.gui.models.interfaces import (
 
 if TYPE_CHECKING:
     from timeline_2_images.gui.timeline_worker import TimelineWorker
+    from timeline_2_images.gui.generation_worker import GenerationWorker
 
 
 class TimelineGeneratorPresenter:
@@ -39,7 +40,8 @@ class TimelineGeneratorPresenter:
             processor: ITimelineProcessor implementation (e.g., adapter)
         """
         self._processor = processor
-        self._worker: Optional["TimelineWorker"] = None
+        self._timeline_worker: Optional["TimelineWorker"] = None
+        self._generation_worker: Optional["GenerationWorker"] = None
 
         # Callbacks for GUI to register (loose coupling)
         self._on_validation_result: Optional[Callable[[bool, Optional[str]], None]] = None
@@ -97,11 +99,11 @@ class TimelineGeneratorPresenter:
             self._on_file_loading(True)
 
         # Create and start worker thread to avoid blocking UI
-        self._worker = TimelineWorker(self._processor, path)
-        self._worker.validation_complete.connect(self._on_validation_complete)
-        self._worker.dates_loaded.connect(self._on_dates_loaded)
-        self._worker.finished.connect(self._on_worker_finished)
-        self._worker.start()
+        self._timeline_worker = TimelineWorker(self._processor, path)
+        self._timeline_worker.validation_complete.connect(self._on_validation_complete)
+        self._timeline_worker.dates_loaded.connect(self._on_dates_loaded)
+        self._timeline_worker.finished.connect(self._on_timeline_worker_finished)
+        self._timeline_worker.start()
 
     def _on_validation_complete(self, is_valid: bool, error_message: str) -> None:
         """Handle worker validation result.
@@ -122,8 +124,8 @@ class TimelineGeneratorPresenter:
         if self._on_available_dates:
             self._on_available_dates(dates)
 
-    def _on_worker_finished(self) -> None:
-        """Handle worker thread finished."""
+    def _on_timeline_worker_finished(self) -> None:
+        """Handle timeline worker thread finished."""
         if self._on_file_loading:
             self._on_file_loading(False)
 
@@ -152,6 +154,8 @@ class TimelineGeneratorPresenter:
             days: Number of days to process
             on_progress: Progress callback (completed, total)
         """
+        from timeline_2_images.gui.generation_worker import GenerationWorker
+
         config = ImageGenerationConfig(
             timeline_path=timeline_path,
             output_dir=output_dir,
@@ -163,8 +167,17 @@ class TimelineGeneratorPresenter:
             days=days,
         )
 
-        result = self._processor.generate_images(config, on_progress=on_progress)
+        # Create and start generation worker thread to avoid blocking UI
+        self._generation_worker = GenerationWorker(self._processor, config, on_progress)
+        self._generation_worker.generation_complete.connect(self._on_generation_complete_signal)
+        self._generation_worker.start()
 
+    def _on_generation_complete_signal(self, result: GenerationResult) -> None:
+        """Handle generation completion signal from worker.
+
+        Args:
+            result: GenerationResult from the worker
+        """
         if self._on_generation_complete:
             self._on_generation_complete(result)
 
