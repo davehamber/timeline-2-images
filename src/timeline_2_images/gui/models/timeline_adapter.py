@@ -71,8 +71,6 @@ class TimelineProcessorAdapter(ITimelineProcessor):
             app = self._get_or_create_app(config.timeline_path, config.output_dir)
 
             # Only load file if not already loaded in this session
-            # This preserves the original cache_source (parsed/persistent/session)
-            # instead of overwriting it
             cache = app.processor._parser._timeline_cache
             json_path_normalized = str(Path(config.timeline_path).resolve())
             cache_path_normalized = str(Path(cache.file_path).resolve()) if cache.file_path else None
@@ -83,16 +81,15 @@ class TimelineProcessorAdapter(ITimelineProcessor):
                 except Exception:
                     pass
 
-            # Check actual cache source from TimelineProcessor
-            cache_source = "unknown"
+            # Check if file was loaded from session cache or parsed from disk
             try:
-                cache_source = cache.cache_source
+                is_from_cache = cache.cache_source == "session"
             except Exception:
-                pass
+                is_from_cache = False
 
-            # Notify about cache usage based on actual cache source
+            # Notify about cache usage
             if on_file_loading:
-                on_file_loading(cache_source != "parsed")
+                on_file_loading(is_from_cache)
 
             # Determine which method to use based on config
             if config.single_image:
