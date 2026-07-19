@@ -38,7 +38,7 @@ class TimelineWindow(QMainWindow):
         """Initialize main window."""
         super().__init__()
         self.setWindowTitle("Timeline 2 Images")
-        self.setGeometry(100, 100, 700, 850)
+        self.setGeometry(100, 100, 700, 600)
 
         # Initialize settings manager
         self._settings_manager = SettingsManager()
@@ -115,8 +115,6 @@ class TimelineWindow(QMainWindow):
         footer_layout.addStretch()
         footer_layout.addWidget(metadata)
         main_layout.addLayout(footer_layout)
-
-        main_layout.addStretch()
 
     def _register_callbacks(self) -> None:
         """Register presenter callbacks."""
