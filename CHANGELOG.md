@@ -8,22 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- New features in development
-
-### Changed
-- Modifications to existing functionality
-
-### Fixed
-- Bug fixes
-
-### Deprecated
-- Features that will be removed in future releases
-
-### Removed
-- Removed features
-
-### Security
-- Security improvements and vulnerability fixes
+- `process_date_bytes()` method: Render a single date and return image bytes for web/cloud integration
+- `process_date_range_bytes()` method: Batch render date ranges, returning bytes for each image
+- Support for library usage patterns: web servers, serverless functions, cloud storage, memory pipelines
 
 ---
 
