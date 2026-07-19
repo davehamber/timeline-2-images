@@ -70,6 +70,13 @@ class TimelineProcessorAdapter(ITimelineProcessor):
 
             app = self._get_or_create_app(config.timeline_path, config.output_dir)
 
+            # Ensure file is loaded first so cache_source is set correctly
+            # (it starts as "none" until load_file is called)
+            try:
+                app.processor.cache.load_file(config.timeline_path)
+            except Exception:
+                pass
+
             # Check actual cache source from TimelineProcessor
             cache_source = "unknown"
             try:
