@@ -57,7 +57,7 @@ class TimelineProcessorAdapter(ITimelineProcessor):
     ) -> GenerationResult:
         """Generate map images for date range."""
         try:
-            app = self._get_or_create_app(config.timeline_path)
+            app = self._get_or_create_app(config.timeline_path, config.output_dir)
 
             # Determine which method to use based on config
             if config.single_image:
@@ -128,12 +128,16 @@ class TimelineProcessorAdapter(ITimelineProcessor):
         if self._app:
             self._app.clear_caches()
 
-    def _get_or_create_app(self, json_path: str) -> TimelineApp:
+    def _get_or_create_app(self, json_path: str, output_dir: str = "output") -> TimelineApp:
         """Get or create TimelineApp instance (caches for session).
 
         This keeps the app instance alive for the session, reusing it
         across multiple operations for efficiency.
+
+        Args:
+            json_path: Path to Timeline.json file
+            output_dir: Output directory for images
         """
-        if self._app is None or self._app.json_path != json_path:
-            self._app = TimelineApp(json_path, validate=True)
+        if self._app is None or self._app.json_path != json_path or self._app.output_dir != output_dir:
+            self._app = TimelineApp(json_path, output_dir=output_dir, validate=True)
         return self._app
