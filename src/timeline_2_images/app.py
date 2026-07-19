@@ -28,6 +28,7 @@ class TimelineApp:
         processor: TimelineProcessor | None = None,
         segment_processor: SegmentProcessor | None = None,
         renderer: MapRenderer | None = None,
+        validate: bool = True,
     ):
         """Initialize timeline app with dependency injection.
 
@@ -39,12 +40,14 @@ class TimelineApp:
             processor: TimelineProcessor instance (created if not provided)
             segment_processor: SegmentProcessor instance (created if not provided)
             renderer: MapRenderer instance (created if not provided)
+            validate: Whether to validate Timeline.json structure on init (default: True)
 
         Raises:
-            TimelineValidationError: If Timeline.json structure is invalid
+            TimelineValidationError: If validate=True and Timeline.json structure is invalid
         """
-        # Validate input file
-        TimelineValidator().validate_timeline_structure(json_path)
+        # Validate input file if requested
+        if validate:
+            TimelineValidator().validate_timeline_structure(json_path)
 
         self.json_path = json_path
         self.output_dir = Path(output_dir)
@@ -73,6 +76,22 @@ class TimelineApp:
 
         # Initialize connector builder for multi-day rendering
         self.connector_builder = DayConnectorBuilder(self.processor, self.segment_processor)
+
+    @classmethod
+    def validate_file(cls, json_path: str) -> None:
+        """Validate Timeline.json structure without initializing the app.
+
+        Args:
+            json_path: Path to Timeline.json file
+
+        Raises:
+            TimelineValidationError: If Timeline.json structure is invalid
+
+        Example:
+            >>> TimelineApp.validate_file("Timeline.json")
+            >>> app = TimelineApp("Timeline.json", validate=False)
+        """
+        TimelineValidator().validate_timeline_structure(json_path)
 
     def process_date_range(
         self,
