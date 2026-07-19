@@ -176,7 +176,7 @@ class TestOOPPipeline:
             f.write("invalid json")
 
         output_dir = str(tmp_path / "output")
-        app = TimelineApp(str(invalid_json), output_dir=output_dir)
+        app = TimelineApp(str(invalid_json), output_dir=output_dir, validate=False)
 
         result = app.process_date("2024-01-15")
         assert result.success is False
