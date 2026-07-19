@@ -38,7 +38,7 @@ class TimelineWindow(QMainWindow):
         """Initialize main window."""
         super().__init__()
         self.setWindowTitle("Timeline 2 Images")
-        self.setGeometry(100, 100, 700, 600)
+        self.setGeometry(100, 100, 520, 600)
 
         # Initialize settings manager
         self._settings_manager = SettingsManager()
