@@ -6,16 +6,14 @@ from datetime import datetime, date, timezone
 import pandas as pd
 
 from timeline_2_images.parsers.timeline_cache import TimelineCache
-from timeline_2_images.cache import SegmentCache
 from timeline_2_images.parsers.date_extractor import DateExtractor
 
 
 class SegmentParser:
     """Parses timeline segments from JSON data."""
 
-    def __init__(self, cache: TimelineCache, segment_cache: SegmentCache | None = None):
+    def __init__(self, cache: TimelineCache):
         self.cache = cache
-        self.segment_cache = segment_cache or SegmentCache()
 
     @staticmethod
     def parse_waypoints(path: list) -> list:
@@ -68,35 +66,17 @@ class SegmentParser:
         timing["waypoint_extraction"] = time.time() - step_start
         return segments
 
-    def load_from_sqlite(
-        self, json_path: str, target_date: str, timing: dict, start: float
-    ) -> list[dict] | None:
-        """Try to load segments from SQLite cache."""
-        step_start = time.time()
-        cached_segments = self.segment_cache.load_segments_for_date(json_path, target_date)
-        timing["sqlite_lookup"] = time.time() - step_start
+    def load_for_day(
+        self, json_path: str, target_date: str, profile: bool = False
+    ) -> list[dict] | tuple[list[dict], dict]:
+        """Extract semantic segments for a given date with waypoints."""
+        timing: dict = {}
+        start = time.time()
 
-        if cached_segments is None:
-            return None
-
-        timing["cache_source"] = "sqlite"
-        step_start = time.time()
-        segments = self.build_segments_with_waypoints(cached_segments, step_start, timing)
-        timing["total"] = time.time() - start
-        return segments
-
-    def load_from_json(
-        self, json_path: str, target_date: str, timing: dict, start: float
-    ) -> list[dict]:
-        """Load segments from JSON and populate cache."""
         step_start = time.time()
         data = self.cache.load_file(json_path)
         timing["json_load"] = time.time() - step_start
         timing["cache_source"] = "json_parsed"
-
-        step_start = time.time()
-        self.segment_cache.populate_cache(json_path, data)
-        timing["cache_populate"] = time.time() - step_start
 
         step_start = time.time()
         segment_date_index = self.cache.build_segment_date_index()
@@ -114,18 +94,4 @@ class SegmentParser:
         ]
         segments = self.build_segments_with_waypoints(matching_segments, step_start, timing)
         timing["total"] = time.time() - start
-        return segments
-
-    def load_for_day(
-        self, json_path: str, target_date: str, profile: bool = False
-    ) -> list[dict] | tuple[list[dict], dict]:
-        """Extract semantic segments for a given date with waypoints."""
-        timing: dict = {}
-        start = time.time()
-
-        segments = self.load_from_sqlite(json_path, target_date, timing, start)
-        if segments is not None:
-            return (segments, timing) if profile else segments
-
-        segments = self.load_from_json(json_path, target_date, timing, start)
         return (segments, timing) if profile else segments

@@ -8,13 +8,12 @@ from timeline_2_images.parsers.timeline_cache import TimelineCache
 from timeline_2_images.parsers.segment_parser import SegmentParser
 from timeline_2_images.parsers.point_extractor import PointExtractor
 from timeline_2_images.parsers.date_extractor import DateExtractor
-from timeline_2_images.cache import SegmentCache
 
 
 class TimelineParserFacade:
     """Facade providing OOP interface for timeline parsing operations.
 
-    Coordinates TimelineCache, SegmentParser, PointExtractor, and SegmentCache
+    Coordinates TimelineCache, SegmentParser, and PointExtractor
     to provide a unified API for timeline operations.
     """
 
@@ -23,7 +22,6 @@ class TimelineParserFacade:
         timeline_cache: TimelineCache | None = None,
         segment_parser: SegmentParser | None = None,
         point_extractor: PointExtractor | None = None,
-        segment_cache: SegmentCache | None = None,
     ):
         """Initialize timeline parser facade with optional dependency injection.
 
@@ -31,13 +29,9 @@ class TimelineParserFacade:
             timeline_cache: Session-level cache (created if not provided)
             segment_parser: Segment parser (created if not provided)
             point_extractor: Point extractor (created if not provided)
-            segment_cache: SQLite segment cache (created if not provided)
         """
         self._timeline_cache = timeline_cache or TimelineCache()
-        self._segment_cache = segment_cache or SegmentCache()
-        self._segment_parser = segment_parser or SegmentParser(
-            self._timeline_cache, self._segment_cache
-        )
+        self._segment_parser = segment_parser or SegmentParser(self._timeline_cache)
         self._point_extractor = point_extractor or PointExtractor(self._timeline_cache)
 
     def load_segments_for_day(
@@ -62,16 +56,8 @@ class TimelineParserFacade:
         last_n = sorted_dates[:days]
         return sorted([d.strftime("%Y-%m-%d") for d in last_n])
 
-    def get_available_dates(
-        self, json_path: str, segment_cache: SegmentCache | None = None
-    ) -> list[date]:
+    def get_available_dates(self, json_path: str) -> list[date]:
         """Get available dates from cache or JSON file."""
-        cache = segment_cache or self._segment_cache
-        cached_dates = cache.get_cached_dates(json_path)
-        if cached_dates:
-            self._timeline_cache.cache_source = "disk"
-            return [datetime.strptime(d, "%Y-%m-%d").date() for d in cached_dates]
-
         self._timeline_cache.load_file(json_path)
         self._timeline_cache.build_date_index()
         if not self._timeline_cache.date_index:
@@ -107,10 +93,6 @@ class TimelineParserFacade:
     def get_cache_source(self) -> str:
         """Return the source of the most recent cache load."""
         return self._timeline_cache.cache_source
-
-    def get_sqlite_cache_stats(self, json_path: str) -> dict:
-        """Return SQLite segment cache statistics."""
-        return self._segment_cache.get_cache_stats(json_path)
 
     def clear_cache(self) -> None:
         """Clear the session cache. Useful for testing or memory management."""

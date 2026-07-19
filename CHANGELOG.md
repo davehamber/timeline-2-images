@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- SQLite segment caching (SegmentCache) - legacy optimization no longer needed
+- `--clean-cache` CLI argument (was specific to SQLite cache)
+- Unused `profile` CLI argument and parameter
+- Broken `test_caches.py` test file
+
+### Changed
+- Simplified caching architecture: now uses only TimelineCache (in-memory) for JSON parsing
+- Removed redundant segment indexing logic from SQLite cache
+
 ## [0.3.0] - 2026-07-19
 
 ### Added
