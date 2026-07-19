@@ -161,6 +161,12 @@ class TimelineWindow(QMainWindow):
     def _on_generation_complete(self, result) -> None:
         """Handle generation completion."""
         self._progress_panel.set_complete(result)
+
+        # Re-enable Generate button if a file is still selected
+        timeline_path = self._file_selector.get_selected_path()
+        if timeline_path and self._file_selector.is_file_valid():
+            self._generate_btn.setEnabled(True)
+
         if result.success:
             QMessageBox.information(
                 self,
