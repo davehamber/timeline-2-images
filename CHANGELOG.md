@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `gui/widgets/progress_panel.py`: Progress bar and processing status display
   - `gui/app.py`: Application entry point for launching the desktop GUI
 - PyQt6 as runtime dependency for cross-platform GUI support (Linux, macOS, Windows)
+- Background threading for file loading to prevent UI freezing on large files
+  - TimelineWorker: QThread for async file validation and date loading
+  - File loading indicator in FileSelector showing "⟳ Loading file..." status
+  - Responsive UI even with 60+ MB Timeline.json files
 
 ### Removed
 - SQLite segment caching (SegmentCache) - legacy optimization no longer needed
