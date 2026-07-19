@@ -75,13 +75,15 @@ class DateRangeQuery:
 
     def validate(self) -> bool:
         """Validate date parameters."""
-        if self.days <= 0:
-            raise ValueError("days must be positive")
-
         start_dt = self._parse_date(self.start_date, "start_date") if self.start_date else None
         end_dt = self._parse_date(self.end_date, "end_date") if self.end_date else None
 
         if start_dt and end_dt and start_dt > end_dt:
             raise ValueError("start_date must be before end_date")
+
+        # days only needs to be positive if it will be used
+        # (i.e., when not using both start_date and end_date)
+        if not (self.start_date and self.end_date) and self.days <= 0:
+            raise ValueError("days must be positive")
 
         return True
