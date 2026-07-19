@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Simplified caching architecture: now uses only TimelineCache (in-memory) for JSON parsing
 - Removed redundant segment indexing logic from SQLite cache
 - DateRangeQuery validation: only validates days > 0 when days parameter will be used
+- GUI default output directory changed from ~/maps to ~/Downloads for better UX
 
 ## [0.3.0] - 2026-07-19
 
