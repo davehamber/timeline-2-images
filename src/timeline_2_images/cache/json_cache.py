@@ -78,7 +78,9 @@ class JsonCache:
                     return None
 
                 return json.loads(cached_data)
-        except Exception:
+        except Exception as e:
+            import sys
+            print(f"Cache error for {json_path}: {e}", file=sys.stderr)
             return None
 
     def set(self, json_path: str, data: Any) -> None:

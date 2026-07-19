@@ -70,9 +70,16 @@ class TimelineProcessorAdapter(ITimelineProcessor):
 
             app = self._get_or_create_app(config.timeline_path, config.output_dir)
 
-            # Notify about cache usage
+            # Check actual cache source from TimelineProcessor
+            cache_source = "unknown"
+            try:
+                cache_source = app.processor.cache.cache_source
+            except Exception:
+                pass
+
+            # Notify about cache usage based on actual cache source
             if on_file_loading:
-                on_file_loading(is_cached)
+                on_file_loading(cache_source != "parsed")
 
             # Determine which method to use based on config
             if config.single_image:
