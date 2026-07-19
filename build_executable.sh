@@ -1,9 +1,52 @@
 #!/bin/bash
-# Build a standalone executable using Nuitka
+# Build standalone executables using Nuitka for CLI or GUI
 
 set -e
 
-echo "Building timeline-2-images executable with Nuitka..."
+# Parse command line arguments
+BUILD_TYPE="${1:-cli}"
+
+print_usage() {
+    echo "Build standalone executable with Nuitka"
+    echo ""
+    echo "Usage: $0 [cli|gui]"
+    echo ""
+    echo "Arguments:"
+    echo "  cli   - Build CLI version (default)"
+    echo "  gui   - Build GUI version (requires PyQt6)"
+    echo ""
+    echo "Examples:"
+    echo "  $0          # Build CLI version"
+    echo "  $0 cli      # Build CLI version explicitly"
+    echo "  $0 gui      # Build GUI version"
+    echo ""
+    echo "Output:"
+    echo "  CLI: ./dist/timeline2images"
+    echo "  GUI: ./dist/timeline2images-gui"
+}
+
+if [ "$BUILD_TYPE" = "--help" ] || [ "$BUILD_TYPE" = "-h" ]; then
+    print_usage
+    exit 0
+fi
+
+case "$BUILD_TYPE" in
+    cli)
+        echo "Building CLI executable with Nuitka..."
+        ENTRY_POINT="src/timeline_2_images/main.py"
+        OUTPUT_NAME="timeline2images"
+        ;;
+    gui)
+        echo "Building GUI executable with Nuitka..."
+        ENTRY_POINT="src/timeline_2_images/gui/app.py"
+        OUTPUT_NAME="timeline2images-gui"
+        ;;
+    *)
+        echo "✗ Unknown build type: $BUILD_TYPE"
+        print_usage
+        exit 1
+        ;;
+esac
 
 uv run nuitka \
   --onefile \
@@ -12,16 +55,21 @@ uv run nuitka \
   --include-package=timeline_2_images \
   --enable-plugin=no-qt \
   --remove-output \
-  src/timeline_2_images/main.py
+  "$ENTRY_POINT"
 
-if [ -f ./dist/main.bin ]; then
-    mv ./dist/main.bin ./dist/timeline2images
-    chmod +x ./dist/timeline2images
-    echo "✓ Executable built successfully at ./dist/timeline2images"
+if [ -f "./dist/app.bin" ]; then
+    mv "./dist/app.bin" "./dist/$OUTPUT_NAME"
+    chmod +x "./dist/$OUTPUT_NAME"
+    echo "✓ $BUILD_TYPE executable built successfully at ./dist/$OUTPUT_NAME"
     echo ""
-    echo "Usage examples:"
-    echo "  ./dist/timeline2images Timeline.json --start-date 2026-01-01 --days 7"
-    echo "  ./dist/timeline2images --clean-cache"
+    if [ "$BUILD_TYPE" = "cli" ]; then
+        echo "Usage examples:"
+        echo "  ./dist/timeline2images Timeline.json --start-date 2026-01-01 --days 7"
+        echo "  ./dist/timeline2images Timeline.json --image-size 800"
+    else
+        echo "Usage:"
+        echo "  ./dist/timeline2images-gui"
+    fi
 else
     echo "✗ Build failed or executable not found"
     exit 1
