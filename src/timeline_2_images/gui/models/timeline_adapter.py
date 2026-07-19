@@ -8,7 +8,7 @@ directly depends on TimelineApp or other core implementation details.
 """
 
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 from timeline_2_images.app import TimelineApp
 from timeline_2_images.exceptions import TimelineException, ValidationError
@@ -54,7 +54,7 @@ class TimelineProcessorAdapter(ITimelineProcessor):
         self,
         config: ImageGenerationConfig,
         on_progress: Optional[ProgressCallback] = None,
-        on_file_loading: Optional[callable] = None,
+        on_file_loading: Optional[Callable[[bool], None]] = None,
     ) -> GenerationResult:
         """Generate map images for date range.
 
