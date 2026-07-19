@@ -3,8 +3,7 @@
 
 """SQLite-based persistent cache for parsed JSON timeline data."""
 
-import hashlib
-import json
+import pickle
 import sqlite3
 from pathlib import Path
 from typing import Any, Optional
@@ -36,7 +35,7 @@ class JsonCache:
                     json_path TEXT PRIMARY KEY,
                     file_mtime REAL NOT NULL,
                     file_size INTEGER NOT NULL,
-                    cached_data TEXT NOT NULL
+                    cached_data BLOB NOT NULL
                 )
                 """
             )
@@ -77,7 +76,7 @@ class JsonCache:
                     self.delete(json_path)
                     return None
 
-                return json.loads(cached_data)
+                return pickle.loads(cached_data)
         except Exception as e:
             import sys
             print(f"Cache error for {json_path}: {e}", file=sys.stderr)
@@ -97,7 +96,7 @@ class JsonCache:
 
             mtime = json_file.stat().st_mtime
             size = json_file.stat().st_size
-            cached_json = json.dumps(data)
+            cached_data = pickle.dumps(data)
 
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute(
@@ -106,7 +105,7 @@ class JsonCache:
                     (json_path, file_mtime, file_size, cached_data)
                     VALUES (?, ?, ?, ?)
                     """,
-                    (str(json_file), mtime, size, cached_json),
+                    (str(json_file), mtime, size, cached_data),
                 )
                 conn.commit()
         except Exception:

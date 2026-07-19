@@ -40,12 +40,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Shows "Loading file (parsing JSON)..." for first-time file loads
   - Shows "Loading file (using cache)..." when reusing cached file from previous operation
   - Displays whether file is being read from disk or from memory
-- Persistent JSON caching using SQLite
+- Persistent JSON caching using SQLite with pickle serialization
   - Stores parsed Timeline JSON in ~/.cache/timeline-2-images/json_cache.db
   - Automatic freshness validation based on file mtime and size
   - Three-tier caching: session (memory) → persistent (SQLite) → disk
   - ~14x speedup on app startup (uses cache from previous session)
   - Auto-invalidates cache if source file changes
+  - Uses pickle serialization (10-100x faster than JSON for large files)
 
 ### Fixed
 - Date range validation now correctly handles specific date ranges without requiring days > 0
