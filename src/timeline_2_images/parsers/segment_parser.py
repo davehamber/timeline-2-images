@@ -7,13 +7,15 @@ import pandas as pd
 
 from timeline_2_images.parsers.timeline_cache import TimelineCache
 from timeline_2_images.parsers.date_extractor import DateExtractor
+from timeline_2_images.cache.segment_cache import SegmentCache
 
 
 class SegmentParser:
     """Parses timeline segments from JSON data."""
 
-    def __init__(self, cache: TimelineCache):
+    def __init__(self, cache: TimelineCache, segment_cache: SegmentCache | None = None):
         self.cache = cache
+        self.segment_cache = segment_cache or SegmentCache()
 
     @staticmethod
     def parse_waypoints(path: list) -> list:
@@ -73,6 +75,13 @@ class SegmentParser:
         timing: dict = {}
         start = time.time()
 
+        # Check segment cache first
+        cached_segments = self.segment_cache.get(json_path, target_date)
+        if cached_segments is not None:
+            timing["total"] = time.time() - start
+            timing["cache_source"] = "segment_cached"
+            return (cached_segments, timing) if profile else cached_segments
+
         step_start = time.time()
         data = self.cache.load_file(json_path)
         timing["json_load"] = time.time() - step_start
@@ -94,4 +103,8 @@ class SegmentParser:
         ]
         segments = self.build_segments_with_waypoints(matching_segments, step_start, timing)
         timing["total"] = time.time() - start
+
+        # Cache the segments for this date
+        self.segment_cache.set(json_path, target_date, segments)
+
         return (segments, timing) if profile else segments

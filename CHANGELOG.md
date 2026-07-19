@@ -44,6 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - ~50-60x speedup on date index building (29s → <1s for 45k+ segments)
   - Replaced expensive pandas datetime parsing with native Python fromisoformat
   - Falls back to pandas only for non-standard timestamp formats
+- Session-level segment caching with MD5-based invalidation
+  - Caches parsed segments by date for fast reuse within session
+  - Automatically invalidates cache when Timeline.json file changes (via MD5 hash)
+  - Provides ~10x speedup on repeated date queries with same file
 
 ### Fixed
 - Date range validation now correctly handles specific date ranges without requiring days > 0
@@ -52,7 +56,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Generate Maps button now enables when file is selected (was staying disabled due to deferred file loading)
 
 ### Removed
-- SQLite segment caching (SegmentCache) - legacy optimization no longer needed
 - SQLite persistent JSON caching (JsonCache) - date extraction is now fast enough without it
 - `--clean-cache` CLI argument (was specific to SQLite cache)
 - Unused `profile` CLI argument and parameter
