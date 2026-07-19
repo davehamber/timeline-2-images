@@ -4,6 +4,11 @@
 # pylint: disable=line-too-long
 
 
+def _pad_version(version: str, width: int = 10) -> str:
+    """Pad version string to width with right-aligned spaces."""
+    return version.ljust(width)
+
+
 class BannerPrinter:
     """Displays ASCII art banner with lilac and deep purple colors."""
 
@@ -16,6 +21,8 @@ class BannerPrinter:
     @classmethod
     def print_banner(cls) -> None:
         """Display ASCII art banner with lilac and deep purple colors."""
+        from timeline_2_images import __version__
+
         dp = cls.DEEP_PURPLE
         lilac = cls.LILAC
         white = cls.WHITE
@@ -40,7 +47,7 @@ class BannerPrinter:
 {dp}║{reset}    {dg}╚══════╝{reset}  {dp}╚═╝╚═╝{reset}     {dp}╚═╝╚═╝{reset}  {dp}╚═╝{reset} {dp}╚═════╝{reset} {dp}╚══════╝{reset}{dp}╚══════╝{reset}    {dp}║{reset}
 {dp}║{reset}                                                                 {dp}║{reset}
 {dp}║{reset}        Generate daily route maps from Google Timeline           {dp}║{reset}
-{dp}║{reset}   EUPL-1.2, Copyright (c) 2026 David Hamber - Version 0.0.1     {dp}║{reset}
+{dp}║{reset}   EUPL-1.2, Copyright (c) 2026 David Hamber - Version {_pad_version(__version__)}{dp}║{reset}
 {dp}║{reset}                                                                 {dp}║{reset}
 {dp}╚═════════════════════════════════════════════════════════════════╝{reset}
 """

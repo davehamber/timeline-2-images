@@ -120,16 +120,3 @@ class TimelineValidator:
         errors = self.collect_segment_errors(segment, segment_index)
         if errors:
             raise TimelineValidationError("\n".join(errors))
-
-
-_validator = TimelineValidator()
-
-
-def validate_timeline_structure(json_path: str) -> dict:
-    """Validate Timeline.json structure and return parsed data."""
-    return _validator.validate_timeline_structure(json_path)
-
-
-def validate_segment_structure(segment: dict, segment_index: int = 0) -> None:
-    """Validate a semantic segment has required fields."""
-    _validator.validate_segment_structure(segment, segment_index)
