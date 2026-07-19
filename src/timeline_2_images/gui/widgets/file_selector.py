@@ -21,6 +21,7 @@ class FileSelector(QWidget):
         super().__init__()
         self._presenter = presenter
         self._selected_path: Optional[str] = None
+        self._on_file_selected = None
 
         layout = QHBoxLayout()
         self.setLayout(layout)
@@ -51,6 +52,9 @@ class FileSelector(QWidget):
         if file_path:
             self._selected_path = file_path
             self._path_input.setText(file_path)
+            # Notify that a file has been selected
+            if self._on_file_selected:
+                self._on_file_selected(file_path)
 
     def get_selected_path(self) -> Optional[str]:
         """Get the selected file path."""
@@ -66,3 +70,21 @@ class FileSelector(QWidget):
             self._loading_label.setText("⟳ Loading file...")
         else:
             self._loading_label.setText("")
+
+    def on_file_selected(self, callback) -> None:
+        """Register callback when file is selected.
+
+        Args:
+            callback: Function to call with file path when file is selected
+        """
+        self._on_file_selected = callback
+
+    def is_file_valid(self) -> bool:
+        """Check if selected file is valid.
+
+        Returns:
+            True if file exists and is readable
+        """
+        if not self._selected_path:
+            return False
+        return Path(self._selected_path).is_file()

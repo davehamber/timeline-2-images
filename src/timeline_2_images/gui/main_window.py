@@ -6,7 +6,8 @@
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import Qt, QThread
+from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QThread
 from PyQt6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -64,6 +65,7 @@ class TimelineWindow(QMainWindow):
         file_label = QLabel("Timeline File:")
         file_label.setStyleSheet("font-weight: bold;")
         self._file_selector = FileSelector(self._presenter)
+        self._file_selector.on_file_selected(self._on_file_selected_in_selector)
         main_layout.addWidget(file_label)
         main_layout.addWidget(self._file_selector)
 
@@ -139,6 +141,18 @@ class TimelineWindow(QMainWindow):
             is_loading: True if file is being loaded, False if complete
         """
         self._file_selector.set_loading(is_loading)
+
+    def _on_file_selected_in_selector(self, file_path: str) -> None:
+        """Handle file selection in file selector.
+
+        Args:
+            file_path: Path to selected file
+        """
+        # Enable generate button when a valid file is selected
+        if Path(file_path).is_file():
+            self._generate_btn.setEnabled(True)
+        else:
+            self._generate_btn.setEnabled(False)
 
     def _on_available_dates(self, dates: list[str]) -> None:
         """Handle available dates loaded."""
