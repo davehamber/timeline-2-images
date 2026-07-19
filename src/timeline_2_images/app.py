@@ -4,7 +4,7 @@
 """Timeline-to-images application orchestrator."""
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from timeline_2_images.processors import TimelineProcessor, SegmentProcessor
 from timeline_2_images.rendering import MapRenderer
@@ -14,6 +14,8 @@ from timeline_2_images.models import RenderResult
 from timeline_2_images.validators import TimelineValidator, TimelineValidationError
 from timeline_2_images.day_connector_builder import DayConnectorBuilder
 from geopy.geocoders import Nominatim
+
+ProgressCallback = Callable[[int, int], None]
 
 
 class TimelineApp:
@@ -107,6 +109,7 @@ class TimelineApp:
         start_date: str | None = None,
         end_date: str | None = None,
         days: int = 14,
+        on_progress: ProgressCallback | None = None,
     ) -> list[RenderResult]:
         """Process and render a date range.
 
@@ -114,6 +117,7 @@ class TimelineApp:
             start_date: Start date in YYYY-MM-DD format (optional)
             end_date: End date in YYYY-MM-DD format (optional)
             days: Number of days (default 14)
+            on_progress: Optional callback for progress updates (completed, total)
 
         Returns:
             List of RenderResult objects
@@ -122,9 +126,11 @@ class TimelineApp:
         dates = self.processor.get_date_range(query)
 
         results = []
-        for date in dates:
+        for idx, date in enumerate(dates):
             result = self.process_date(date)
             results.append(result)
+            if on_progress:
+                on_progress(idx + 1, len(dates))
 
         return results
 
@@ -133,6 +139,7 @@ class TimelineApp:
         start_date: str | None = None,
         end_date: str | None = None,
         days: int = 14,
+        on_progress: ProgressCallback | None = None,
     ) -> list[tuple[bytes | None, RenderResult]]:
         """Process and render a date range, returning image bytes for each date.
 
@@ -140,6 +147,7 @@ class TimelineApp:
             start_date: Start date in YYYY-MM-DD format (optional)
             end_date: End date in YYYY-MM-DD format (optional)
             days: Number of days (default 14)
+            on_progress: Optional callback for progress updates (completed, total)
 
         Returns:
             List of tuples (image_bytes, RenderResult) for each date
@@ -148,9 +156,11 @@ class TimelineApp:
         dates = self.processor.get_date_range(query)
 
         results = []
-        for date in dates:
+        for idx, date in enumerate(dates):
             image_bytes, result = self.process_date_bytes(date)
             results.append((image_bytes, result))
+            if on_progress:
+                on_progress(idx + 1, len(dates))
 
         return results
 
@@ -323,6 +333,7 @@ class TimelineApp:
         start_date: str | None = None,
         end_date: str | None = None,
         days: int = 14,
+        on_progress: ProgressCallback | None = None,
     ) -> RenderResult:
         """Process date range and render single combined image.
 
@@ -330,6 +341,7 @@ class TimelineApp:
             start_date: Start date in YYYY-MM-DD format (optional)
             end_date: End date in YYYY-MM-DD format (optional)
             days: Number of days (default 14)
+            on_progress: Optional callback for progress updates (completed, total)
 
         Returns:
             RenderResult with single combined image
@@ -347,7 +359,13 @@ class TimelineApp:
                 error_message="No dates found in range",
             )
 
+        if on_progress:
+            on_progress(0, len(dates))
+
         combined_segments = self.connector_builder.build_segments_with_connectors(dates)
+
+        if on_progress:
+            on_progress(len(dates), len(dates))
 
         if not combined_segments:
             return RenderResult(
