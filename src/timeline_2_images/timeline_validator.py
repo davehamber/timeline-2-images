@@ -4,9 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-
-class TimelineValidationError(Exception):
-    """Raised when Timeline.json structure is invalid."""
+from timeline_2_images.timeline_validation_error import TimelineValidationError
 
 
 class TimelineValidator:
