@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Date range validation now correctly handles specific date ranges without requiring days > 0
+- Output directory setting now correctly used when generating images (was defaulting to project's output/ directory)
 
 ### Removed
 - SQLite segment caching (SegmentCache) - legacy optimization no longer needed
