@@ -23,6 +23,7 @@ from PyQt6.QtWidgets import (
 from timeline_2_images import __version__
 from timeline_2_images.gui.models import TimelineProcessorAdapter, ImageGenerationConfig
 from timeline_2_images.gui.presenter import TimelineGeneratorPresenter
+from timeline_2_images.gui.settings_manager import SettingsManager
 from timeline_2_images.gui.widgets.file_selector import FileSelector
 from timeline_2_images.gui.widgets.date_range_panel import DateRangePanel
 from timeline_2_images.gui.widgets.settings_panel import SettingsPanel
@@ -38,12 +39,18 @@ class TimelineWindow(QMainWindow):
         self.setWindowTitle("Timeline 2 Images")
         self.setGeometry(100, 100, 700, 850)
 
+        # Initialize settings manager
+        self._settings_manager = SettingsManager()
+
         # Initialize presenter with adapter
         self._presenter = TimelineGeneratorPresenter(TimelineProcessorAdapter())
         self._register_callbacks()
 
         # Create UI
         self._create_ui()
+
+        # Load saved settings
+        self._load_settings()
 
     def _create_ui(self) -> None:
         """Create the user interface."""
@@ -148,6 +155,45 @@ class TimelineWindow(QMainWindow):
             )
         else:
             QMessageBox.critical(self, "Generation Failed", result.error_message or "Unknown error")
+
+    def _load_settings(self) -> None:
+        """Load saved settings from previous session."""
+        # Load image size
+        image_size = self._settings_manager.get("image_size", 500)
+        self._settings_panel._size_spin.setValue(image_size)
+
+        # Load output directory
+        output_dir = self._settings_manager.get("output_dir")
+        if output_dir:
+            self._settings_panel._output_input.setText(output_dir)
+            self._settings_panel._output_dir = output_dir
+
+        # Load place names setting
+        add_place_names = self._settings_manager.get("add_place_names", True)
+        self._settings_panel._place_names_check.setChecked(add_place_names)
+
+        # Load single image setting
+        single_image = self._settings_manager.get("single_image", False)
+        self._settings_panel._single_image_check.setChecked(single_image)
+
+    def _save_settings(self) -> None:
+        """Save current settings for next session."""
+        settings = {
+            "image_size": self._settings_panel.get_image_size(),
+            "output_dir": self._settings_panel.get_output_dir(),
+            "add_place_names": self._settings_panel.get_add_place_names(),
+            "single_image": self._settings_panel.get_single_image(),
+        }
+        self._settings_manager.save_settings(settings)
+
+    def closeEvent(self, event) -> None:
+        """Handle window close event - save settings.
+
+        Args:
+            event: Close event
+        """
+        self._save_settings()
+        super().closeEvent(event)
 
     def _on_generate(self) -> None:
         """Handle generate button click."""
