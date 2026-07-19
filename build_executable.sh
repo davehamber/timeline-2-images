@@ -35,11 +35,13 @@ case "$BUILD_TYPE" in
         echo "Building CLI executable with Nuitka..."
         ENTRY_POINT="src/timeline_2_images/main.py"
         OUTPUT_NAME="timeline2images"
+        QT_FLAGS="--enable-plugin=no-qt"
         ;;
     gui)
         echo "Building GUI executable with Nuitka..."
         ENTRY_POINT="src/timeline_2_images/gui/app.py"
         OUTPUT_NAME="timeline2images-gui"
+        QT_FLAGS="--enable-plugin=pyqt6"
         ;;
     *)
         echo "✗ Unknown build type: $BUILD_TYPE"
@@ -53,7 +55,7 @@ uv run nuitka \
   --output-dir=./dist \
   --follow-imports \
   --include-package=timeline_2_images \
-  --enable-plugin=no-qt \
+  $QT_FLAGS \
   --remove-output \
   "$ENTRY_POINT"
 
