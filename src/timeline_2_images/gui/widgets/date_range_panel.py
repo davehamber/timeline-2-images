@@ -56,6 +56,7 @@ class DateRangePanel(QWidget):
         self._start_date = QDateEdit()
         self._start_date.setCalendarPopup(True)
         self._start_date.setDate(QDate.currentDate())
+        self._start_date.setDisplayFormat("yyyy-MM-dd")
         self._start_date.setEnabled(False)
         dates_layout.addWidget(self._start_date)
 
@@ -63,6 +64,7 @@ class DateRangePanel(QWidget):
         self._end_date = QDateEdit()
         self._end_date.setCalendarPopup(True)
         self._end_date.setDate(QDate.currentDate())
+        self._end_date.setDisplayFormat("yyyy-MM-dd")
         self._end_date.setEnabled(False)
         dates_layout.addWidget(self._end_date)
         dates_layout.addStretch()
