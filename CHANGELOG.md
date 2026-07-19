@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - TimelineWorker: QThread for async file validation and date loading
   - File loading indicator in FileSelector showing "⟳ Loading file..." status
   - Responsive UI even with 60+ MB Timeline.json files
+- Background threading for image generation to prevent UI freezing during processing
+  - GenerationWorker: QThread for async image generation
+  - Progress updates and real-time feedback during generation
+  - Improved error reporting showing failed dates and success count
 
 ### Fixed
 - Date range validation now correctly handles specific date ranges without requiring days > 0
