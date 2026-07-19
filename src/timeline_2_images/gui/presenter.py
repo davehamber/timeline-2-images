@@ -140,6 +140,7 @@ class TimelineGeneratorPresenter:
         end_date: Optional[str] = None,
         days: int = 14,
         on_progress: Optional[ProgressCallback] = None,
+        on_file_loading: Optional[Callable[[bool], None]] = None,
     ) -> None:
         """User clicked 'Generate Maps' button.
 
@@ -153,6 +154,7 @@ class TimelineGeneratorPresenter:
             end_date: End date (YYYY-MM-DD) or None
             days: Number of days to process
             on_progress: Progress callback (completed, total)
+            on_file_loading: File loading callback (is_cached)
         """
         from timeline_2_images.gui.generation_worker import GenerationWorker
 
@@ -168,7 +170,9 @@ class TimelineGeneratorPresenter:
         )
 
         # Create and start generation worker thread to avoid blocking UI
-        self._generation_worker = GenerationWorker(self._processor, config, on_progress)
+        self._generation_worker = GenerationWorker(
+            self._processor, config, on_progress, on_file_loading
+        )
         self._generation_worker.generation_complete.connect(self._on_generation_complete_signal)
         self._generation_worker.start()
 
