@@ -64,12 +64,9 @@ class TimelineProcessorAdapter(ITimelineProcessor):
             on_file_loading: Optional callback when file loading completes (is_cached)
         """
         try:
-            # Check if app is already cached
-            is_cached = (
-                self._app is not None
-                and self._app.json_path == config.timeline_path
-                and self._app.output_dir == config.output_dir
-            )
+            # Check if JSON is already cached (based on json_path only, not output_dir)
+            # Output directory doesn't affect JSON caching - it only affects where images are saved
+            is_cached = self._app is not None and self._app.json_path == config.timeline_path
 
             app = self._get_or_create_app(config.timeline_path, config.output_dir)
 
@@ -150,18 +147,21 @@ class TimelineProcessorAdapter(ITimelineProcessor):
         """Get or create TimelineApp instance (caches for session).
 
         This keeps the app instance alive for the session, reusing it
-        across multiple operations for efficiency.
+        across multiple operations for efficiency. JSON is cached by json_path;
+        output_dir can change without invalidating the cache since it only
+        affects where images are saved, not JSON parsing.
 
         Args:
             json_path: Path to Timeline.json file
             output_dir: Output directory for images
         """
-        # Compare output directories as Path objects to handle both str and Path types
-        output_dir_path = Path(output_dir)
-        if (
-            self._app is None
-            or self._app.json_path != json_path
-            or self._app.output_dir != output_dir_path
-        ):
+        # Only recreate app if json_path changes; output_dir can change without losing cache
+        if self._app is None or self._app.json_path != json_path:
             self._app = TimelineApp(json_path, output_dir=output_dir, validate=True)
+        else:
+            # Update output_dir if it changed (doesn't invalidate JSON cache)
+            output_dir_path = Path(output_dir)
+            if self._app.output_dir != output_dir_path:
+                self._app.output_dir = output_dir_path
+                self._app.output_dir.mkdir(exist_ok=True, parents=True)
         return self._app
