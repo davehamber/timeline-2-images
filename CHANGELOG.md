@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Specific exception types for programmatic error handling: `SegmentProcessingError`, `RenderingError`, `ValidationError`, `CacheError`
 - Base `TimelineException` class for catching all timeline-related errors
 - Exception chaining support for error context and debugging
+- `CacheConfig` class for controlling in-memory caching behavior
+- Cache size limits (1 MB - 8 GB) for predictable memory usage
+- Cache configuration options: enable/disable caching, set max size, auto-clear on exit
 
 ## [0.2.0] - 2026-07-19
 
