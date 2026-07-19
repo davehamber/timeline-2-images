@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Progress callback support in batch methods for real-time progress tracking
 - `on_progress` parameter in `process_date_range()`, `process_date_range_bytes()`, and `process_date_range_single_image()`
 - Progress tracking examples with tqdm integration in library usage documentation
+- Specific exception types for programmatic error handling: `SegmentProcessingError`, `RenderingError`, `ValidationError`, `CacheError`
+- Base `TimelineException` class for catching all timeline-related errors
+- Exception chaining support for error context and debugging
 
 ## [0.2.0] - 2026-07-19
 
