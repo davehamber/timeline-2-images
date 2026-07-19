@@ -3,7 +3,8 @@
 
 """Data models for timeline-2-images."""
 
-from timeline_2_images.models.segment import Segment, ProcessedSegment
+from timeline_2_images.models.segment import Segment
+from timeline_2_images.models.processed_segment import ProcessedSegment
 from timeline_2_images.models.bounds import Bounds
 from timeline_2_images.models.render_result import RenderResult
 
