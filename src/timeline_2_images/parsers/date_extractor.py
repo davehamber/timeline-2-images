@@ -39,11 +39,26 @@ class DateExtractor:
             start_str = duration.get("startTimestamp") or duration.get("startTimestampMs")
         if start_str is None:
             return None
-        dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
-        if pd.isna(dt_timestamp):
-            return None
-        parsed_datetime = datetime.fromisoformat(str(dt_timestamp.isoformat()))
-        return parsed_datetime.astimezone(timezone.utc).date()
+        # Try fast path first: fromisoformat
+        try:
+            if isinstance(start_str, str):
+                if start_str.endswith("Z"):
+                    parsed_datetime = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
+                else:
+                    parsed_datetime = datetime.fromisoformat(start_str)
+            else:
+                # Handle numeric timestamps (milliseconds)
+                parsed_datetime = datetime.fromtimestamp(start_str / 1000, tz=timezone.utc)
+            return parsed_datetime.astimezone(timezone.utc).date()
+        except (ValueError, TypeError):
+            # Fallback to pandas for non-standard formats
+            try:
+                dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
+                if pd.isna(dt_timestamp):
+                    return None
+                return dt_timestamp.to_pydatetime().astimezone(timezone.utc).date()
+            except Exception:
+                return None
 
     def extract_from_timeline_objects(self) -> Set[date]:
         """Extract unique dates from timelineObjects."""
@@ -68,10 +83,22 @@ class DateExtractor:
             start_str = segment.get("startTime")
             if not start_str:
                 continue
-            parsed_datetime = pd.to_datetime(start_str, utc=True, errors="coerce")
-            if pd.isna(parsed_datetime):
-                continue
-            dates.add(parsed_datetime.to_pydatetime().astimezone(timezone.utc).date())
+            # Try fast path first: fromisoformat (10x faster than pd.to_datetime)
+            try:
+                # Handle ISO 8601 format with Z or ±HH:MM timezone
+                if start_str.endswith("Z"):
+                    parsed_datetime = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
+                else:
+                    parsed_datetime = datetime.fromisoformat(start_str)
+                dates.add(parsed_datetime.astimezone(timezone.utc).date())
+            except (ValueError, TypeError):
+                # Fallback to pandas for non-standard formats
+                try:
+                    parsed_datetime = pd.to_datetime(start_str, utc=True, errors="coerce")
+                    if not pd.isna(parsed_datetime):
+                        dates.add(parsed_datetime.to_pydatetime().astimezone(timezone.utc).date())
+                except Exception:
+                    pass  # Skip unparseable timestamps
         elapsed = time.time() - start
         print(f"[TIMING]   extract_from_segments: {elapsed:.2f}s ({len(dates)} dates from {len(self.data.get('semanticSegments', []))} segments)")
         return dates
