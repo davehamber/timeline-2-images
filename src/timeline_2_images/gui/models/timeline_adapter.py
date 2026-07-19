@@ -70,17 +70,23 @@ class TimelineProcessorAdapter(ITimelineProcessor):
 
             app = self._get_or_create_app(config.timeline_path, config.output_dir)
 
-            # Ensure file is loaded first so cache_source is set correctly
-            # (it starts as "none" until load_file is called)
-            try:
-                app.processor.cache.load_file(config.timeline_path)
-            except Exception:
-                pass
+            # Only load file if not already loaded in this session
+            # This preserves the original cache_source (parsed/persistent/session)
+            # instead of overwriting it
+            cache = app.processor.cache
+            json_path_normalized = str(Path(config.timeline_path).resolve())
+            cache_path_normalized = str(Path(cache.file_path).resolve()) if cache.file_path else None
+
+            if cache.file_path is None or json_path_normalized != cache_path_normalized or cache.data is None:
+                try:
+                    cache.load_file(config.timeline_path)
+                except Exception:
+                    pass
 
             # Check actual cache source from TimelineProcessor
             cache_source = "unknown"
             try:
-                cache_source = app.processor.cache.cache_source
+                cache_source = cache.cache_source
             except Exception:
                 pass
 
