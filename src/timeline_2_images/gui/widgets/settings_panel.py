@@ -24,7 +24,7 @@ class SettingsPanel(QWidget):
     def __init__(self):
         """Initialize settings panel."""
         super().__init__()
-        self._output_dir = str(Path.home() / "maps")
+        self._output_dir = str(Path.home() / "Downloads")
         self._create_ui()
 
     def _create_ui(self) -> None:
