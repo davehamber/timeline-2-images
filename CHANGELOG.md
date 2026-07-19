@@ -30,6 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - GenerationWorker: QThread for async image generation
   - Progress updates and real-time feedback during generation
   - Improved error reporting showing failed dates and success count
+- GUI settings persistence between sessions
+  - SettingsManager: Stores settings in ~/.cache/timeline-2-images/settings.json
+  - Remembers: image size, output directory, place names option, single image option
+  - Automatically saves settings when window closes
+  - Restores all settings on app startup
 
 ### Fixed
 - Date range validation now correctly handles specific date ranges without requiring days > 0
