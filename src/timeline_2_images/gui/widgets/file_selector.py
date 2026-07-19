@@ -51,7 +51,6 @@ class FileSelector(QWidget):
         if file_path:
             self._selected_path = file_path
             self._path_input.setText(file_path)
-            self._presenter.handle_file_selected(file_path)
 
     def get_selected_path(self) -> Optional[str]:
         """Get the selected file path."""
