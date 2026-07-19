@@ -13,10 +13,8 @@ from timeline_2_images.banner import print_banner
 from timeline_2_images.app import TimelineApp
 from timeline_2_images.config import RenderConfiguration, DateRangeQuery
 from timeline_2_images.sqlite_cache import SegmentCache
-from timeline_2_images.timeline_validator import (
-    TimelineValidator,
-    TimelineValidationError,
-)
+from timeline_2_images.timeline_validator import TimelineValidator
+from timeline_2_images.timeline_validation_error import TimelineValidationError
 
 
 class CLIRunner:
