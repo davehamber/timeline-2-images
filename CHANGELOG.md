@@ -36,6 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Also remembers date range settings: mode (last N days vs specific range), days value, start/end dates
   - Automatically saves settings when window closes
   - Restores all settings on app startup, including file loading and date range selection
+- Cache usage feedback in progress panel
+  - Shows "Loading file (parsing JSON)..." for first-time file loads
+  - Shows "Loading file (using cache)..." when reusing cached file from previous operation
+  - Displays whether file is being read from disk or from memory
 
 ### Fixed
 - Date range validation now correctly handles specific date ranges without requiring days > 0
