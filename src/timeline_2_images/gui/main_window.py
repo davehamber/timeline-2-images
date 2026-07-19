@@ -212,6 +212,8 @@ class TimelineWindow(QMainWindow):
             if Path(timeline_path).exists():
                 self._file_selector._selected_path = timeline_path
                 self._file_selector._path_input.setText(timeline_path)
+                # Enable Generate button since file path is valid
+                self._on_file_selected_in_selector(timeline_path)
 
     def _save_settings(self) -> None:
         """Save current settings for next session."""
