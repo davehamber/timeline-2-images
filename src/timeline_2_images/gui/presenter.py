@@ -7,7 +7,7 @@ This layer converts user actions into business operations and
 updates to display state, keeping GUI and business logic separate.
 """
 
-from typing import Callable, Optional
+from typing import Callable, Optional, TYPE_CHECKING
 
 from timeline_2_images.gui.models.interfaces import (
     ITimelineProcessor,
@@ -15,6 +15,9 @@ from timeline_2_images.gui.models.interfaces import (
     GenerationResult,
     ProgressCallback,
 )
+
+if TYPE_CHECKING:
+    from timeline_2_images.gui.timeline_worker import TimelineWorker
 
 
 class TimelineGeneratorPresenter:
@@ -36,11 +39,13 @@ class TimelineGeneratorPresenter:
             processor: ITimelineProcessor implementation (e.g., adapter)
         """
         self._processor = processor
+        self._worker: Optional["TimelineWorker"] = None
 
         # Callbacks for GUI to register (loose coupling)
         self._on_validation_result: Optional[Callable[[bool, Optional[str]], None]] = None
         self._on_available_dates: Optional[Callable[[list[str]], None]] = None
         self._on_generation_complete: Optional[Callable[[GenerationResult], None]] = None
+        self._on_file_loading: Optional[Callable[[bool], None]] = None
 
     # ===== Event Registration (GUI calls these to subscribe) =====
 
@@ -68,6 +73,14 @@ class TimelineGeneratorPresenter:
         """
         self._on_generation_complete = callback
 
+    def on_file_loading(self, callback: Callable[[bool], None]) -> None:
+        """Register callback for file loading state.
+
+        Args:
+            callback: Called with True when loading starts, False when complete
+        """
+        self._on_file_loading = callback
+
     # ===== User Actions (GUI calls these on user interaction) =====
 
     def handle_file_selected(self, path: str) -> None:
@@ -76,25 +89,43 @@ class TimelineGeneratorPresenter:
         Args:
             path: Path to selected file
         """
-        is_valid, error = self._processor.validate_file(path)
+        # Lazy import to avoid PyQt6 dependency in non-GUI contexts
+        from timeline_2_images.gui.timeline_worker import TimelineWorker
 
-        if self._on_validation_result:
-            self._on_validation_result(is_valid, error)
+        # Signal that loading has started
+        if self._on_file_loading:
+            self._on_file_loading(True)
 
-        if is_valid:
-            # Load available dates after successful validation
-            self.handle_timeline_loaded(path)
+        # Create and start worker thread to avoid blocking UI
+        self._worker = TimelineWorker(self._processor, path)
+        self._worker.validation_complete.connect(self._on_validation_complete)
+        self._worker.dates_loaded.connect(self._on_dates_loaded)
+        self._worker.finished.connect(self._on_worker_finished)
+        self._worker.start()
 
-    def handle_timeline_loaded(self, path: str) -> None:
-        """Timeline file has been loaded/validated.
+    def _on_validation_complete(self, is_valid: bool, error_message: str) -> None:
+        """Handle worker validation result.
 
         Args:
-            path: Path to timeline file
+            is_valid: Whether file is valid
+            error_message: Error message if invalid
         """
-        dates = self._processor.get_available_dates(path)
+        if self._on_validation_result:
+            self._on_validation_result(is_valid, error_message if error_message else None)
 
+    def _on_dates_loaded(self, dates: list[str]) -> None:
+        """Handle worker dates loaded.
+
+        Args:
+            dates: List of available date strings
+        """
         if self._on_available_dates:
             self._on_available_dates(dates)
+
+    def _on_worker_finished(self) -> None:
+        """Handle worker thread finished."""
+        if self._on_file_loading:
+            self._on_file_loading(False)
 
     def handle_generate_clicked(
         self,
