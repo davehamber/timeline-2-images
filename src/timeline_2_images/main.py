@@ -12,7 +12,6 @@ from typing import Any
 from timeline_2_images.banner import print_banner
 from timeline_2_images.app import TimelineApp
 from timeline_2_images.config import RenderConfiguration
-from timeline_2_images.cache import SegmentCache
 from timeline_2_images.validators import TimelineValidationError
 from timeline_2_images.console_formatter import ConsoleFormatter
 
@@ -138,16 +137,6 @@ class CLIRunner:
             help="End date in YYYY-MM-DD format",
         )
         parser.add_argument(
-            "--profile",
-            action="store_true",
-            help="Show detailed timing breakdown (future enhancement)",
-        )
-        parser.add_argument(
-            "--clean-cache",
-            action="store_true",
-            help="Remove all cached segment data and exit",
-        )
-        parser.add_argument(
             "--no-place-names",
             action="store_true",
             help="Disable adding place names to maps",
@@ -161,9 +150,7 @@ class CLIRunner:
 
     def run(self, args: argparse.Namespace) -> None:
         """Execute CLI commands based on parsed arguments."""
-        if args.clean_cache:
-            self._handle_clean_cache()
-        elif args.timeline_json:
+        if args.timeline_json:
             self.process_images(
                 args.timeline_json,
                 args.output_dir,
@@ -179,18 +166,6 @@ class CLIRunner:
             parser.print_help()
             sys.exit(1)
 
-    @staticmethod
-    def _handle_clean_cache(segment_cache: SegmentCache | None = None) -> None:
-        """Handle cache cleaning operation."""
-        try:
-            if segment_cache is None:
-                segment_cache = SegmentCache()
-            segment_cache.clean_all_cache()
-            print("Cache cleaned successfully")
-        except RuntimeError as exception:
-            print(f"Error: {exception}")
-            sys.exit(1)
-
 
 def main(
     timeline_json: str,
@@ -199,7 +174,6 @@ def main(
     image_size: int = 500,
     start_date: str | None = None,
     end_date: str | None = None,
-    profile: bool = False,  # pylint: disable=unused-argument
     place_names: bool = True,
     single_image: bool = False,
 ) -> None:
@@ -212,7 +186,6 @@ def main(
         image_size: Output image size in pixels (default 500)
         start_date: Start date in YYYY-MM-DD format
         end_date: End date in YYYY-MM-DD format
-        profile: If True, show detailed timing breakdown per operation
         place_names: If True, add place names to maps (default: True)
         single_image: If True, combine all dates into single image (default: False)
     """
