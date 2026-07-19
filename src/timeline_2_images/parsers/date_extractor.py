@@ -1,5 +1,6 @@
 """Extracts and filters dates from timeline JSON data."""
 
+import time
 from datetime import date, datetime, timedelta, timezone
 from typing import Set
 
@@ -16,6 +17,7 @@ class DateExtractor:
         """Extract unique dates from flat locations list."""
         from timeline_2_images.parsers.point_extractor import PointExtractor
 
+        start = time.time()
         dates = set()
         for location in self.data.get("locations", []):
             timestamp_value = location.get("timestamp") or location.get("timestampMs")
@@ -24,6 +26,8 @@ class DateExtractor:
             parsed_datetime = PointExtractor.parse_timestamp(timestamp_value)
             if parsed_datetime is not None:
                 dates.add(parsed_datetime.astimezone(timezone.utc).date())
+        elapsed = time.time() - start
+        print(f"[TIMING]   extract_from_flat_locations: {elapsed:.2f}s ({len(dates)} dates from {len(self.data.get('locations', []))} locations)")
         return dates
 
     @staticmethod
@@ -43,6 +47,7 @@ class DateExtractor:
 
     def extract_from_timeline_objects(self) -> Set[date]:
         """Extract unique dates from timelineObjects."""
+        start = time.time()
         dates = set()
         for obj in self.data.get("timelineObjects", []):
             segment = obj.get("activitySegment") or obj.get("placeVisit")
@@ -51,10 +56,13 @@ class DateExtractor:
             segment_date = self.get_segment_start_date(segment)
             if segment_date:
                 dates.add(segment_date)
+        elapsed = time.time() - start
+        print(f"[TIMING]   extract_from_timeline_objects: {elapsed:.2f}s ({len(dates)} dates from {len(self.data.get('timelineObjects', []))} objects)")
         return dates
 
     def extract_from_segments(self) -> Set[date]:
         """Extract unique dates from semanticSegments."""
+        start = time.time()
         dates = set()
         for segment in self.data.get("semanticSegments", []):
             start_str = segment.get("startTime")
@@ -64,6 +72,8 @@ class DateExtractor:
             if pd.isna(parsed_datetime):
                 continue
             dates.add(parsed_datetime.to_pydatetime().astimezone(timezone.utc).date())
+        elapsed = time.time() - start
+        print(f"[TIMING]   extract_from_segments: {elapsed:.2f}s ({len(dates)} dates from {len(self.data.get('semanticSegments', []))} segments)")
         return dates
 
     @staticmethod
