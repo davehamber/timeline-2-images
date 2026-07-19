@@ -14,7 +14,7 @@ class DateExtractor:
 
     def extract_from_flat_locations(self) -> Set[date]:
         """Extract unique dates from flat locations list."""
-        from timeline_2_images.point_extractor import PointExtractor
+        from timeline_2_images.parsers.point_extractor import PointExtractor
 
         dates = set()
         for location in self.data.get("locations", []):

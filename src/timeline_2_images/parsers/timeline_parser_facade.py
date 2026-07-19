@@ -4,11 +4,11 @@ from datetime import date, datetime
 
 import pandas as pd
 
-from timeline_2_images.timeline_cache import TimelineCache
-from timeline_2_images.segment_parser import SegmentParser
-from timeline_2_images.point_extractor import PointExtractor
-from timeline_2_images.date_extractor import DateExtractor
-from timeline_2_images.sqlite_cache import SegmentCache
+from timeline_2_images.parsers.timeline_cache import TimelineCache
+from timeline_2_images.parsers.segment_parser import SegmentParser
+from timeline_2_images.parsers.point_extractor import PointExtractor
+from timeline_2_images.parsers.date_extractor import DateExtractor
+from timeline_2_images.cache import SegmentCache
 
 
 class TimelineParserFacade:

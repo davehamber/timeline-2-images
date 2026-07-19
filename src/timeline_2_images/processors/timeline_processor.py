@@ -6,7 +6,7 @@ import pandas as pd
 
 from timeline_2_images.models import Segment
 from timeline_2_images.config import DateRangeQuery
-from timeline_2_images.timeline_parser import TimelineParserFacade
+from timeline_2_images.parsers import TimelineParserFacade
 
 
 class TimelineProcessor:

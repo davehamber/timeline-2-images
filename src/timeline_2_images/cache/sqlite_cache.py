@@ -10,7 +10,7 @@ import shutil
 from pathlib import Path
 from datetime import datetime, timezone
 
-from timeline_2_images.cache_path_manager import CachePathManager
+from timeline_2_images.cache.cache_path_manager import CachePathManager
 
 
 class SegmentCache:
