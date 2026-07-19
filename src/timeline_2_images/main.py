@@ -11,63 +11,38 @@ from typing import Any
 
 from timeline_2_images.banner import print_banner
 from timeline_2_images.app import TimelineApp
-from timeline_2_images.config import RenderConfiguration, DateRangeQuery
+from timeline_2_images.config import RenderConfiguration
 from timeline_2_images.cache import SegmentCache
-from timeline_2_images.validators import TimelineValidator, TimelineValidationError
+from timeline_2_images.validators import TimelineValidationError
+from timeline_2_images.console_formatter import ConsoleFormatter
 
 
 class CLIRunner:
     """Handles CLI argument parsing and timeline processing orchestration."""
 
-    def __init__(self):
-        self.app: TimelineApp | None = None
-        self.timeline_path: Path | None = None
-        self.validator = TimelineValidator()
-
-    def load_and_validate_app(
+    def initialize_app(
         self, timeline_json: str, output_dir: str, image_size: int, place_names: bool
     ) -> TimelineApp:
-        """Validate Timeline.json and initialize TimelineApp."""
+        """Initialize TimelineApp with CLI configuration.
+
+        Args:
+            timeline_json: Path to Timeline.json file
+            output_dir: Output directory for images
+            image_size: Size of output images in pixels
+            place_names: Whether to add place names to maps
+
+        Returns:
+            Initialized TimelineApp instance
+
+        Raises:
+            SystemExit: If Timeline.json validation fails
+        """
         try:
-            self.validator.validate_timeline_structure(timeline_json)
+            config = RenderConfiguration(image_size=image_size, add_place_names=place_names)
+            return TimelineApp(str(timeline_json), output_dir=output_dir, config=config)
         except TimelineValidationError as e:
-            print("Error: Invalid Timeline.json structure")
-            print(f"  {e}")
+            ConsoleFormatter.print_error(str(e))
             sys.exit(1)
-
-        config = RenderConfiguration(image_size=image_size, add_place_names=place_names)
-        return TimelineApp(str(timeline_json), output_dir=output_dir, config=config)
-
-    @staticmethod
-    def load_available_dates(app: TimelineApp, timeline_path: Path) -> list[str]:
-        """Load available dates from timeline."""
-        print(f"Loading timeline data from {timeline_path}...", end=" ", flush=True)
-        load_start = time.time()
-        available_dates = app.get_available_dates()
-        load_time = time.time() - load_start
-        print(f"✓ ({load_time:.2f}s)")
-
-        if not available_dates:
-            print("No timeline data found")
-            sys.exit(1)
-
-        print(f"Found {len(available_dates)} days with data")
-        print(f"Date range: {available_dates[0]} to {available_dates[-1]}")
-        print()
-        return available_dates
-
-    @staticmethod
-    def print_cache_info(cache_info: dict) -> None:
-        """Print cache information."""
-        if not cache_info:
-            return
-        print()
-        print("Cache Information:")
-        print(f"  Location: {cache_info.get('cache_dir', 'unknown')}")
-        print(f"  Status: {cache_info.get('status', 'unknown')}")
-        if cache_info.get("status") == "cached":
-            print(f"  Cached tiles: {cache_info.get('total_cached_tiles', 0)}")
-        print(f"  Size: {cache_info.get('cache_size_mb', 0):.1f}MB")
 
     def process_images(
         self,
@@ -80,74 +55,60 @@ class CLIRunner:
         place_names: bool,
         single_image: bool,
     ) -> None:
-        """Process and render timeline images."""
-        self.timeline_path = Path(timeline_json)
-        self.app = self.load_and_validate_app(timeline_json, output_dir, image_size, place_names)
-        self.load_available_dates(self.app, self.timeline_path)
+        """Process and render timeline images.
 
-        query = DateRangeQuery(start_date=start_date, end_date=end_date, days=days)
-        dates_to_process = self.app.processor.get_date_range(query)
+        Args:
+            timeline_json: Path to Timeline.json file
+            output_dir: Output directory for images
+            days: Number of days to process
+            image_size: Size of output images in pixels
+            start_date: Optional start date in YYYY-MM-DD format
+            end_date: Optional end date in YYYY-MM-DD format
+            place_names: Whether to add place names to maps
+            single_image: Whether to render as single combined image
+        """
+        app = self.initialize_app(timeline_json, output_dir, image_size, place_names)
+        timeline_path = Path(timeline_json)
 
-        if dates_to_process:
-            print(f"Processing dates {dates_to_process[0]} to {dates_to_process[-1]}...")
-        else:
-            print("Processing dates...")
+        # Load and display available dates
+        load_start = time.time()
+        available_dates = app.get_available_dates()
+        load_time = time.time() - load_start
+        ConsoleFormatter.print_loading_timeline(str(timeline_path), load_time)
+
+        if not available_dates:
+            ConsoleFormatter.print_no_data_found()
+            sys.exit(1)
+
+        ConsoleFormatter.print_available_dates(available_dates)
+
+        # Get dates to process
+        dates_to_process = app.get_date_range(
+            start_date=start_date, end_date=end_date, days=days
+        )
+
+        ConsoleFormatter.print_processing_message(dates_to_process)
 
         start_time = time.time()
         results: list[Any] = []
 
+        # Process images
         if single_image:
-            self._process_single_image(start_date, end_date, days, results)
-        else:
-            self._process_multiple_dates(dates_to_process, results)
-
-        self._print_results_summary(results, output_dir, start_time)
-
-    def _process_single_image(
-        self, start_date: str | None, end_date: str | None, days: int, results: list
-    ) -> None:
-        """Process date range as single combined image."""
-        assert self.app is not None
-        result = self.app.process_date_range_single_image(
-            start_date=start_date, end_date=end_date, days=days
-        )
-        results.append(result)
-
-        status = "✓" if result.was_successful() else "✗"
-        print()
-        if result.was_successful():
-            print(
-                f"{status} {result.date}: {result.render_time:.2f}s ({result.point_count} points)"
+            result = app.process_date_range_single_image(
+                start_date=start_date, end_date=end_date, days=days
             )
-        else:
-            print(f"{status} {result.date}: {result.error_message}")
-
-    def _process_multiple_dates(self, dates_to_process: list[str], results: list) -> None:
-        """Process each date individually."""
-        assert self.app is not None
-        for date in dates_to_process:
-            result = self.app.process_date(date)
             results.append(result)
+            ConsoleFormatter.print_single_image_result(result)
+        else:
+            for date in dates_to_process:
+                result = app.process_date(date)
+                results.append(result)
+                ConsoleFormatter.print_render_result(result)
 
-            status = "✓" if result.was_successful() else "✗"
-            if result.was_successful():
-                time_str = f"{result.render_time:.2f}s"
-                points_str = f"({result.point_count} points)"
-                print(f"{status} {result.date}: {time_str} {points_str}")
-            else:
-                print(f"{status} {result.date}: {result.error_message}")
-
-    def _print_results_summary(self, results: list, output_dir: str, start_time: float) -> None:
-        """Print final results summary and cache info."""
+        # Print summary
         total_time = time.time() - start_time
-        success_count = sum(1 for r in results if r.was_successful())
-
-        print()
-        print(f"Generated {success_count}/{len(results)} map images in {output_dir}")
-        print(f"Total time: {total_time:.2f}s")
-
-        assert self.app is not None
-        self.print_cache_info(self.app.renderer.get_cache_info())
+        ConsoleFormatter.print_results_summary(results, output_dir, total_time)
+        ConsoleFormatter.print_cache_info(app.renderer.get_cache_info())
 
     def build_argument_parser(self) -> argparse.ArgumentParser:
         """Build and return argument parser."""
