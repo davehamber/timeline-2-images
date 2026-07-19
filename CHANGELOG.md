@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - File loading indicator in FileSelector showing "⟳ Loading file..." status
   - Responsive UI even with 60+ MB Timeline.json files
 
+### Fixed
+- Date range validation now correctly handles specific date ranges without requiring days > 0
+
 ### Removed
 - SQLite segment caching (SegmentCache) - legacy optimization no longer needed
 - `--clean-cache` CLI argument (was specific to SQLite cache)
@@ -36,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Simplified caching architecture: now uses only TimelineCache (in-memory) for JSON parsing
 - Removed redundant segment indexing logic from SQLite cache
+- DateRangeQuery validation: only validates days > 0 when days parameter will be used
 
 ## [0.3.0] - 2026-07-19
 
