@@ -37,16 +37,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatically saves settings when window closes
   - Restores all settings on app startup, including file loading and date range selection
 - Cache usage feedback in progress panel
-  - Shows "Loading file (parsing JSON)..." for first-time file loads
-  - Shows "Loading file (using cache)..." when reusing cached file from previous operation
-  - Displays whether file is being read from disk or from memory
-- Persistent JSON caching using SQLite with pickle serialization
-  - Stores parsed Timeline JSON in ~/.cache/timeline-2-images/json_cache.db
-  - Automatic freshness validation based on file mtime and size
-  - Three-tier caching: session (memory) → persistent (SQLite) → disk
-  - ~14x speedup on app startup (uses cache from previous session)
-  - Auto-invalidates cache if source file changes
-  - Uses pickle serialization (10-100x faster than JSON for large files)
+  - Shows "Loading file (parsing JSON)..." for first-time file loads from disk
+  - Shows "Loading file (using cache)..." when reusing cached file from current session
+  - Session-level in-memory cache for multiple operations in same app session
+- Optimized date extraction: Use datetime.fromisoformat instead of pd.to_datetime
+  - ~50-60x speedup on date index building (29s → <1s for 45k+ segments)
+  - Replaced expensive pandas datetime parsing with native Python fromisoformat
+  - Falls back to pandas only for non-standard timestamp formats
 
 ### Fixed
 - Date range validation now correctly handles specific date ranges without requiring days > 0
@@ -56,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - SQLite segment caching (SegmentCache) - legacy optimization no longer needed
+- SQLite persistent JSON caching (JsonCache) - date extraction is now fast enough without it
 - `--clean-cache` CLI argument (was specific to SQLite cache)
 - Unused `profile` CLI argument and parameter
 - Broken `test_caches.py` test file
