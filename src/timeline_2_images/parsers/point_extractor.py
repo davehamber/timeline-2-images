@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 import pandas as pd
 
-from timeline_2_images.timeline_cache import TimelineCache
+from timeline_2_images.parsers.timeline_cache import TimelineCache
 
 
 class PointExtractor:

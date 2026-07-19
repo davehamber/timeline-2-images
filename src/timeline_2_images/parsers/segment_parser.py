@@ -5,9 +5,9 @@ from datetime import datetime, date, timezone
 
 import pandas as pd
 
-from timeline_2_images.timeline_cache import TimelineCache
-from timeline_2_images.sqlite_cache import SegmentCache
-from timeline_2_images.date_extractor import DateExtractor
+from timeline_2_images.parsers.timeline_cache import TimelineCache
+from timeline_2_images.cache import SegmentCache
+from timeline_2_images.parsers.date_extractor import DateExtractor
 
 
 class SegmentParser:
