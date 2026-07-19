@@ -191,15 +191,13 @@ class TimelineWindow(QMainWindow):
             days = self._settings_manager.get("date_range_days", 14)
             self._date_range_panel._days_spin.setValue(days)
 
-        # Load Timeline file path
+        # Load Timeline file path (just restore the path, don't load the file)
         timeline_path = self._settings_manager.get("timeline_file_path")
         if timeline_path:
             from pathlib import Path
             if Path(timeline_path).exists():
                 self._file_selector._selected_path = timeline_path
                 self._file_selector._path_input.setText(timeline_path)
-                # Load available dates for the file
-                self._presenter.handle_file_selected(timeline_path)
 
     def _save_settings(self) -> None:
         """Save current settings for next session."""
