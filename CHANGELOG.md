@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Date range validation now correctly handles specific date ranges without requiring days > 0
 - Output directory setting now correctly used when generating images (was defaulting to project's output/ directory)
 - Image size default now correctly set to 500 pixels (was showing 100 due to Qt spinbox initialization order)
+- Generate Maps button now enables when file is selected (was staying disabled due to deferred file loading)
 
 ### Removed
 - SQLite segment caching (SegmentCache) - legacy optimization no longer needed
