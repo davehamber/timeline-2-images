@@ -1,7 +1,7 @@
 """Process timeline segments."""
 
 from timeline_2_images.models import Segment, ProcessedSegment, Bounds
-from timeline_2_images.utils import simplify_waypoints
+from timeline_2_images.utils import WaypointSimplifier
 
 
 class SegmentProcessor:
@@ -65,7 +65,8 @@ class SegmentProcessor:
         Returns:
             Simplified list of (lat, lon) tuples
         """
-        return simplify_waypoints(waypoints, self.simplification_tolerance_meters)
+        simplifier = WaypointSimplifier(self.simplification_tolerance_meters)
+        return simplifier.simplify(waypoints)
 
     def _parse_point_string(self, point_str: str) -> tuple[float, float] | None:
         """Parse a point string to (lat, lon) tuple."""

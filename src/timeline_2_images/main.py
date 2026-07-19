@@ -14,7 +14,7 @@ from timeline_2_images.app import TimelineApp
 from timeline_2_images.config import RenderConfiguration, DateRangeQuery
 from timeline_2_images.sqlite_cache import SegmentCache
 from timeline_2_images.timeline_validator import (
-    validate_timeline_structure,
+    TimelineValidator,
     TimelineValidationError,
 )
 
@@ -25,13 +25,14 @@ class CLIRunner:
     def __init__(self):
         self.app: TimelineApp | None = None
         self.timeline_path: Path | None = None
+        self.validator = TimelineValidator()
 
     def load_and_validate_app(
         self, timeline_json: str, output_dir: str, image_size: int, place_names: bool
     ) -> TimelineApp:
         """Validate Timeline.json and initialize TimelineApp."""
         try:
-            validate_timeline_structure(timeline_json)
+            self.validator.validate_timeline_structure(timeline_json)
         except TimelineValidationError as e:
             print("Error: Invalid Timeline.json structure")
             print(f"  {e}")
