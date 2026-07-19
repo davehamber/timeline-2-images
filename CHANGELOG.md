@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `gui/presenter.py`: Controller layer handling user actions and state
   - `gui/widgets/`: Package for PyQt6 UI components (implementation in Phase 2)
 - 11 comprehensive tests for GUI architecture ensuring proper decoupling
+- GUI implementation (Phase 2): Complete PyQt6 desktop application
+  - `gui/main_window.py`: TimelineWindow main application window with full layout
+  - `gui/widgets/file_selector.py`: File picker widget with browse button
+  - `gui/widgets/date_range_panel.py`: Date range selection (last N days or specific range)
+  - `gui/widgets/settings_panel.py`: Image size, output directory, place names, single image options
+  - `gui/widgets/progress_panel.py`: Progress bar and processing status display
+  - `gui/app.py`: Application entry point for launching the desktop GUI
+- PyQt6 as runtime dependency for cross-platform GUI support (Linux, macOS, Windows)
 
 ### Removed
 - SQLite segment caching (SegmentCache) - legacy optimization no longer needed
