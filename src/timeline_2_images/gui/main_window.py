@@ -268,6 +268,7 @@ class TimelineWindow(QMainWindow):
             end_date=end_date,
             days=days,
             on_progress=self._progress_panel.update_progress,
+            on_file_loading=self._progress_panel.set_loading_file,
         )
 
     def _on_cancel(self) -> None:

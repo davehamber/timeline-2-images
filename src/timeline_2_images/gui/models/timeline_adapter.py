@@ -54,10 +54,28 @@ class TimelineProcessorAdapter(ITimelineProcessor):
         self,
         config: ImageGenerationConfig,
         on_progress: Optional[ProgressCallback] = None,
+        on_file_loading: Optional[callable] = None,
     ) -> GenerationResult:
-        """Generate map images for date range."""
+        """Generate map images for date range.
+
+        Args:
+            config: ImageGenerationConfig with generation parameters
+            on_progress: Optional progress callback (completed, total)
+            on_file_loading: Optional callback when file loading completes (is_cached)
+        """
         try:
+            # Check if app is already cached
+            is_cached = (
+                self._app is not None
+                and self._app.json_path == config.timeline_path
+                and self._app.output_dir == config.output_dir
+            )
+
             app = self._get_or_create_app(config.timeline_path, config.output_dir)
+
+            # Notify about cache usage
+            if on_file_loading:
+                on_file_loading(is_cached)
 
             # Determine which method to use based on config
             if config.single_image:
