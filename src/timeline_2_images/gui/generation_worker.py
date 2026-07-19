@@ -3,6 +3,8 @@
 
 """Worker thread for image generation to prevent UI blocking."""
 
+from typing import Callable, Optional
+
 from PyQt6.QtCore import QThread, pyqtSignal
 
 from timeline_2_images.gui.models.interfaces import (
@@ -22,8 +24,8 @@ class GenerationWorker(QThread):
         self,
         processor: ITimelineProcessor,
         config: ImageGenerationConfig,
-        on_progress: ProgressCallback | None = None,
-        on_file_loading: callable | None = None,
+        on_progress: Optional[ProgressCallback] = None,
+        on_file_loading: Optional[Callable[[bool], None]] = None,
     ):
         """Initialize worker.
 
