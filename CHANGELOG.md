@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Progress callback support in batch methods for real-time progress tracking
+- `on_progress` parameter in `process_date_range()`, `process_date_range_bytes()`, and `process_date_range_single_image()`
+- Progress tracking examples with tqdm integration in library usage documentation
+
 ## [0.2.0] - 2026-07-19
 
 ### Added
