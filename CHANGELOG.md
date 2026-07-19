@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- GUI architecture foundation (Phase 1): Proper layering for desktop interface
+  - `gui/models/interfaces.py`: ITimelineProcessor interface (GUI depends on this)
+  - `gui/models/timeline_adapter.py`: Adapter wrapping TimelineApp (decouples GUI from core)
+  - `gui/presenter.py`: Controller layer handling user actions and state
+  - `gui/widgets/`: Package for PyQt6 UI components (implementation in Phase 2)
+- 11 comprehensive tests for GUI architecture ensuring proper decoupling
+
 ### Removed
 - SQLite segment caching (SegmentCache) - legacy optimization no longer needed
 - `--clean-cache` CLI argument (was specific to SQLite cache)
