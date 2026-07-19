@@ -6,7 +6,7 @@
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QFileDialog
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QFileDialog, QLabel
 
 
 class FileSelector(QWidget):
@@ -34,6 +34,10 @@ class FileSelector(QWidget):
         browse_btn.clicked.connect(self._on_browse)
         layout.addWidget(browse_btn)
 
+        self._loading_label = QLabel("")
+        self._loading_label.setStyleSheet("color: #0066cc; font-size: 9pt;")
+        layout.addWidget(self._loading_label)
+
     def _on_browse(self) -> None:
         """Handle browse button click."""
         file_dialog = QFileDialog()
@@ -52,3 +56,14 @@ class FileSelector(QWidget):
     def get_selected_path(self) -> Optional[str]:
         """Get the selected file path."""
         return self._selected_path
+
+    def set_loading(self, is_loading: bool) -> None:
+        """Set loading state.
+
+        Args:
+            is_loading: True to show loading indicator, False to hide
+        """
+        if is_loading:
+            self._loading_label.setText("⟳ Loading file...")
+        else:
+            self._loading_label.setText("")

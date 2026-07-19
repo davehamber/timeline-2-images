@@ -2,6 +2,12 @@
 
 import pytest
 
+try:
+    from PyQt6.QtWidgets import QApplication
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+
 from timeline_2_images.gui.models import (
     ITimelineProcessor,
     TimelineProcessorAdapter,
@@ -56,25 +62,42 @@ class TestTimelineGeneratorPresenter:
         presenter.on_available_dates(lambda dates: None)
         presenter.on_generation_complete(lambda result: None)
 
+    @pytest.mark.skipif(not PYQT6_AVAILABLE, reason="PyQt6 not available")
     def test_presenter_handles_file_selected(self):
-        """Presenter should handle file selection."""
+        """Presenter should handle file selection with threading."""
+        from unittest.mock import Mock, patch
+
         adapter = TimelineProcessorAdapter()
         presenter = TimelineGeneratorPresenter(adapter)
 
         # Track callbacks
-        validation_results = []
-        presenter.on_validation_result(
-            lambda valid, error: validation_results.append((valid, error))
-        )
+        validation_result_callback = Mock()
+        presenter.on_validation_result(validation_result_callback)
+        dates_callback = Mock()
+        presenter.on_available_dates(dates_callback)
 
-        # Handle invalid file selection
-        presenter.handle_file_selected("/nonexistent/file.json")
+        # Mock the TimelineWorker to avoid needing a Qt event loop in tests
+        with patch("timeline_2_images.gui.presenter.TimelineWorker") as mock_worker_class:
+            mock_worker = Mock()
+            mock_worker_class.return_value = mock_worker
 
-        # Should have called validation callback
-        assert len(validation_results) == 1
-        is_valid, error = validation_results[0]
-        assert is_valid is False
-        assert error is not None
+            # Simulate worker signals being emitted
+            def start_side_effect():
+                presenter._on_validation_complete(False, "File not found")
+
+            mock_worker.start.side_effect = start_side_effect
+
+            # Handle file selection
+            presenter.handle_file_selected("/nonexistent/file.json")
+
+            # Verify callbacks were registered
+            mock_worker.validation_complete.connect.assert_called()
+            mock_worker.dates_loaded.connect.assert_called()
+            mock_worker.finished.connect.assert_called()
+            mock_worker.start.assert_called()
+
+            # Verify validation callback was called
+            validation_result_callback.assert_called_with(False, "File not found")
 
     def test_presenter_handles_clear_cache(self):
         """Presenter should handle clear cache action."""
