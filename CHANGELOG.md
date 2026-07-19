@@ -32,9 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improved error reporting showing failed dates and success count
 - GUI settings persistence between sessions
   - SettingsManager: Stores settings in ~/.cache/timeline-2-images/settings.json
-  - Remembers: image size, output directory, place names option, single image option
+  - Remembers: Timeline file path, image size, output directory, place names option, single image option
+  - Also remembers date range settings: mode (last N days vs specific range), days value, start/end dates
   - Automatically saves settings when window closes
-  - Restores all settings on app startup
+  - Restores all settings on app startup, including file loading and date range selection
 
 ### Fixed
 - Date range validation now correctly handles specific date ranges without requiring days > 0
