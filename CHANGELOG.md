@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-19
+
 ### Added
 - Progress callback support in batch methods for real-time progress tracking
 - `on_progress` parameter in `process_date_range()`, `process_date_range_bytes()`, and `process_date_range_single_image()`
@@ -17,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CacheConfig` class for controlling in-memory caching behavior
 - Cache size limits (1 MB - 8 GB) for predictable memory usage
 - Cache configuration options: enable/disable caching, set max size, auto-clear on exit
+
+---
 
 ## [0.2.0] - 2026-07-19
 
@@ -50,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive error messages and validation
 - EUPL-1.2 licensing with compliance checking
 
-[Unreleased]: https://github.com/yourusername/timeline-2-images/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/yourusername/timeline-2-images/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/yourusername/timeline-2-images/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/yourusername/timeline-2-images/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/yourusername/timeline-2-images/releases/tag/v0.1.0
