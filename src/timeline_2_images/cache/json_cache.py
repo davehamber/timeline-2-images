@@ -52,7 +52,7 @@ class JsonCache:
             Cached data if valid and exists, None otherwise
         """
         try:
-            json_file = Path(json_path)
+            json_file = Path(json_path).resolve()  # Normalize to absolute path
             if not json_file.exists():
                 return None
 
@@ -62,7 +62,7 @@ class JsonCache:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.execute(
                     "SELECT file_mtime, file_size, cached_data FROM json_cache WHERE json_path = ?",
-                    (json_path,),
+                    (str(json_file),),
                 )
                 row = cursor.fetchone()
 
@@ -89,7 +89,7 @@ class JsonCache:
             data: Parsed data to cache
         """
         try:
-            json_file = Path(json_path)
+            json_file = Path(json_path).resolve()  # Normalize to absolute path
             if not json_file.exists():
                 return
 
@@ -104,7 +104,7 @@ class JsonCache:
                     (json_path, file_mtime, file_size, cached_data)
                     VALUES (?, ?, ?, ?)
                     """,
-                    (json_path, mtime, size, cached_json),
+                    (str(json_file), mtime, size, cached_json),
                 )
                 conn.commit()
         except Exception:
@@ -117,8 +117,9 @@ class JsonCache:
             json_path: Path to Timeline.json file
         """
         try:
+            json_file = Path(json_path).resolve()  # Normalize to absolute path
             with sqlite3.connect(self.db_path) as conn:
-                conn.execute("DELETE FROM json_cache WHERE json_path = ?", (json_path,))
+                conn.execute("DELETE FROM json_cache WHERE json_path = ?", (str(json_file),))
                 conn.commit()
         except Exception:
             pass
