@@ -74,7 +74,7 @@ class TimelineProcessorAdapter(ITimelineProcessor):
                         image_count=1,
                     )
                 else:
-                    error = f"Failed to generate combined image: {result.error or 'Unknown error'}"
+                    error = f"Failed to generate combined image: {result.error_message or 'Unknown error'}"
                     return GenerationResult(
                         success=False,
                         output_dir=Path(config.output_dir),
