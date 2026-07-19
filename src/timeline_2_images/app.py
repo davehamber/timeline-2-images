@@ -119,6 +119,32 @@ class TimelineApp:
 
         return results
 
+    def process_date_range_bytes(
+        self,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        days: int = 14,
+    ) -> list[tuple[bytes | None, RenderResult]]:
+        """Process and render a date range, returning image bytes for each date.
+
+        Args:
+            start_date: Start date in YYYY-MM-DD format (optional)
+            end_date: End date in YYYY-MM-DD format (optional)
+            days: Number of days (default 14)
+
+        Returns:
+            List of tuples (image_bytes, RenderResult) for each date
+        """
+        query = DateRangeQuery(start_date=start_date, end_date=end_date, days=days)
+        dates = self.processor.get_date_range(query)
+
+        results = []
+        for date in dates:
+            image_bytes, result = self.process_date_bytes(date)
+            results.append((image_bytes, result))
+
+        return results
+
     def process_date(self, date: str) -> RenderResult:
         """Process and render a single date.
 
@@ -161,6 +187,74 @@ class TimelineApp:
 
         except (ValueError, OSError, IOError, RuntimeError) as exception:
             return RenderResult(
+                date=date,
+                output_path=self.output_dir / f"{date}.jpg",
+                segment_count=0,
+                point_count=0,
+                render_time=0.0,
+                success=False,
+                error_message=str(exception),
+            )
+
+    def process_date_bytes(self, date: str) -> tuple[bytes | None, RenderResult]:
+        """Process and render a single date, returning image bytes.
+
+        Args:
+            date: Date in YYYY-MM-DD format
+
+        Returns:
+            Tuple of (image_bytes, RenderResult) where image_bytes is None if rendering failed
+        """
+        try:
+            segments = self.processor.load_segments_for_day(date)
+
+            if not segments:
+                return None, RenderResult(
+                    date=date,
+                    output_path=self.output_dir / f"{date}.jpg",
+                    segment_count=0,
+                    point_count=0,
+                    render_time=0.0,
+                    success=False,
+                    error_message="No segments found for date",
+                )
+
+            processed_segments = self.segment_processor.process_segments(segments)
+
+            if not processed_segments:
+                return None, RenderResult(
+                    date=date,
+                    output_path=self.output_dir / f"{date}.jpg",
+                    segment_count=0,
+                    point_count=0,
+                    render_time=0.0,
+                    success=False,
+                    error_message="No segments after processing",
+                )
+
+            output_path = self.output_dir / f"{date}.jpg"
+            result = self.renderer.render_segments(processed_segments, str(output_path))
+
+            if result.was_successful():
+                try:
+                    with open(result.output_path, "rb") as f:
+                        image_bytes = f.read()
+                    return image_bytes, result
+                except (IOError, OSError) as e:
+                    return None, RenderResult(
+                        date=date,
+                        output_path=result.output_path,
+                        segment_count=result.segment_count,
+                        point_count=result.point_count,
+                        render_time=result.render_time,
+                        success=False,
+                        error_message=f"Failed to read rendered image: {str(e)}",
+                    )
+
+            return None, result
+
+        except (ValueError, OSError, IOError, RuntimeError) as exception:
+            return None, RenderResult(
                 date=date,
                 output_path=self.output_dir / f"{date}.jpg",
                 segment_count=0,
