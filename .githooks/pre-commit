@@ -58,4 +58,41 @@ if echo "$STAGED_FILES" | grep -qE "(src/timeline_2_images/__init__.py|pyproject
 fi
 
 echo -e "${GREEN}✓ Version consistency check passed${NC} (v${VERSION_INIT})"
+echo ""
+
+# ============================================================================
+# RUFF: Code Quality Checks
+# ============================================================================
+
+echo -e "${YELLOW}Running code quality checks...${NC}"
+echo ""
+
+# Run ruff linting on staged files
+RUFF_LINT_RESULT=0
+echo -e "${CYAN}→ Linting with ruff...${NC}"
+if uv run ruff check src/ tests/ --exit-zero 2>&1 | grep -q "Found"; then
+    echo -e "${YELLOW}⚠️  Linting issues found (non-blocking):${NC}"
+    uv run ruff check src/ tests/ 2>&1 | grep -E "^[A-Z][0-9]+" | head -10
+    echo "  (Run 'uv run ruff check src/ tests/' to see all issues)"
+    echo "  (Run 'uv run ruff check --fix src/ tests/' to auto-fix)"
+    RUFF_LINT_RESULT=0  # Don't block commit for lint issues
+else
+    echo -e "${GREEN}✓ No linting issues${NC}"
+fi
+echo ""
+
+# Run ruff format check on staged files
+RUFF_FORMAT_RESULT=0
+echo -e "${CYAN}→ Checking code formatting...${NC}"
+if uv run ruff format src/ tests/ --check 2>&1 | grep -q "would be reformatted"; then
+    echo -e "${YELLOW}⚠️  Formatting issues found (non-blocking):${NC}"
+    uv run ruff format src/ tests/ --check 2>&1 | grep "Would reformat"
+    echo "  (Run 'uv run ruff format src/ tests/' to auto-fix)"
+    RUFF_FORMAT_RESULT=0  # Don't block commit for format issues
+else
+    echo -e "${GREEN}✓ Code formatting is correct${NC}"
+fi
+echo ""
+
+echo -e "${GREEN}✓ All pre-commit checks passed!${NC}"
 exit 0
