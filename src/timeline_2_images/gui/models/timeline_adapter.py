@@ -61,97 +61,16 @@ class TimelineProcessorAdapter(ITimelineProcessor):
         Args:
             config: ImageGenerationConfig with generation parameters
             on_progress: Optional progress callback (completed, total)
-            on_file_loading: Optional callback when file loading completes (is_cached)
+            on_file_loading: Optional callback when file loading completes
         """
         try:
-            # Check if JSON is already cached (based on json_path only, not output_dir)
-            # Output directory doesn't affect JSON caching - it only affects where images are saved
-            is_cached = self._app is not None and self._app.json_path == config.timeline_path
-
             app = self._get_or_create_app(config.timeline_path, config.output_dir)
+            self._load_cache_if_needed(app, config, on_file_loading)
 
-            # Only load file if not already loaded in this session
-            cache = app.processor._parser._timeline_cache
-            json_path_normalized = str(Path(config.timeline_path).resolve())
-            cache_path_normalized = (
-                str(Path(cache.file_path).resolve()) if cache.file_path else None
-            )
-
-            if (
-                cache.file_path is None
-                or json_path_normalized != cache_path_normalized
-                or cache.data is None
-            ):
-                try:
-                    cache.load_file(config.timeline_path)
-                except Exception:
-                    pass
-
-            # Check if file was loaded from session cache or parsed from disk
-            try:
-                is_from_cache = cache.cache_source == "session"
-            except Exception:
-                is_from_cache = False
-
-            # Notify about cache usage
-            if on_file_loading:
-                on_file_loading(is_from_cache)
-
-            # Determine which method to use based on config
             if config.single_image:
-                result = app.process_date_range_single_image(
-                    start_date=config.start_date,
-                    end_date=config.end_date,
-                    days=config.days,
-                    on_progress=on_progress,
-                )
-                if result.was_successful():
-                    return GenerationResult(
-                        success=True,
-                        output_dir=Path(config.output_dir),
-                        image_count=1,
-                    )
-                else:
-                    error = f"Failed to generate combined image: {result.error_message or 'Unknown error'}"
-                    return GenerationResult(
-                        success=False,
-                        output_dir=Path(config.output_dir),
-                        image_count=0,
-                        error_message=error,
-                    )
+                return self._process_single_image_generation(app, config, on_progress)
             else:
-                results = app.process_date_range(
-                    start_date=config.start_date,
-                    end_date=config.end_date,
-                    days=config.days,
-                    on_progress=on_progress,
-                )
-                success = all(r.was_successful() for r in results)
-                image_count = sum(1 for r in results if r.was_successful())
-
-                if success:
-                    return GenerationResult(
-                        success=True,
-                        output_dir=Path(config.output_dir),
-                        image_count=image_count,
-                    )
-                else:
-                    # Collect error details for failed dates
-                    failed_dates = [r.date for r in results if not r.was_successful()]
-                    error_details = ", ".join(failed_dates[:5])  # Show first 5 failed dates
-                    if len(failed_dates) > 5:
-                        error_details += f" (and {len(failed_dates) - 5} more)"
-
-                    error = (
-                        f"Generated {image_count} of {len(results)} images. "
-                        f"Failed dates: {error_details}"
-                    )
-                    return GenerationResult(
-                        success=False,
-                        output_dir=Path(config.output_dir),
-                        image_count=image_count,
-                        error_message=error,
-                    )
+                return self._process_batch_generation(app, config, on_progress)
 
         except Exception as e:
             return GenerationResult(
@@ -160,6 +79,108 @@ class TimelineProcessorAdapter(ITimelineProcessor):
                 image_count=0,
                 error_message=str(e),
             )
+
+    def _load_cache_if_needed(
+        self,
+        app: TimelineApp,
+        config: ImageGenerationConfig,
+        on_file_loading: Optional[Callable[[bool], None]],
+    ) -> None:
+        """Load cache if not already loaded for this timeline."""
+        cache = app.processor._parser._timeline_cache
+        json_path_normalized = str(Path(config.timeline_path).resolve())
+        cache_path_normalized = str(Path(cache.file_path).resolve()) if cache.file_path else None
+
+        if (
+            cache.file_path is None
+            or json_path_normalized != cache_path_normalized
+            or cache.data is None
+        ):
+            try:
+                cache.load_file(config.timeline_path)
+            except Exception:
+                pass
+
+        is_from_cache = self._get_cache_source(cache)
+        if on_file_loading:
+            on_file_loading(is_from_cache)
+
+    @staticmethod
+    def _get_cache_source(cache) -> bool:
+        """Check if cache was loaded from session."""
+        try:
+            return cache.cache_source == "session"
+        except Exception:
+            return False
+
+    def _process_single_image_generation(
+        self,
+        app: TimelineApp,
+        config: ImageGenerationConfig,
+        on_progress: Optional[ProgressCallback],
+    ) -> GenerationResult:
+        """Process single image generation."""
+        result = app.process_date_range_single_image(
+            start_date=config.start_date,
+            end_date=config.end_date,
+            days=config.days,
+            on_progress=on_progress,
+        )
+        if result.was_successful():
+            return GenerationResult(
+                success=True,
+                output_dir=Path(config.output_dir),
+                image_count=1,
+            )
+        error_msg = result.error_message or "Unknown error"
+        error = f"Failed to generate combined image: {error_msg}"
+        return GenerationResult(
+            success=False,
+            output_dir=Path(config.output_dir),
+            image_count=0,
+            error_message=error,
+        )
+
+    def _process_batch_generation(
+        self,
+        app: TimelineApp,
+        config: ImageGenerationConfig,
+        on_progress: Optional[ProgressCallback],
+    ) -> GenerationResult:
+        """Process batch generation."""
+        results = app.process_date_range(
+            start_date=config.start_date,
+            end_date=config.end_date,
+            days=config.days,
+            on_progress=on_progress,
+        )
+        success = all(r.was_successful() for r in results)
+        image_count = sum(1 for r in results if r.was_successful())
+
+        if success:
+            return GenerationResult(
+                success=True,
+                output_dir=Path(config.output_dir),
+                image_count=image_count,
+            )
+
+        failed_dates = [r.date for r in results if not r.was_successful()]
+        error_details = self._format_failed_dates(failed_dates)
+        error = f"Generated {image_count} of {len(results)} images. Failed dates: {error_details}"
+        return GenerationResult(
+            success=False,
+            output_dir=Path(config.output_dir),
+            image_count=image_count,
+            error_message=error,
+        )
+
+    @staticmethod
+    def _format_failed_dates(failed_dates: list[str]) -> str:
+        """Format failed dates for error message."""
+        error_details = ", ".join(failed_dates[:5])
+        if len(failed_dates) > 5:
+            error_details += f" (and {len(failed_dates) - 5} more)"
+        return error_details
 
     def clear_cache(self) -> None:
         """Clear any cached data."""

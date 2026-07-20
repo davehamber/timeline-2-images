@@ -39,14 +39,21 @@ class TimelineApp:
         Args:
             json_path: Path to Timeline.json file
             output_dir: Directory for output images
-            config: RenderConfiguration (uses defaults if not provided, ignored if batch_config is provided)
-            cache_dir: Directory for tile cache (uses ~/.cache/timeline-2-images if not provided, ignored if batch_config is provided)
+            config: RenderConfiguration (uses defaults, ignored if
+                batch_config is provided)
+            cache_dir: Directory for tile cache (uses
+                ~/.cache/timeline-2-images if not provided, ignored if
+                batch_config is provided)
             processor: TimelineProcessor instance (created if not provided)
-            segment_processor: SegmentProcessor instance (created if not provided)
-            renderer: MapRenderer instance (created if not provided, ignored if batch_config is provided)
-            batch_config: BatchConfig with shared resources for batch processing (overrides config/cache_dir/renderer)
-            cache_config: CacheConfig for controlling in-memory caching behavior
-            validate: Whether to validate Timeline.json structure on init (default: True)
+            segment_processor: SegmentProcessor instance (created if not
+                provided)
+            renderer: MapRenderer instance (created if not provided, ignored
+                if batch_config is provided)
+            batch_config: BatchConfig with shared resources for batch
+                processing (overrides config/cache_dir/renderer)
+            cache_config: CacheConfig for controlling in-memory caching
+            validate: Whether to validate Timeline.json structure on init
+                (default: True)
 
         Raises:
             TimelineValidationError: If validate=True and Timeline.json structure is invalid

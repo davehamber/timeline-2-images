@@ -23,7 +23,7 @@ class TestProgressCallback:
         def on_progress(completed: int, total: int):
             progress_calls.append((completed, total))
 
-        results = app.process_date_range(days=7, on_progress=on_progress)
+        app.process_date_range(days=7, on_progress=on_progress)
 
         # Should have called progress callback after each date
         assert len(progress_calls) > 0
@@ -54,7 +54,7 @@ class TestProgressCallback:
         def on_progress(completed: int, total: int):
             progress_calls.append((completed, total))
 
-        results = app.process_date_range_bytes(days=7, on_progress=on_progress)
+        app.process_date_range_bytes(days=7, on_progress=on_progress)
 
         # Should have called progress callback after each date
         assert len(progress_calls) > 0
@@ -74,7 +74,7 @@ class TestProgressCallback:
         def on_progress(completed: int, total: int):
             progress_calls.append((completed, total))
 
-        results = app.process_date_range(days=7, on_progress=on_progress)
+        app.process_date_range(days=7, on_progress=on_progress)
 
         # Check progress increments correctly
         if progress_calls:
@@ -98,7 +98,7 @@ class TestProgressCallback:
         def on_progress(completed: int, total: int):
             progress_calls.append((completed, total))
 
-        result = app.process_date_range_single_image(days=7, on_progress=on_progress)
+        app.process_date_range_single_image(days=7, on_progress=on_progress)
 
         # Should have called progress callback (at least start and end)
         assert len(progress_calls) > 0
