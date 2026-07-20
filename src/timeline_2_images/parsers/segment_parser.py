@@ -6,7 +6,6 @@ from datetime import datetime, date, timezone
 import pandas as pd
 
 from timeline_2_images.parsers.timeline_cache import TimelineCache
-from timeline_2_images.parsers.date_extractor import DateExtractor
 from timeline_2_images.cache.segment_cache import SegmentCache
 
 

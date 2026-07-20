@@ -1,7 +1,5 @@
 """Unit tests for progress callback functionality."""
 
-import pytest
-
 from timeline_2_images.app import TimelineApp, ProgressCallback
 
 

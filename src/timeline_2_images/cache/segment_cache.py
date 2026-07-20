@@ -4,7 +4,6 @@
 """Session-level cache for parsed timeline segments with MD5-based invalidation."""
 
 import hashlib
-from pathlib import Path
 from typing import Optional
 
 from timeline_2_images.models import Segment
