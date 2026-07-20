@@ -54,13 +54,16 @@ class DayConnectorBuilder:
         if not connectors:
             return segments
 
+        return self._build_connected_segments(dates, connectors)
+
+    def _build_connected_segments(self, dates: list[str], connectors: list[Any]) -> list[Any]:
+        """Build segments with connectors inserted between days."""
         result = []
         connector_idx = 0
 
         for day_idx, date in enumerate(dates):
             day_segments = self.processor.load_segments_for_day(date)
             day_processed = self.segment_processor.process_segments(day_segments)
-
             result.extend(day_processed)
 
             if connector_idx < len(connectors) and day_idx < len(dates) - 1:
@@ -81,28 +84,32 @@ class DayConnectorBuilder:
         connectors = []
 
         for i in range(len(dates) - 1):
-            current_segments = self.processor.load_segments_for_day(dates[i])
-            current_processed = self.segment_processor.process_segments(current_segments)
-
+            current_processed = self._get_processed_segments_for_date(dates[i])
             if not current_processed:
                 continue
 
-            next_date_idx = i + 1
-            while next_date_idx < len(dates):
-                next_segments = self.processor.load_segments_for_day(dates[next_date_idx])
-                next_processed = self.segment_processor.process_segments(next_segments)
-
-                if next_processed:
-                    connector = self._create_connector_segment(
-                        current_processed[-1], next_processed[0]
-                    )
-                    if connector:
-                        connectors.append(connector)
-                    break
-
-                next_date_idx += 1
+            connector = self._find_connector_for_current_day(dates, i, current_processed)
+            if connector:
+                connectors.append(connector)
 
         return connectors
+
+    def _get_processed_segments_for_date(self, date: str) -> list[Any]:
+        """Load and process segments for a single date."""
+        segments = self.processor.load_segments_for_day(date)
+        return self.segment_processor.process_segments(segments)
+
+    def _find_connector_for_current_day(
+        self, dates: list[str], current_idx: int, current_processed: list[Any]
+    ) -> Any:
+        """Find next day with segments and create connector to it."""
+        next_date_idx = current_idx + 1
+        while next_date_idx < len(dates):
+            next_processed = self._get_processed_segments_for_date(dates[next_date_idx])
+            if next_processed:
+                return self._create_connector_segment(current_processed[-1], next_processed[0])
+            next_date_idx += 1
+        return None
 
     @staticmethod
     def _create_connector_segment(end_segment: Any, start_segment: Any) -> Any:
