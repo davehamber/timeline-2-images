@@ -40,8 +40,8 @@ class DateRangeQuery:
 
     def _filter_between_dates(self, available_dates: list[str], start: str, end: str) -> list[str]:
         """Filter dates between start and end (inclusive)."""
-        start_dt = datetime.strptime(start, "%Y-%m-%d")
-        end_dt = datetime.strptime(end, "%Y-%m-%d")
+        start_dt = self._parse_date(start, "start_date")
+        end_dt = self._parse_date(end, "end_date")
         return [
             d for d in available_dates if start_dt <= datetime.strptime(d, "%Y-%m-%d") <= end_dt
         ]
@@ -50,7 +50,7 @@ class DateRangeQuery:
         self, available_dates: list[str], start: str, num_days: int
     ) -> list[str]:
         """Filter dates from start_date for num_days."""
-        start_dt = datetime.strptime(start, "%Y-%m-%d")
+        start_dt = self._parse_date(start, "start_date")
         end_dt = start_dt + timedelta(days=num_days - 1)
         return [
             d for d in available_dates if start_dt <= datetime.strptime(d, "%Y-%m-%d") <= end_dt
@@ -60,7 +60,7 @@ class DateRangeQuery:
         self, available_dates: list[str], end: str, num_days: int
     ) -> list[str]:
         """Filter dates N days before end_date (inclusive)."""
-        end_dt = datetime.strptime(end, "%Y-%m-%d")
+        end_dt = self._parse_date(end, "end_date")
         start_dt = end_dt - timedelta(days=num_days - 1)
         return [
             d for d in available_dates if start_dt <= datetime.strptime(d, "%Y-%m-%d") <= end_dt
@@ -71,7 +71,14 @@ class DateRangeQuery:
         try:
             return datetime.strptime(date_str, "%Y-%m-%d")
         except ValueError as exc:
-            raise ValueError(f"{field_name} must be in YYYY-MM-DD format") from exc
+            if "unconverted data remains" in str(exc):
+                raise ValueError(
+                    f"{field_name}: '{date_str}' is not a valid date. "
+                    "Ensure the date is in YYYY-MM-DD format with valid day/month values."
+                ) from exc
+            raise ValueError(
+                f"{field_name}: '{date_str}' is not a valid date. {str(exc)}"
+            ) from exc
 
     def validate(self) -> bool:
         """Validate date parameters."""
