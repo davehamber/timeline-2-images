@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from timeline_2_images.app import TimelineApp
-from timeline_2_images.exceptions import TimelineException, ValidationError
+from timeline_2_images.exceptions import TimelineException
 from timeline_2_images.gui.models.interfaces import (
     ITimelineProcessor,
     ImageGenerationConfig,
@@ -36,7 +36,7 @@ class TimelineProcessorAdapter(ITimelineProcessor):
         try:
             TimelineApp.validate_file(path)
             return True, None
-        except (ValidationError, TimelineException) as e:
+        except TimelineException as e:
             return False, str(e)
         except Exception as e:
             return False, f"Unexpected error: {str(e)}"
