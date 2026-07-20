@@ -65,7 +65,9 @@ class TimelineApp:
         self.cache_config = self._setup_cache_config(cache_config)
         self.connector_builder = DayConnectorBuilder(self.processor, self.segment_processor)
 
-    def _setup_config(self, config: RenderConfiguration | None, batch_config: BatchConfig | None) -> RenderConfiguration:
+    def _setup_config(
+        self, config: RenderConfiguration | None, batch_config: BatchConfig | None
+    ) -> RenderConfiguration:
         """Setup render configuration with validation."""
         if batch_config is not None:
             result = batch_config.render_config
@@ -74,7 +76,9 @@ class TimelineApp:
         result.validate()
         return result
 
-    def _setup_renderer(self, batch_config: BatchConfig | None, cache_dir: str | None) -> MapRenderer:
+    def _setup_renderer(
+        self, batch_config: BatchConfig | None, cache_dir: str | None
+    ) -> MapRenderer:
         """Setup map renderer with tile cache and geocoder."""
         if batch_config is not None:
             return batch_config.create_renderer()
