@@ -1,7 +1,5 @@
 """Functional tests for batch processing with BatchConfig."""
 
-import pytest
-
 from timeline_2_images.app import TimelineApp
 from timeline_2_images.config import BatchConfig, RenderConfiguration
 

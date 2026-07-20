@@ -6,8 +6,6 @@
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtCore import QThread
 from PyQt6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -15,14 +13,11 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QProgressBar,
-    QTextEdit,
-    QFileDialog,
     QMessageBox,
 )
 
 from timeline_2_images import __version__
-from timeline_2_images.gui.models import TimelineProcessorAdapter, ImageGenerationConfig
+from timeline_2_images.gui.models import TimelineProcessorAdapter
 from timeline_2_images.gui.presenter import TimelineGeneratorPresenter
 from timeline_2_images.gui.settings_manager import SettingsManager
 from timeline_2_images.gui.widgets.file_selector import FileSelector
@@ -202,7 +197,10 @@ class TimelineWindow(QMainWindow):
             end_date = self._settings_manager.get("date_range_end")
             if start_date and end_date:
                 from PyQt6.QtCore import QDate
-                self._date_range_panel._start_date.setDate(QDate.fromString(start_date, "yyyy-MM-dd"))
+
+                self._date_range_panel._start_date.setDate(
+                    QDate.fromString(start_date, "yyyy-MM-dd")
+                )
                 self._date_range_panel._end_date.setDate(QDate.fromString(end_date, "yyyy-MM-dd"))
         else:
             self._date_range_panel._days_radio.setChecked(True)
@@ -213,6 +211,7 @@ class TimelineWindow(QMainWindow):
         timeline_path = self._settings_manager.get("timeline_file_path")
         if timeline_path:
             from pathlib import Path
+
             if Path(timeline_path).exists():
                 self._file_selector._selected_path = timeline_path
                 self._file_selector._path_input.setText(timeline_path)
@@ -231,7 +230,9 @@ class TimelineWindow(QMainWindow):
             "add_place_names": self._settings_panel.get_add_place_names(),
             "single_image": self._settings_panel.get_single_image(),
             "date_range_mode": date_range_mode,
-            "date_range_days": days if date_range_mode == "days" else self._date_range_panel._days_spin.value(),
+            "date_range_days": days
+            if date_range_mode == "days"
+            else self._date_range_panel._days_spin.value(),
             "date_range_start": start_date,
             "date_range_end": end_date,
             "timeline_file_path": self._file_selector.get_selected_path(),
