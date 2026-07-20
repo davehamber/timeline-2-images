@@ -35,7 +35,10 @@ echo -e "${GREEN}✓ Made hook scripts executable${NC}"
 echo ""
 
 echo "Git hooks installed:"
-echo -e "  ${YELLOW}pre-commit${NC}  - Validates version consistency"
+echo -e "  ${YELLOW}pre-commit${NC}  - Validates version consistency + ruff checks"
+echo -e "    • Version consistency across __init__.py, pyproject.toml, .bumpversion.cfg"
+echo -e "    • Ruff linting (informational, doesn't block commit)"
+echo -e "    • Ruff formatting check (informational, doesn't block commit)"
 echo -e "  ${YELLOW}post-commit${NC} - Suggests version bumping"
 echo ""
 
