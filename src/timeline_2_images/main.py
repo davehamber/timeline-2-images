@@ -7,17 +7,38 @@ import sys
 import time
 import argparse
 from pathlib import Path
+from datetime import datetime
 from typing import Any
 
 from timeline_2_images.banner import print_banner
 from timeline_2_images.app import TimelineApp
-from timeline_2_images.config import RenderConfiguration
+from timeline_2_images.config import RenderConfiguration, DateRangeQuery
 from timeline_2_images.validators import TimelineValidationError
 from timeline_2_images.console_formatter import ConsoleFormatter
 
 
 class CLIRunner:
     """Handles CLI argument parsing and timeline processing orchestration."""
+
+    def validate_dates(
+        self, start_date: str | None, end_date: str | None, days: int
+    ) -> None:
+        """Validate date arguments from CLI.
+
+        Args:
+            start_date: Optional start date in YYYY-MM-DD format
+            end_date: Optional end date in YYYY-MM-DD format
+            days: Number of days to process
+
+        Raises:
+            SystemExit: If dates are invalid
+        """
+        try:
+            query = DateRangeQuery(start_date=start_date, end_date=end_date, days=days)
+            query.validate()
+        except ValueError as e:
+            ConsoleFormatter.print_error(f"Invalid date arguments: {str(e)}")
+            sys.exit(1)
 
     def initialize_app(
         self, timeline_json: str, output_dir: str, image_size: int, place_names: bool
@@ -66,6 +87,7 @@ class CLIRunner:
             place_names: Whether to add place names to maps
             single_image: Whether to render as single combined image
         """
+        self.validate_dates(start_date, end_date, days)
         app = self.initialize_app(timeline_json, output_dir, image_size, place_names)
         timeline_path = Path(timeline_json)
 
