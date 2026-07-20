@@ -3,7 +3,7 @@
 import pytest
 
 try:
-    from PyQt6.QtWidgets import QApplication
+    import PyQt6.QtWidgets  # noqa: F401
 
     PYQT6_AVAILABLE = True
 except ImportError:
