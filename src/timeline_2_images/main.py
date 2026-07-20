@@ -82,9 +82,7 @@ class CLIRunner:
         ConsoleFormatter.print_available_dates(available_dates)
 
         # Get dates to process
-        dates_to_process = app.get_date_range(
-            start_date=start_date, end_date=end_date, days=days
-        )
+        dates_to_process = app.get_date_range(start_date=start_date, end_date=end_date, days=days)
 
         ConsoleFormatter.print_processing_message(dates_to_process)
 

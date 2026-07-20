@@ -11,7 +11,7 @@ from timeline_2_images.rendering import MapRenderer
 from timeline_2_images.rendering.tile_cache_manager import TileCacheManager
 from timeline_2_images.config import RenderConfiguration, DateRangeQuery, BatchConfig, CacheConfig
 from timeline_2_images.models import RenderResult
-from timeline_2_images.validators import TimelineValidator, TimelineValidationError
+from timeline_2_images.validators import TimelineValidator
 from timeline_2_images.day_connector_builder import DayConnectorBuilder
 from geopy.geocoders import Nominatim
 
@@ -391,4 +391,3 @@ class TimelineApp:
         output_path = self.output_dir / f"{dates[0]}_to_{dates[-1]}.jpg"
         result = self.renderer.render_combined_segments(combined_segments, str(output_path))
         return result
-

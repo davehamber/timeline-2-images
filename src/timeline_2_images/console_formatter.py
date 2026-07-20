@@ -1,6 +1,5 @@
 """Console output formatting for CLI."""
 
-import time
 from typing import Any
 
 
@@ -48,7 +47,9 @@ class ConsoleFormatter:
         status = "✓" if result.was_successful() else "✗"
         print()
         if result.was_successful():
-            print(f"{status} {result.date}: {result.render_time:.2f}s ({result.point_count} points)")
+            print(
+                f"{status} {result.date}: {result.render_time:.2f}s ({result.point_count} points)"
+            )
         else:
             print(f"{status} {result.date}: {result.error_message}")
 

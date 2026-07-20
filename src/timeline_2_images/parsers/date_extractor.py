@@ -27,7 +27,9 @@ class DateExtractor:
             if parsed_datetime is not None:
                 dates.add(parsed_datetime.astimezone(timezone.utc).date())
         elapsed = time.time() - start
-        print(f"[TIMING]   extract_from_flat_locations: {elapsed:.2f}s ({len(dates)} dates from {len(self.data.get('locations', []))} locations)")
+        print(
+            f"[TIMING]   extract_from_flat_locations: {elapsed:.2f}s ({len(dates)} dates from {len(self.data.get('locations', []))} locations)"
+        )
         return dates
 
     @staticmethod
@@ -72,7 +74,9 @@ class DateExtractor:
             if segment_date:
                 dates.add(segment_date)
         elapsed = time.time() - start
-        print(f"[TIMING]   extract_from_timeline_objects: {elapsed:.2f}s ({len(dates)} dates from {len(self.data.get('timelineObjects', []))} objects)")
+        print(
+            f"[TIMING]   extract_from_timeline_objects: {elapsed:.2f}s ({len(dates)} dates from {len(self.data.get('timelineObjects', []))} objects)"
+        )
         return dates
 
     def extract_from_segments(self) -> Set[date]:
@@ -100,7 +104,9 @@ class DateExtractor:
                 except Exception:
                     pass  # Skip unparseable timestamps
         elapsed = time.time() - start
-        print(f"[TIMING]   extract_from_segments: {elapsed:.2f}s ({len(dates)} dates from {len(self.data.get('semanticSegments', []))} segments)")
+        print(
+            f"[TIMING]   extract_from_segments: {elapsed:.2f}s ({len(dates)} dates from {len(self.data.get('semanticSegments', []))} segments)"
+        )
         return dates
 
     @staticmethod

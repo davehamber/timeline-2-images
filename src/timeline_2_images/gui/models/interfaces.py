@@ -18,6 +18,7 @@ class ImageGenerationConfig:
 
     This is GUI-facing, not dependent on TimelineApp internals.
     """
+
     timeline_path: str
     output_dir: str
     image_size: int = 500
@@ -31,6 +32,7 @@ class ImageGenerationConfig:
 @dataclass
 class GenerationResult:
     """Result of image generation operation."""
+
     success: bool
     output_dir: Path
     image_count: int

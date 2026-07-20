@@ -73,9 +73,15 @@ class TimelineProcessorAdapter(ITimelineProcessor):
             # Only load file if not already loaded in this session
             cache = app.processor._parser._timeline_cache
             json_path_normalized = str(Path(config.timeline_path).resolve())
-            cache_path_normalized = str(Path(cache.file_path).resolve()) if cache.file_path else None
+            cache_path_normalized = (
+                str(Path(cache.file_path).resolve()) if cache.file_path else None
+            )
 
-            if cache.file_path is None or json_path_normalized != cache_path_normalized or cache.data is None:
+            if (
+                cache.file_path is None
+                or json_path_normalized != cache_path_normalized
+                or cache.data is None
+            ):
                 try:
                     cache.load_file(config.timeline_path)
                 except Exception:
