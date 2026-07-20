@@ -76,9 +76,7 @@ class DateRangeQuery:
                     f"{field_name}: '{date_str}' is not a valid date. "
                     "Ensure the date is in YYYY-MM-DD format with valid day/month values."
                 ) from exc
-            raise ValueError(
-                f"{field_name}: '{date_str}' is not a valid date. {str(exc)}"
-            ) from exc
+            raise ValueError(f"{field_name}: '{date_str}' is not a valid date. {str(exc)}") from exc
 
     def validate(self) -> bool:
         """Validate date parameters."""

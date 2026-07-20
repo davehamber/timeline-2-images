@@ -7,7 +7,6 @@ import sys
 import time
 import argparse
 from pathlib import Path
-from datetime import datetime
 from typing import Any
 
 from timeline_2_images.banner import print_banner
@@ -20,9 +19,7 @@ from timeline_2_images.console_formatter import ConsoleFormatter
 class CLIRunner:
     """Handles CLI argument parsing and timeline processing orchestration."""
 
-    def validate_dates(
-        self, start_date: str | None, end_date: str | None, days: int
-    ) -> None:
+    def validate_dates(self, start_date: str | None, end_date: str | None, days: int) -> None:
         """Validate date arguments from CLI.
 
         Args:
