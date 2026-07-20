@@ -9,21 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - 2026-07-20
 
-### Added
-- Smart date picker auto-adjustment in date range selector
-  - If end date < start date: start date automatically becomes end date
-  - If start date > end date: end date automatically becomes start date
-  - Prevents invalid date ranges with immediate visual feedback
-- Progress callback support in batch methods for real-time progress tracking
-  - `on_progress` parameter in `process_date_range()`, `process_date_range_bytes()`, and `process_date_range_single_image()`
-  - Progress tracking examples with tqdm integration in library usage documentation
-- Specific exception types for programmatic error handling: `SegmentProcessingError`, `RenderingError`, `ValidationError`, `CacheError`
-- Base `TimelineException` class for catching all timeline-related errors
-- Exception chaining support for error context and debugging
-- `CacheConfig` class for controlling in-memory caching behavior
-- Cache size limits (1 MB - 8 GB) for predictable memory usage
-- Cache configuration options: enable/disable caching, set max size, auto-clear on exit
-
 ### Changed
 - Reduced GUI window size and removed excessive empty space (more compact layout)
 - GUI architecture foundation (Phase 1): Proper layering for desktop interface
@@ -58,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - DateRangeQuery validation: only validates days > 0 when days parameter will be used
 - GUI default output directory changed from ~/maps to ~/Downloads for better UX
 - Date picker format changed to ISO 8601 (yyyy-MM-dd) for consistency across platforms
-- GUI defers Timeline.json parsing until Generate is clicked (faster startup and file selection, uses session-level JSON cache for efficiency)
+- GUI defers Timeline.json parsing until Generate is clicked (faster startup and file selection)
 - Cache usage feedback in progress panel
   - Shows "Loading file (parsing JSON)..." for first-time file loads from disk
   - Shows "Loading file (using cache)..." when reusing cached file from current session
@@ -92,6 +77,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--clean-cache` CLI argument (was specific to SQLite cache)
 - Unused `profile` CLI argument and parameter
 - Broken `test_caches.py` test file
+
+---
+
+## [0.3.0] - 2026-07-19
+
+### Added
+- Progress callback support in batch methods for real-time progress tracking
+  - `on_progress` parameter in `process_date_range()`, `process_date_range_bytes()`, and `process_date_range_single_image()`
+  - Progress tracking examples with tqdm integration in library usage documentation
+- Specific exception types for programmatic error handling: `SegmentProcessingError`, `RenderingError`, `ValidationError`, `CacheError`
+- Base `TimelineException` class for catching all timeline-related errors
+- Exception chaining support for error context and debugging
+- `CacheConfig` class for controlling in-memory caching behavior
+- Cache size limits (1 MB - 8 GB) for predictable memory usage
+- Cache configuration options: enable/disable caching, set max size, auto-clear on exit
 
 ---
 
