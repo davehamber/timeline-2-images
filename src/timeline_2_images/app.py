@@ -51,7 +51,6 @@ class TimelineApp:
         Raises:
             TimelineValidationError: If validate=True and Timeline.json structure is invalid
         """
-        # Validate input file if requested
         if validate:
             TimelineValidator().validate_timeline_structure(json_path)
 
@@ -59,43 +58,36 @@ class TimelineApp:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True, parents=True)
 
-        # Use batch_config if provided, otherwise use individual config/cache_dir
-        if batch_config is not None:
-            self.config = batch_config.render_config
-        else:
-            # Use provided config or create default
-            if config is None:
-                config = RenderConfiguration()
-            self.config = config
-        self.config.validate()
-
-        # Use provided dependencies or create them with defaults
-        if processor is None:
-            processor = TimelineProcessor(json_path)
-        self.processor = processor
-
-        if segment_processor is None:
-            segment_processor = SegmentProcessor()
-        self.segment_processor = segment_processor
-
-        if renderer is None:
-            if batch_config is not None:
-                renderer = batch_config.create_renderer()
-            else:
-                tile_cache = TileCacheManager(cache_dir)
-                geocoder = Nominatim(user_agent="timeline-2-images")
-                renderer = MapRenderer(config=self.config, tile_cache=tile_cache, geocoder=geocoder)
-        self.renderer = renderer
-
-        # Use provided cache config or create default
-        if cache_config is None:
-            cache_config = CacheConfig()
-        else:
-            cache_config.validate()
-        self.cache_config = cache_config
-
-        # Initialize connector builder for multi-day rendering
+        self.config = self._setup_config(config, batch_config)
+        self.processor = processor or TimelineProcessor(json_path)
+        self.segment_processor = segment_processor or SegmentProcessor()
+        self.renderer = renderer or self._setup_renderer(batch_config, cache_dir)
+        self.cache_config = self._setup_cache_config(cache_config)
         self.connector_builder = DayConnectorBuilder(self.processor, self.segment_processor)
+
+    def _setup_config(self, config: RenderConfiguration | None, batch_config: BatchConfig | None) -> RenderConfiguration:
+        """Setup render configuration with validation."""
+        if batch_config is not None:
+            result = batch_config.render_config
+        else:
+            result = config or RenderConfiguration()
+        result.validate()
+        return result
+
+    def _setup_renderer(self, batch_config: BatchConfig | None, cache_dir: str | None) -> MapRenderer:
+        """Setup map renderer with tile cache and geocoder."""
+        if batch_config is not None:
+            return batch_config.create_renderer()
+        tile_cache = TileCacheManager(cache_dir)
+        geocoder = Nominatim(user_agent="timeline-2-images")
+        return MapRenderer(config=self.config, tile_cache=tile_cache, geocoder=geocoder)
+
+    def _setup_cache_config(self, cache_config: CacheConfig | None) -> CacheConfig:
+        """Setup cache configuration with validation."""
+        result = cache_config or CacheConfig()
+        if cache_config is not None:
+            result.validate()
+        return result
 
     @classmethod
     def validate_file(cls, json_path: str) -> None:
