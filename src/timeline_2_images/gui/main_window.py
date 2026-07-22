@@ -131,7 +131,7 @@ class TimelineWindow(QMainWindow):
 
         # ===== File Selector =====
         file_label_layout = QHBoxLayout()
-        file_label = QLabel("Timeline File:")
+        file_label = QLabel("Timeline File")
         file_label.setStyleSheet("font-weight: bold;")
         file_label_layout.addWidget(file_label)
         file_help = ClickableHelpLabel("?")
@@ -201,7 +201,7 @@ class TimelineWindow(QMainWindow):
 
         # ===== Progress Panel =====
         output_label_layout = QHBoxLayout()
-        output_label = QLabel("Output Directory:")
+        output_label = QLabel("Output Directory")
         output_label_layout.addWidget(output_label)
         output_help = ClickableHelpLabel("?")
         output_help.setStyleSheet("color: #0066cc; font-weight: bold; margin-top: 2px;")
