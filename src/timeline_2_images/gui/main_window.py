@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
     QLabel,
     QPushButton,
     QMessageBox,
+    QToolTip,
 )
 from PyQt6.QtGui import QCursor
 from PyQt6.QtCore import Qt
@@ -26,6 +27,16 @@ from timeline_2_images.gui.widgets.file_selector import FileSelector
 from timeline_2_images.gui.widgets.date_range_panel import DateRangePanel
 from timeline_2_images.gui.widgets.settings_panel import SettingsPanel
 from timeline_2_images.gui.widgets.progress_panel import ProgressPanel
+
+
+class ClickableHelpLabel(QLabel):
+    """QLabel that shows tooltip on click instead of hover."""
+
+    def mousePressEvent(self, event):
+        """Show tooltip when clicked."""
+        tooltip_text = self.toolTip()
+        if tooltip_text:
+            QToolTip.showText(event.globalPos(), tooltip_text, self)
 
 
 class TimelineWindow(QMainWindow):
@@ -63,7 +74,7 @@ class TimelineWindow(QMainWindow):
         file_label = QLabel("Timeline File:")
         file_label.setStyleSheet("font-weight: bold;")
         file_label_layout.addWidget(file_label)
-        file_help = QLabel("?")
+        file_help = ClickableHelpLabel("?")
         file_help.setStyleSheet("color: #0066cc; font-weight: bold;")
         file_help.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         file_help.setToolTip(
@@ -89,9 +100,9 @@ class TimelineWindow(QMainWindow):
         date_label = QLabel("Date Range")
         date_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
         date_label_layout.addWidget(date_label)
-        date_help = QLabel("?")
+        date_help = ClickableHelpLabel("?")
         date_help.setStyleSheet("color: #0066cc; font-weight: bold;")
-        date_help.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
+        date_help.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         date_help.setToolTip(
             "Choose how to select dates:\n"
             "• Last N days: Process the most recent N days with location data\n"
@@ -110,9 +121,9 @@ class TimelineWindow(QMainWindow):
         settings_label = QLabel("Image Settings")
         settings_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
         settings_label_layout.addWidget(settings_label)
-        settings_help = QLabel("?")
+        settings_help = ClickableHelpLabel("?")
         settings_help.setStyleSheet("color: #0066cc; font-weight: bold;")
-        settings_help.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
+        settings_help.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         settings_help.setToolTip(
             "Configure map rendering:\n"
             "• Width/Height: Image dimensions in pixels (200-4000 range)\n"
@@ -132,9 +143,9 @@ class TimelineWindow(QMainWindow):
         output_label_layout = QHBoxLayout()
         output_label = QLabel("Output Directory:")
         output_label_layout.addWidget(output_label)
-        output_help = QLabel("?")
+        output_help = ClickableHelpLabel("?")
         output_help.setStyleSheet("color: #0066cc; font-weight: bold;")
-        output_help.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
+        output_help.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         output_help.setToolTip(
             "Destination folder for generated map images\nOrganized by date (e.g., 2024-01-15.jpg)"
         )
