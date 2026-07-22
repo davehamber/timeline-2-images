@@ -150,8 +150,6 @@ class TimelineWindow(QMainWindow):
         )
         file_label_layout.addWidget(file_help, 0, Qt.AlignmentFlag.AlignVCenter)
         file_label_layout.addStretch()
-        file_container = QWidget()
-        file_container.setLayout(file_label_layout)
         self._file_selector = FileSelector(self._presenter)
         self._file_selector.on_file_selected(self._on_file_selected_in_selector)
         self._file_selector.setToolTip("Select your exported Timeline.json file (JSON format)")
@@ -177,8 +175,6 @@ class TimelineWindow(QMainWindow):
         )
         output_label_layout.addWidget(output_help, 0, Qt.AlignmentFlag.AlignVCenter)
         output_label_layout.addStretch()
-        output_container = QWidget()
-        output_container.setLayout(output_label_layout)
 
         # Output directory picker
         self._output_dir = str(Path.home() / "Downloads")
