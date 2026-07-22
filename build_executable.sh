@@ -59,6 +59,9 @@ uv run nuitka \
   --remove-output \
   "$ENTRY_POINT"
 
+echo "Checking for binary in dist directory..."
+ls -lh ./dist/ 2>/dev/null | grep -E "\.bin|timeline"
+
 if [ -f "./dist/main.bin" ]; then
     mv "./dist/main.bin" "./dist/$OUTPUT_NAME"
     chmod +x "./dist/$OUTPUT_NAME"
