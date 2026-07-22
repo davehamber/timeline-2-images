@@ -121,11 +121,7 @@ jobs:
       - name: Extract version
         id: version
         run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            VERSION=$(python -c "import sys; sys.path.insert(0, 'src'); from timeline_2_images import __version__; print(__version__)")
-          else
-            VERSION=$(python3 -c "import sys; sys.path.insert(0, 'src'); from timeline_2_images import __version__; print(__version__)")
-          fi
+          VERSION=$(uv run python -c "import sys; sys.path.insert(0, 'src'); from timeline_2_images import __version__; print(__version__)")
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
         shell: bash
 
