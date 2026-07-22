@@ -144,7 +144,7 @@ class TimelineWindow(QMainWindow):
             "4. Choose where to save the file\n"
             "5. Transfer the file to your computer"
         )
-        file_label_layout.addWidget(file_help)
+        file_label_layout.addWidget(file_help, 0, Qt.AlignmentFlag.AlignVCenter)
         file_label_layout.addStretch()
         file_container = QWidget()
         file_container.setLayout(file_label_layout)
@@ -167,7 +167,7 @@ class TimelineWindow(QMainWindow):
             "• Last N days: Process the most recent N days with location data\n"
             "• Specific range: Process dates between start and end dates (inclusive)"
         )
-        date_label_layout.addWidget(date_help)
+        date_label_layout.addWidget(date_help, 0, Qt.AlignmentFlag.AlignVCenter)
         date_label_layout.addStretch()
         date_container = QWidget()
         date_container.setLayout(date_label_layout)
@@ -190,7 +190,7 @@ class TimelineWindow(QMainWindow):
             "• Add place names: Show location names on maps\n"
             "• Single image: Combine all dates into one map"
         )
-        settings_label_layout.addWidget(settings_help)
+        settings_label_layout.addWidget(settings_help, 0, Qt.AlignmentFlag.AlignVCenter)
         settings_label_layout.addStretch()
         settings_container = QWidget()
         settings_container.setLayout(settings_label_layout)
@@ -208,7 +208,7 @@ class TimelineWindow(QMainWindow):
         output_help.set_click_tooltip(
             "Destination folder for generated map images\nOrganized by date (e.g., 2024-01-15.jpg)"
         )
-        output_label_layout.addWidget(output_help)
+        output_label_layout.addWidget(output_help, 0, Qt.AlignmentFlag.AlignVCenter)
         output_label_layout.addStretch()
         output_container = QWidget()
         output_container.setLayout(output_label_layout)
