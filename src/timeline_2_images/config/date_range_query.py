@@ -25,18 +25,18 @@ class DateRangeQuery:
         if not available_dates:
             return []
 
-        available_dates_sorted = sorted(available_dates)
+        sorted_dates = sorted(available_dates)
 
         if self.start_date and self.end_date:
-            return self._filter_between_dates(
-                available_dates_sorted, self.start_date, self.end_date
-            )
-        if self.start_date:
-            return self._filter_from_start_date(available_dates_sorted, self.start_date, self.days)
-        if self.end_date:
-            return self._filter_before_end_date(available_dates_sorted, self.end_date, self.days)
+            return self._filter_between_dates(sorted_dates, self.start_date, self.end_date)
 
-        return available_dates_sorted[-self.days :]
+        if self.start_date:
+            return self._filter_from_start_date(sorted_dates, self.start_date, self.days)
+
+        if self.end_date:
+            return self._filter_before_end_date(sorted_dates, self.end_date, self.days)
+
+        return sorted_dates[-self.days :]
 
     def _filter_between_dates(self, available_dates: list[str], start: str, end: str) -> list[str]:
         """Filter dates between start and end (inclusive)."""
@@ -78,17 +78,22 @@ class DateRangeQuery:
                 ) from exc
             raise ValueError(f"{field_name}: '{date_str}' is not a valid date. {str(exc)}") from exc
 
+    def _validate_date_order(self, start_dt: datetime | None, end_dt: datetime | None) -> None:
+        """Validate that start_date is before end_date."""
+        if start_dt and end_dt and start_dt > end_dt:
+            raise ValueError("start_date must be before end_date")
+
+    def _validate_days_parameter(self) -> None:
+        """Validate days parameter is positive when used."""
+        if not (self.start_date and self.end_date) and self.days <= 0:
+            raise ValueError("days must be positive")
+
     def validate(self) -> bool:
         """Validate date parameters."""
         start_dt = self._parse_date(self.start_date, "start_date") if self.start_date else None
         end_dt = self._parse_date(self.end_date, "end_date") if self.end_date else None
 
-        if start_dt and end_dt and start_dt > end_dt:
-            raise ValueError("start_date must be before end_date")
-
-        # days only needs to be positive if it will be used
-        # (i.e., when not using both start_date and end_date)
-        if not (self.start_date and self.end_date) and self.days <= 0:
-            raise ValueError("days must be positive")
+        self._validate_date_order(start_dt, end_dt)
+        self._validate_days_parameter()
 
         return True

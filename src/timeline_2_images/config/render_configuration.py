@@ -37,8 +37,8 @@ class RenderConfiguration:
         """Get output filename for a date."""
         return f"{date_str}.{self.output_format}"
 
-    def validate(self) -> bool:
-        """Validate configuration."""
+    def _validate_image_dimensions(self) -> None:
+        """Validate image width and height are within bounds."""
         if self.image_width < MIN_IMAGE_SIZE:
             raise ValueError(f"image_width must be at least {MIN_IMAGE_SIZE} pixels")
         if self.image_width > MAX_IMAGE_SIZE:
@@ -47,10 +47,18 @@ class RenderConfiguration:
             raise ValueError(f"image_height must be at least {MIN_IMAGE_SIZE} pixels")
         if self.image_height > MAX_IMAGE_SIZE:
             raise ValueError(f"image_height must not exceed {MAX_IMAGE_SIZE} pixels")
+
+    def _validate_numeric_parameters(self) -> None:
+        """Validate numeric parameters are in valid ranges."""
         if self.dpi <= 0:
             raise ValueError("dpi must be positive")
         if self.min_area_sq_km < 0:
             raise ValueError("min_area_sq_km must be non-negative")
         if not 0 <= self.line_alpha <= 1:
             raise ValueError("line_alpha must be between 0 and 1")
+
+    def validate(self) -> bool:
+        """Validate configuration."""
+        self._validate_image_dimensions()
+        self._validate_numeric_parameters()
         return True
