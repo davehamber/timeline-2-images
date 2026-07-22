@@ -36,9 +36,7 @@ class DateRangePanel(QWidget):
         days_layout = QHBoxLayout()
         self._days_radio = QRadioButton("Last N days:")
         self._days_radio.setChecked(True)
-        self._days_radio.setToolTip(
-            "Process the most recent N days that have location data"
-        )
+        self._days_radio.setToolTip("Process the most recent N days that have location data")
         self._days_spin = QSpinBox()
         self._days_spin.setValue(14)
         self._days_spin.setMinimum(1)
@@ -67,9 +65,7 @@ class DateRangePanel(QWidget):
         self._start_date.setDate(QDate.currentDate())
         self._start_date.setDisplayFormat("yyyy-MM-dd")
         self._start_date.setEnabled(False)
-        self._start_date.setToolTip(
-            "Start date (inclusive) - click calendar icon to select"
-        )
+        self._start_date.setToolTip("Start date (inclusive) - click calendar icon to select")
         dates_layout.addWidget(self._start_date)
 
         dates_layout.addWidget(QLabel("To:"))
@@ -78,9 +74,7 @@ class DateRangePanel(QWidget):
         self._end_date.setDate(QDate.currentDate())
         self._end_date.setDisplayFormat("yyyy-MM-dd")
         self._end_date.setEnabled(False)
-        self._end_date.setToolTip(
-            "End date (inclusive) - click calendar icon to select"
-        )
+        self._end_date.setToolTip("End date (inclusive) - click calendar icon to select")
         dates_layout.addWidget(self._end_date)
         dates_layout.addStretch()
 

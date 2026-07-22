@@ -130,8 +130,7 @@ class TimelineWindow(QMainWindow):
         output_help = QLabel("?")
         output_help.setStyleSheet("color: #0066cc; font-weight: bold; cursor: help;")
         output_help.setToolTip(
-            "Destination folder for generated map images\n"
-            "Organized by date (e.g., 2024-01-15.jpg)"
+            "Destination folder for generated map images\nOrganized by date (e.g., 2024-01-15.jpg)"
         )
         output_label_layout.addWidget(output_help)
         output_label_layout.addStretch()
