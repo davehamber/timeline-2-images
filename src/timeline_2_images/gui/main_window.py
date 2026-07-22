@@ -224,7 +224,8 @@ class TimelineWindow(QMainWindow):
         self._output_input = QLineEdit()
         self._output_input.setText(self._output_dir)
         self._output_input.setToolTip(
-            "Folder where generated map images will be saved\nCreated automatically if it doesn't exist"
+            "Folder where generated map images will be saved\n"
+            "Created automatically if it doesn't exist"
         )
         output_picker_layout.addWidget(self._output_input)
         output_browse_btn = QPushButton("Browse...")
