@@ -197,7 +197,9 @@ class TimelineWindow(QMainWindow):
         output_picker_layout.addWidget(output_browse_btn, 0)
         output_picker_container = QWidget()
         output_picker_container.setLayout(output_picker_layout)
-        output_directory_box = self._create_section_box(output_label_layout, output_picker_container)
+        output_directory_box = self._create_section_box(
+            output_label_layout, output_picker_container
+        )
         main_layout.addWidget(output_directory_box)
         main_layout.addSpacing(3)
 
@@ -270,9 +272,7 @@ class TimelineWindow(QMainWindow):
         footer_layout.addWidget(metadata)
         main_layout.addLayout(footer_layout)
 
-    def _create_section_box(
-        self, title_layout: QHBoxLayout, content_widget: QWidget
-    ) -> QWidget:
+    def _create_section_box(self, title_layout: QHBoxLayout, content_widget: QWidget) -> QWidget:
         """Create a framed section with title and content.
 
         Args:
