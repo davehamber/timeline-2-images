@@ -129,6 +129,7 @@ class TimelineWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
         main_layout = QVBoxLayout()
+        main_layout.setSpacing(6)
         central_widget.setLayout(main_layout)
 
         # ===== File Selector =====
