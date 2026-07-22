@@ -162,6 +162,7 @@ class TimelineWindow(QMainWindow):
         file_picker_container.setLayout(file_picker_layout)
         main_layout.addWidget(file_container)
         main_layout.addWidget(file_picker_container)
+        main_layout.addSpacing(3)
 
         # ===== Output Directory =====
         output_label_layout = QHBoxLayout()
@@ -198,6 +199,7 @@ class TimelineWindow(QMainWindow):
         output_picker_container = QWidget()
         output_picker_container.setLayout(output_picker_layout)
         main_layout.addWidget(output_picker_container)
+        main_layout.addSpacing(3)
 
         # ===== Date Range Panel =====
         date_label_layout = QHBoxLayout()
@@ -219,6 +221,7 @@ class TimelineWindow(QMainWindow):
         self._date_range_panel = DateRangePanel()
         main_layout.addWidget(date_container)
         main_layout.addWidget(self._date_range_panel)
+        main_layout.addSpacing(3)
 
         # ===== Settings Panel =====
         settings_label_layout = QHBoxLayout()
@@ -242,6 +245,7 @@ class TimelineWindow(QMainWindow):
         self._settings_panel = SettingsPanel()
         main_layout.addWidget(settings_container)
         main_layout.addWidget(self._settings_panel)
+        main_layout.addSpacing(3)
 
         self._progress_panel = ProgressPanel()
         main_layout.addWidget(self._progress_panel)
