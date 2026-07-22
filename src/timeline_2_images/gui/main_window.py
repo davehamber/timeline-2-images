@@ -20,7 +20,6 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QCursor
-from PyQt6.QtCore import Qt
 
 from timeline_2_images import __version__
 from timeline_2_images.gui.models import TimelineProcessorAdapter
