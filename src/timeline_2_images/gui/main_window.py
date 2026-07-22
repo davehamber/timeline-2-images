@@ -425,7 +425,7 @@ class TimelineWindow(QMainWindow):
                 success=False,
                 output_dir=Path(self._settings_panel.get_output_dir() or ""),
                 image_count=0,
-                error_message="Generation cancelled by user"
+                error_message="Generation cancelled by user",
             )
             self._progress_panel.set_complete(result)
             # Re-enable Generate button

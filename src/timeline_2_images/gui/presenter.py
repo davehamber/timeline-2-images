@@ -198,10 +198,7 @@ class TimelineGeneratorPresenter:
         Returns:
             True if generation worker is active and running
         """
-        return (
-            self._generation_worker is not None
-            and self._generation_worker.isRunning()
-        )
+        return self._generation_worker is not None and self._generation_worker.isRunning()
 
     def cancel_generation(self) -> None:
         """Cancel the current image generation process."""
