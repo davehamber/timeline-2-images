@@ -21,7 +21,6 @@ from PyQt6.QtCore import Qt
 
 from timeline_2_images import __version__
 from timeline_2_images.gui.models import TimelineProcessorAdapter
-from timeline_2_images.gui.models.interfaces import GenerationResult
 from timeline_2_images.gui.presenter import TimelineGeneratorPresenter
 from timeline_2_images.gui.settings_manager import SettingsManager
 from timeline_2_images.gui.widgets.file_selector import FileSelector
