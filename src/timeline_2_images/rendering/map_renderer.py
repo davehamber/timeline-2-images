@@ -505,8 +505,8 @@ class MapRenderer:
         center_x = (minx + maxx) / 2
         center_y = (miny + maxy) / 2
 
-        pixel_size_x = dx / (self.config.image_size or 1000)
-        pixel_size_y = dy / (self.config.image_size or 1000)
+        pixel_size_x = dx / (self.config.image_width or 1000)
+        pixel_size_y = dy / (self.config.image_height or 1000)
 
         border_x = 5 * pixel_size_x
         border_y = 5 * pixel_size_y

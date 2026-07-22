@@ -18,11 +18,12 @@ class TestBatchConfig:
 
     def test_batch_config_with_custom_render_config(self):
         """Test BatchConfig with custom RenderConfiguration."""
-        render_config = RenderConfiguration(image_size=800)
+        render_config = RenderConfiguration(image_width=800, image_height=800)
         batch_config = BatchConfig(render_config=render_config)
 
         assert batch_config.render_config is render_config
-        assert batch_config.render_config.image_size == 800
+        assert batch_config.render_config.image_width == 800
+        assert batch_config.render_config.image_height == 800
 
     def test_batch_config_with_cache_dir(self):
         """Test BatchConfig with custom cache directory."""
@@ -51,6 +52,6 @@ class TestBatchConfig:
 
     def test_batch_config_validate_config(self):
         """Test that BatchConfig validates render configuration."""
-        render_config = RenderConfiguration(image_size=-1)
+        render_config = RenderConfiguration(image_width=-1, image_height=500)
         with pytest.raises(ValueError):
             BatchConfig(render_config=render_config)

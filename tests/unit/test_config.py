@@ -11,7 +11,8 @@ class TestRenderConfiguration:
     def test_default_configuration(self):
         """Test default configuration values."""
         config = RenderConfiguration()
-        assert config.image_size == 500
+        assert config.image_width == 500
+        assert config.image_height == 500
         assert config.output_format == "jpg"
         assert config.dpi == 100
         assert config.min_area_sq_km == 5.0
@@ -19,16 +20,17 @@ class TestRenderConfiguration:
     def test_custom_configuration(self):
         """Test custom configuration values."""
         config = RenderConfiguration(
-            image_size=800,
+            image_width=800, image_height=800,
             dpi=200,
             min_area_sq_km=10.0,
         )
-        assert config.image_size == 800
+        assert config.image_width == 800
+        assert config.image_height == 800
         assert config.dpi == 200
 
     def test_get_figure_size(self):
         """Test getting figure size."""
-        config = RenderConfiguration(image_size=500, dpi=100)
+        config = RenderConfiguration(image_width=500, image_height=500, dpi=100)
         width, height = config.get_figure_size()
         assert width == 5.0
         assert height == 5.0
@@ -46,8 +48,8 @@ class TestRenderConfiguration:
 
     def test_validate_invalid_image_size(self):
         """Test validation with invalid image size."""
-        config = RenderConfiguration(image_size=-1)
-        with pytest.raises(ValueError, match="image_size must be positive"):
+        config = RenderConfiguration(image_width=-1, image_height=500)
+        with pytest.raises(ValueError, match="image_width must be at least"):
             config.validate()
 
     def test_validate_invalid_dpi(self):
@@ -130,7 +132,7 @@ class TestDateRangeQuery:
     def test_validate_invalid_date_format(self):
         """Test validation with invalid date format."""
         query = DateRangeQuery(start_date="01-01-2024")
-        with pytest.raises(ValueError, match="start_date must be in YYYY-MM-DD format"):
+        with pytest.raises(ValueError, match="is not a valid date"):
             query.validate()
 
     def test_validate_start_after_end(self):

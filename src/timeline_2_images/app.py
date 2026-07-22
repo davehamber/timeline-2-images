@@ -331,7 +331,8 @@ class TimelineApp:
         return {
             "json_path": str(self.json_path),
             "output_dir": str(self.output_dir),
-            "image_size": self.config.image_size,
+            "image_width": self.config.image_width,
+            "image_height": self.config.image_height,
             "tile_cache": self.renderer.get_cache_info(),
             "cache_config": str(self.cache_config),
         }

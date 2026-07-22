@@ -54,9 +54,10 @@ class TestTimelineApp:
     def test_initialization_with_config(self, sample_timeline_json, tmp_path):
         """Test app initialization with custom config."""
         output_dir = str(tmp_path / "output")
-        config = RenderConfiguration(image_size=800)
+        config = RenderConfiguration(image_width=800, image_height=800)
         app = TimelineApp(sample_timeline_json, output_dir=output_dir, config=config)
-        assert app.config.image_size == 800
+        assert app.config.image_width == 800
+        assert app.config.image_height == 800
 
     def test_get_available_dates(self, sample_timeline_json, tmp_path):
         """Test getting available dates."""
@@ -121,7 +122,8 @@ class TestTimelineApp:
         assert isinstance(stats, dict)
         assert "json_path" in stats
         assert "output_dir" in stats
-        assert "image_size" in stats
+        assert "image_width" in stats
+        assert "image_height" in stats
         assert "tile_cache" in stats
 
     def test_clear_caches(self, sample_timeline_json, tmp_path):
@@ -143,7 +145,7 @@ class TestOOPPipeline:
     def test_full_pipeline(self, sample_timeline_json, tmp_path):
         """Test the full processing pipeline."""
         output_dir = str(tmp_path / "output")
-        config = RenderConfiguration(image_size=500)
+        config = RenderConfiguration(image_width=500)
 
         app = TimelineApp(sample_timeline_json, output_dir=output_dir, config=config)
 

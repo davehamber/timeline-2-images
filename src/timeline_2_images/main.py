@@ -92,14 +92,20 @@ class CLIRunner:
             sys.exit(1)
 
     def initialize_app(
-        self, timeline_json: str, output_dir: str, image_size: int, place_names: bool
+        self,
+        timeline_json: str,
+        output_dir: str,
+        image_width: int,
+        image_height: int,
+        place_names: bool,
     ) -> TimelineApp:
         """Initialize TimelineApp with CLI configuration.
 
         Args:
             timeline_json: Path to Timeline.json file
             output_dir: Output directory for images
-            image_size: Size of output images in pixels
+            image_width: Width of output images in pixels
+            image_height: Height of output images in pixels
             place_names: Whether to add place names to maps
 
         Returns:
@@ -109,7 +115,9 @@ class CLIRunner:
             SystemExit: If Timeline.json validation fails
         """
         try:
-            config = RenderConfiguration(image_size=image_size, add_place_names=place_names)
+            config = RenderConfiguration(
+                image_width=image_width, image_height=image_height, add_place_names=place_names
+            )
             return TimelineApp(str(timeline_json), output_dir=output_dir, config=config)
         except TimelineValidationError as e:
             ConsoleFormatter.print_error(str(e))
@@ -120,7 +128,8 @@ class CLIRunner:
         timeline_json: str,
         output_dir: str,
         days: int,
-        image_size: int,
+        image_width: int,
+        image_height: int,
         start_date: str | None,
         end_date: str | None,
         place_names: bool,
@@ -132,14 +141,15 @@ class CLIRunner:
             timeline_json: Path to Timeline.json file
             output_dir: Output directory for images
             days: Number of days to process
-            image_size: Size of output images in pixels
+            image_width: Width of output images in pixels
+            image_height: Height of output images in pixels
             start_date: Optional start date in YYYY-MM-DD format
             end_date: Optional end date in YYYY-MM-DD format
             place_names: Whether to add place names to maps
             single_image: Whether to render as single combined image
         """
         self.validate_dates(start_date, end_date, days)
-        app = self.initialize_app(timeline_json, output_dir, image_size, place_names)
+        app = self.initialize_app(timeline_json, output_dir, image_width, image_height, place_names)
         timeline_path = Path(timeline_json)
 
         # Load and display available dates
@@ -196,8 +206,20 @@ class CLIRunner:
         parser.add_argument(
             "--image-size",
             type=self._validate_image_size,
-            default=500,
-            help=f"Output image size in pixels ({MIN_IMAGE_SIZE}-{MAX_IMAGE_SIZE}, default: 500)",
+            default=None,
+            help=f"Output image size in pixels (sets both width and height, {MIN_IMAGE_SIZE}-{MAX_IMAGE_SIZE})",
+        )
+        parser.add_argument(
+            "--image-width",
+            type=self._validate_image_size,
+            default=None,
+            help=f"Output image width in pixels ({MIN_IMAGE_SIZE}-{MAX_IMAGE_SIZE}, default: 500)",
+        )
+        parser.add_argument(
+            "--image-height",
+            type=self._validate_image_size,
+            default=None,
+            help=f"Output image height in pixels ({MIN_IMAGE_SIZE}-{MAX_IMAGE_SIZE}, default: 500)",
         )
         parser.add_argument(
             "--start-date",
@@ -222,11 +244,20 @@ class CLIRunner:
     def run(self, args: argparse.Namespace) -> None:
         """Execute CLI commands based on parsed arguments."""
         if args.timeline_json:
+            # Handle image size: --image-size sets both, or use separate --image-width/height
+            if args.image_size is not None:
+                image_width = args.image_size
+                image_height = args.image_size
+            else:
+                image_width = args.image_width if args.image_width is not None else 500
+                image_height = args.image_height if args.image_height is not None else 500
+
             self.process_images(
                 args.timeline_json,
                 args.output_dir,
                 args.days,
-                args.image_size,
+                image_width,
+                image_height,
                 args.start_date,
                 args.end_date,
                 not args.no_place_names,
@@ -242,7 +273,9 @@ def main(
     timeline_json: str,
     output_dir: str = "output",
     days: int = 14,
-    image_size: int = 500,
+    image_size: int | None = None,
+    image_width: int | None = None,
+    image_height: int | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
     place_names: bool = True,
@@ -254,15 +287,21 @@ def main(
         timeline_json: Path to Timeline.json file
         output_dir: Directory to save JPG images
         days: Number of recent days to process (default 14)
-        image_size: Output image size in pixels (default 500)
+        image_size: Output image size in pixels (sets both width and height, default 500)
+        image_width: Output image width in pixels (overrides image_size, default 500)
+        image_height: Output image height in pixels (overrides image_size, default 500)
         start_date: Start date in YYYY-MM-DD format
         end_date: End date in YYYY-MM-DD format
         place_names: If True, add place names to maps (default: True)
         single_image: If True, combine all dates into single image (default: False)
     """
+    # Handle backward compatibility: image_size sets both width and height
+    width = image_size if image_size is not None else (image_width if image_width is not None else 500)
+    height = image_size if image_size is not None else (image_height if image_height is not None else 500)
+
     runner = CLIRunner()
     runner.process_images(
-        timeline_json, output_dir, days, image_size, start_date, end_date, place_names, single_image
+        timeline_json, output_dir, days, width, height, start_date, end_date, place_names, single_image
     )
 
 

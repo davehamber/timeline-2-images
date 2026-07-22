@@ -133,7 +133,8 @@ class TimelineGeneratorPresenter:
         self,
         timeline_path: str,
         output_dir: str,
-        image_size: int = 500,
+        image_width: int = 500,
+        image_height: int = 500,
         add_place_names: bool = True,
         single_image: bool = False,
         start_date: Optional[str] = None,
@@ -147,7 +148,8 @@ class TimelineGeneratorPresenter:
         Args:
             timeline_path: Path to Timeline.json
             output_dir: Output directory for images
-            image_size: Size of output images
+            image_width: Width of output images
+            image_height: Height of output images
             add_place_names: Whether to add place names
             single_image: Whether to render single combined image
             start_date: Start date (YYYY-MM-DD) or None
@@ -161,7 +163,8 @@ class TimelineGeneratorPresenter:
         config = ImageGenerationConfig(
             timeline_path=timeline_path,
             output_dir=output_dir,
-            image_size=image_size,
+            image_width=image_width,
+            image_height=image_height,
             add_place_names=add_place_names,
             single_image=single_image,
             start_date=start_date,

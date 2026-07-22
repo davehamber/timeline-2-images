@@ -184,7 +184,8 @@ class TimelineProcessorAdapter(ITimelineProcessor):
             app: TimelineApp instance
             config: ImageGenerationConfig with user-selected settings
         """
-        app.config.image_size = config.image_size
+        app.config.image_width = config.image_width
+        app.config.image_height = config.image_height
         app.config.add_place_names = config.add_place_names
 
     @staticmethod
