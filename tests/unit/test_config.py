@@ -20,7 +20,8 @@ class TestRenderConfiguration:
     def test_custom_configuration(self):
         """Test custom configuration values."""
         config = RenderConfiguration(
-            image_width=800, image_height=800,
+            image_width=800,
+            image_height=800,
             dpi=200,
             min_area_sq_km=10.0,
         )

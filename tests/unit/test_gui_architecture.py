@@ -113,7 +113,8 @@ class TestTimelineGeneratorPresenter:
         config = ImageGenerationConfig(
             timeline_path="/path/to/Timeline.json",
             output_dir="/output",
-            image_width=800, image_height=800,
+            image_width=800,
+            image_height=800,
             add_place_names=True,
             single_image=False,
             days=30,
