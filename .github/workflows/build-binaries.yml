@@ -52,6 +52,14 @@ jobs:
           echo "ccache installed"
         shell: bash
 
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ccache
+          echo "ccache installed"
+        shell: bash
+
       - name: Sync dependencies
         run: uv sync
 
