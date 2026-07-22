@@ -82,9 +82,12 @@ class ClickableHelpLabel(QLabel):
             # Create new tooltip (None parent = top-level window)
             tooltip = PersistentTooltip(self._tooltip_text, None)
             ClickableHelpLabel._tooltip_widget = tooltip
-            pos = event.globalPosition().toPoint()
-            pos.setY(pos.y() + 20)  # Offset below cursor
-            ClickableHelpLabel._tooltip_widget.show_at(pos)
+            tooltip.show()  # Show first to get size
+            # Position below and to the right of the "?" icon
+            global_pos = self.mapToGlobal(self.rect().bottomRight())
+            global_pos.setX(global_pos.x() - 50)  # Left offset
+            global_pos.setY(global_pos.y() + 5)  # Small downward offset
+            ClickableHelpLabel._tooltip_widget.move(global_pos)
 
     def leaveEvent(self, event):
         """Hide tooltip when mouse leaves widget."""
