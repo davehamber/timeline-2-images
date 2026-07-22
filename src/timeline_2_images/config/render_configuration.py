@@ -10,7 +10,8 @@ MAX_IMAGE_SIZE = 4000
 class RenderConfiguration:
     """Configuration for map rendering."""
 
-    image_size: int = 500
+    image_width: int = 500
+    image_height: int = 500
     output_format: str = "jpg"
     dpi: int = 100
     min_area_sq_km: float = 5.0
@@ -22,10 +23,11 @@ class RenderConfiguration:
     add_place_names: bool = True
 
     def get_figure_size(self) -> tuple[float, float]:
-        """Get figure size in inches."""
+        """Get figure size in inches (width, height)."""
         inches_per_pixel = 1 / self.dpi
-        size_inches = self.image_size * inches_per_pixel
-        return (size_inches, size_inches)
+        width_inches = self.image_width * inches_per_pixel
+        height_inches = self.image_height * inches_per_pixel
+        return (width_inches, height_inches)
 
     def get_bounds_padding(self) -> float:
         """Get padding to add to bounds in degrees."""
@@ -37,10 +39,14 @@ class RenderConfiguration:
 
     def validate(self) -> bool:
         """Validate configuration."""
-        if self.image_size < MIN_IMAGE_SIZE:
-            raise ValueError(f"image_size must be at least {MIN_IMAGE_SIZE} pixels")
-        if self.image_size > MAX_IMAGE_SIZE:
-            raise ValueError(f"image_size must not exceed {MAX_IMAGE_SIZE} pixels")
+        if self.image_width < MIN_IMAGE_SIZE:
+            raise ValueError(f"image_width must be at least {MIN_IMAGE_SIZE} pixels")
+        if self.image_width > MAX_IMAGE_SIZE:
+            raise ValueError(f"image_width must not exceed {MAX_IMAGE_SIZE} pixels")
+        if self.image_height < MIN_IMAGE_SIZE:
+            raise ValueError(f"image_height must be at least {MIN_IMAGE_SIZE} pixels")
+        if self.image_height > MAX_IMAGE_SIZE:
+            raise ValueError(f"image_height must not exceed {MAX_IMAGE_SIZE} pixels")
         if self.dpi <= 0:
             raise ValueError("dpi must be positive")
         if self.min_area_sq_km < 0:

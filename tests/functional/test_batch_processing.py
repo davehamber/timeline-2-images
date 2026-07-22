@@ -45,12 +45,12 @@ class TestBatchProcessing:
 
     def test_batch_config_overrides_individual_config(self, tmp_path, sample_timeline_json):
         """Test that BatchConfig overrides individual config parameter."""
-        batch_render_config = RenderConfiguration(image_size=800)
+        batch_render_config = RenderConfiguration(image_width=800, image_height=800)
         batch_config = BatchConfig(render_config=batch_render_config)
 
         # Create app with both batch_config and config parameter
         # batch_config should take precedence
-        individual_config = RenderConfiguration(image_size=500)
+        individual_config = RenderConfiguration(image_width=500, image_height=500)
         app = TimelineApp(
             sample_timeline_json,
             output_dir=str(tmp_path / "output"),
@@ -61,13 +61,14 @@ class TestBatchProcessing:
 
         # App should use batch config's render config
         assert app.config is batch_render_config
-        assert app.config.image_size == 800
+        assert app.config.image_width == 800
+        assert app.config.image_height == 800
 
     def test_batch_processing_workflow(self, tmp_path, sample_timeline_json):
         """Test realistic batch processing workflow."""
         # Create shared resources once
         batch_config = BatchConfig(
-            render_config=RenderConfiguration(image_size=600),
+            render_config=RenderConfiguration(image_width=600, image_height=600),
             cache_dir=str(tmp_path / "cache"),
         )
 

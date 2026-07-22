@@ -171,9 +171,11 @@ class TimelineWindow(QMainWindow):
 
     def _load_settings(self) -> None:
         """Load saved settings from previous session."""
-        # Load image size
-        image_size = self._settings_manager.get("image_size", 500)
-        self._settings_panel._size_spin.setValue(image_size)
+        # Load image size (width and height)
+        image_width = self._settings_manager.get("image_width", 500)
+        image_height = self._settings_manager.get("image_height", 500)
+        self._settings_panel._width_spin.setValue(image_width)
+        self._settings_panel._height_spin.setValue(image_height)
 
         # Load output directory
         output_dir = self._settings_manager.get("output_dir")
@@ -224,8 +226,10 @@ class TimelineWindow(QMainWindow):
         start_date, end_date, days = self._date_range_panel.get_date_range()
         date_range_mode = "range" if start_date and end_date else "days"
 
+        image_width, image_height = self._settings_panel.get_image_size()
         settings = {
-            "image_size": self._settings_panel.get_image_size(),
+            "image_width": image_width,
+            "image_height": image_height,
             "output_dir": self._settings_panel.get_output_dir(),
             "add_place_names": self._settings_panel.get_add_place_names(),
             "single_image": self._settings_panel.get_single_image(),
@@ -256,7 +260,7 @@ class TimelineWindow(QMainWindow):
             return
 
         output_dir = self._settings_panel.get_output_dir()
-        image_size = self._settings_panel.get_image_size()
+        image_width, image_height = self._settings_panel.get_image_size()
         add_place_names = self._settings_panel.get_add_place_names()
         single_image = self._settings_panel.get_single_image()
 
@@ -268,7 +272,8 @@ class TimelineWindow(QMainWindow):
         self._presenter.handle_generate_clicked(
             timeline_path=timeline_path,
             output_dir=output_dir,
-            image_size=image_size,
+            image_width=image_width,
+            image_height=image_height,
             add_place_names=add_place_names,
             single_image=single_image,
             start_date=start_date,

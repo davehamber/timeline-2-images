@@ -11,7 +11,7 @@ Library Usage:
     from timeline_2_images.app import TimelineApp
     from timeline_2_images.config import RenderConfiguration
 
-    config = RenderConfiguration(image_size=800)
+    config = RenderConfiguration(image_width=800, image_height=800)
     app = TimelineApp("Timeline.json", output_dir="maps", config=config)
     results = app.process_date_range(start_date="2026-06-01", days=30)
 

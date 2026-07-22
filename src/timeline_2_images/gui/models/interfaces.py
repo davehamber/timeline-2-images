@@ -21,7 +21,8 @@ class ImageGenerationConfig:
 
     timeline_path: str
     output_dir: str
-    image_size: int = 500
+    image_width: int = 500
+    image_height: int = 500
     add_place_names: bool = True
     single_image: bool = False
     start_date: Optional[str] = None

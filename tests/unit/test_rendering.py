@@ -59,9 +59,10 @@ class TestMapRenderer:
 
     def test_initialization_with_config(self):
         """Test initialization with custom config."""
-        config = RenderConfiguration(image_size=800)
+        config = RenderConfiguration(image_width=800, image_height=800)
         renderer = MapRenderer(config=config)
-        assert renderer.config.image_size == 800
+        assert renderer.config.image_width == 800
+        assert renderer.config.image_height == 800
 
     def test_collect_waypoints(self):
         """Test collecting waypoints from segments."""

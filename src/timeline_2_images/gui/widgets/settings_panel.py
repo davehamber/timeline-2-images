@@ -33,16 +33,28 @@ class SettingsPanel(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        # Image size
+        # Image size (width and height)
         size_layout = QHBoxLayout()
         size_layout.addWidget(QLabel("Image Size:"))
-        self._size_spin = QSpinBox()
-        self._size_spin.setMinimum(1)
-        self._size_spin.setMaximum(MAX_IMAGE_SIZE)
-        self._size_spin.setValue(500)
-        self._size_spin.valueChanged.connect(self._on_size_changed)
-        size_layout.addWidget(self._size_spin)
-        size_layout.addWidget(QLabel("pixels"))
+
+        size_layout.addWidget(QLabel("W:"))
+        self._width_spin = QSpinBox()
+        self._width_spin.setMinimum(1)
+        self._width_spin.setMaximum(MAX_IMAGE_SIZE)
+        self._width_spin.setValue(500)
+        self._width_spin.valueChanged.connect(self._on_width_changed)
+        size_layout.addWidget(self._width_spin)
+        size_layout.addWidget(QLabel("px"))
+
+        size_layout.addWidget(QLabel("H:"))
+        self._height_spin = QSpinBox()
+        self._height_spin.setMinimum(1)
+        self._height_spin.setMaximum(MAX_IMAGE_SIZE)
+        self._height_spin.setValue(500)
+        self._height_spin.valueChanged.connect(self._on_height_changed)
+        size_layout.addWidget(self._height_spin)
+        size_layout.addWidget(QLabel("px"))
+
         size_layout.addStretch()
         layout.addLayout(size_layout)
 
@@ -66,20 +78,35 @@ class SettingsPanel(QWidget):
         self._single_image_check.setChecked(False)
         layout.addWidget(self._single_image_check)
 
-    def _on_size_changed(self, value: int) -> None:
-        """Handle image size value changes - clamp to valid range.
+    def _on_width_changed(self, value: int) -> None:
+        """Handle image width value changes - clamp to valid range.
 
         Args:
             value: The new spinbox value
         """
         if value < MIN_IMAGE_SIZE:
-            self._size_spin.blockSignals(True)
-            self._size_spin.setValue(MIN_IMAGE_SIZE)
-            self._size_spin.blockSignals(False)
+            self._width_spin.blockSignals(True)
+            self._width_spin.setValue(MIN_IMAGE_SIZE)
+            self._width_spin.blockSignals(False)
         elif value > MAX_IMAGE_SIZE:
-            self._size_spin.blockSignals(True)
-            self._size_spin.setValue(MAX_IMAGE_SIZE)
-            self._size_spin.blockSignals(False)
+            self._width_spin.blockSignals(True)
+            self._width_spin.setValue(MAX_IMAGE_SIZE)
+            self._width_spin.blockSignals(False)
+
+    def _on_height_changed(self, value: int) -> None:
+        """Handle image height value changes - clamp to valid range.
+
+        Args:
+            value: The new spinbox value
+        """
+        if value < MIN_IMAGE_SIZE:
+            self._height_spin.blockSignals(True)
+            self._height_spin.setValue(MIN_IMAGE_SIZE)
+            self._height_spin.blockSignals(False)
+        elif value > MAX_IMAGE_SIZE:
+            self._height_spin.blockSignals(True)
+            self._height_spin.setValue(MAX_IMAGE_SIZE)
+            self._height_spin.blockSignals(False)
 
     def _on_browse_output(self) -> None:
         """Handle output directory browse."""
@@ -88,9 +115,9 @@ class SettingsPanel(QWidget):
             self._output_dir = dir_path
             self._output_input.setText(dir_path)
 
-    def get_image_size(self) -> int:
-        """Get selected image size."""
-        return self._size_spin.value()
+    def get_image_size(self) -> tuple[int, int]:
+        """Get selected image size (width, height)."""
+        return (self._width_spin.value(), self._height_spin.value())
 
     def get_output_dir(self) -> str:
         """Get selected output directory."""
