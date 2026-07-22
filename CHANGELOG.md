@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-22
+
+### Changed
+- Migrated GUI framework from PyQt6 to PySide6 for better cross-platform support
+  - Official Qt Company support and maintenance
+  - Full Nuitka compatibility across all platforms (Linux, Windows, macOS)
+  - More permissive LGPL license vs GPL
+  - Better integration with Qt tooling and ecosystem
+
+### Added
+- macOS GUI binaries now fully supported (both Intel AMD64 and Apple Silicon ARM64)
+- Complete cross-platform binary builds: CLI + GUI on all platforms
+  - Linux AMD64: CLI + GUI
+  - Windows AMD64: CLI + GUI
+  - macOS Intel (AMD64): CLI + GUI
+  - macOS Apple Silicon (ARM64): CLI + GUI
+
+### Fixed
+- GUI builds on macOS previously unavailable (PyQt6 had Nuitka compatibility issues)
+- Workflow version extraction now properly uses uv environment
+
 ## [0.5.1] - 2026-07-22
 
 ### Fixed
