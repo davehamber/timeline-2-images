@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-22
+
+### Added
+- Separate image width and height controls (image_width, image_height parameters)
+  - CLI: New `--image-width` and `--image-height` flags for granular control
+  - GUI: Two separate spinboxes for width and height independently
+  - API: RenderConfiguration now has image_width and image_height attributes
+- Backward compatibility: `--image-size` flag still works and sets both dimensions
+
+### Changed
+- Image dimension validation now applies to width and height separately (200-4000px range)
+- GUI settings panel redesigned with dual spinboxes for width/height instead of single size
+- All data models updated to use image_width and image_height instead of image_size
+
 ## [0.4.1] - 2026-07-22
 
 ### Added
