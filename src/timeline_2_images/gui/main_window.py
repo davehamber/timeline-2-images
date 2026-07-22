@@ -15,7 +15,9 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QMessageBox,
     QToolTip,
+    QFrame,
 )
+from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QCursor
 from PyQt6.QtCore import Qt
 
@@ -29,41 +31,62 @@ from timeline_2_images.gui.widgets.settings_panel import SettingsPanel
 from timeline_2_images.gui.widgets.progress_panel import ProgressPanel
 
 
+class PersistentTooltip(QFrame):
+    """Custom persistent tooltip that stays visible on click."""
+
+    def __init__(self, text: str, parent=None):
+        """Initialize custom tooltip."""
+        super().__init__(parent)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowType.FramelessWindowHint |
+                           Qt.WindowType.NoDropShadowWindowHint)
+        self.setStyleSheet(
+            "QFrame { background-color: #ffffdc; border: 1px solid #cccccc; "
+            "border-radius: 3px; padding: 3px 5px; }"
+        )
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        label = QLabel(text)
+        label.setStyleSheet("color: #000000; font-size: 10pt;")
+        layout.addWidget(label)
+        self.setLayout(layout)
+
+    def show_at(self, pos):
+        """Show tooltip at specified position."""
+        self.move(pos)
+        self.show()
+
+
 class ClickableHelpLabel(QLabel):
-    """QLabel that shows tooltip on click until mouse leaves widget."""
+    """QLabel that shows persistent tooltip on click."""
+
+    _tooltip_widget = None  # Class variable for the persistent tooltip
 
     def __init__(self, text=""):
         """Initialize with text and store tooltip separately."""
         super().__init__(text)
         self._tooltip_text = ""
-        self._tooltip_visible = False
-        self._last_pos = None
 
     def set_click_tooltip(self, text: str):
-        """Set tooltip to show on click (not on hover)."""
+        """Set tooltip to show on click."""
         self._tooltip_text = text
 
     def mousePressEvent(self, event):
-        """Show tooltip when clicked."""
+        """Show persistent tooltip when clicked."""
         if self._tooltip_text:
-            self._last_pos = event.globalPosition().toPoint()
-            QToolTip.showText(self._last_pos, self._tooltip_text)
-            self._tooltip_visible = True
-            # Re-show tooltip periodically to keep it visible
-            self.setMouseTracking(True)
+            # Hide any existing tooltip
+            if ClickableHelpLabel._tooltip_widget:
+                ClickableHelpLabel._tooltip_widget.hide()
 
-    def mouseMoveEvent(self, event):
-        """Keep tooltip visible while mouse is over widget."""
-        if self._tooltip_visible and self._last_pos:
-            global_pos = self.mapToGlobal(event.pos())
-            QToolTip.showText(global_pos, self._tooltip_text)
+            # Create new tooltip
+            ClickableHelpLabel._tooltip_widget = PersistentTooltip(self._tooltip_text, self.window())
+            pos = event.globalPosition().toPoint()
+            pos.setY(pos.y() + 20)  # Offset below cursor
+            ClickableHelpLabel._tooltip_widget.show_at(pos)
 
     def leaveEvent(self, event):
         """Hide tooltip when mouse leaves widget."""
-        if self._tooltip_visible:
-            QToolTip.hideText()
-            self._tooltip_visible = False
-            self.setMouseTracking(False)
+        if ClickableHelpLabel._tooltip_widget:
+            ClickableHelpLabel._tooltip_widget.hide()
         super().leaveEvent(event)
 
 
