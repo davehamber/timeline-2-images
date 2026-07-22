@@ -149,9 +149,11 @@ class MapRenderer:
             if address_str:
                 return self._extract_from_address_string(address_str)
         except (GeocoderTimedOut, GeocoderUnavailable):
-            pass
+            # Silently continue on timeout/unavailable - network issues are temporary
+            return ""
         except Exception:  # pylint: disable=broad-except
-            pass
+            # Silently continue on any other error
+            return ""
         return ""
 
     def _format_location_label(self, start_place: str, end_place: str) -> str:
