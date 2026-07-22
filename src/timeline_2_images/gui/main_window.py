@@ -30,12 +30,13 @@ from timeline_2_images.gui.widgets.progress_panel import ProgressPanel
 
 
 class ClickableHelpLabel(QLabel):
-    """QLabel that shows tooltip on click instead of hover."""
+    """QLabel that shows tooltip on click until mouse leaves widget."""
 
     def __init__(self, text=""):
         """Initialize with text and store tooltip separately."""
         super().__init__(text)
         self._tooltip_text = ""
+        self._tooltip_visible = False
 
     def set_click_tooltip(self, text: str):
         """Set tooltip to show on click (not on hover)."""
@@ -45,6 +46,14 @@ class ClickableHelpLabel(QLabel):
         """Show tooltip when clicked."""
         if self._tooltip_text:
             QToolTip.showText(event.globalPosition().toPoint(), self._tooltip_text, self)
+            self._tooltip_visible = True
+
+    def leaveEvent(self, event):
+        """Hide tooltip when mouse leaves widget."""
+        if self._tooltip_visible:
+            QToolTip.hideText()
+            self._tooltip_visible = False
+        super().leaveEvent(event)
 
 
 class TimelineWindow(QMainWindow):
