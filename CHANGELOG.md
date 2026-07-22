@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GUI settings panel redesigned with dual spinboxes for width/height instead of single size
 - All data models updated to use image_width and image_height instead of image_size
 
+### Fixed
+- Rectangular images now render without white borders (was forcing square aspect ratio)
+- Bounds calculation now respects image width/height ratio instead of forcing square bounds
+- Changed aspect ratio handling from 'equal' (square) to 'auto' (rectangular)
+
 ## [0.4.1] - 2026-07-22
 
 ### Added
