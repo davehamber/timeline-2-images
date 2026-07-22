@@ -334,7 +334,9 @@ class TimelineApp:
         self.processor.clear_cache()
         self.renderer.clear_cache()
 
-    def _emit_progress(self, on_progress: ProgressCallback | None, completed: int, total: int) -> None:
+    def _emit_progress(
+        self, on_progress: ProgressCallback | None, completed: int, total: int
+    ) -> None:
         """Emit progress callback if provided."""
         if on_progress:
             on_progress(completed, total)
