@@ -288,9 +288,7 @@ class TimelineWindow(QMainWindow):
 
         section_frame = QFrame()
         section_frame.setFrameStyle(QFrame.Shape.NoFrame)
-        section_frame.setStyleSheet(
-            "QFrame { border: 1px solid #555555; border-radius: 4px; }"
-        )
+        section_frame.setStyleSheet("QFrame { border: 1px solid #555555; border-radius: 4px; }")
         section_frame.setLayout(section_layout)
         return section_frame
 
