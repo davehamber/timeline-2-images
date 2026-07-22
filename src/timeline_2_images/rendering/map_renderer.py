@@ -518,7 +518,9 @@ class MapRenderer:
         lons = [p[1] for p in waypoints]
         return min(lats), max(lats), min(lons), max(lons)
 
-    def _project_to_mercator(self, min_lat: float, max_lat: float, min_lon: float, max_lon: float) -> tuple:
+    def _project_to_mercator(
+        self, min_lat: float, max_lat: float, min_lon: float, max_lon: float
+    ) -> tuple:
         """Project lat/lon bounds to Web Mercator coordinates."""
         bounds_gdf = gpd.GeoDataFrame(
             geometry=[Point(min_lon, min_lat), Point(max_lon, max_lat)],

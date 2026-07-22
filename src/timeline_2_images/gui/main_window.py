@@ -345,9 +345,7 @@ class TimelineWindow(QMainWindow):
         end_date = self._settings_manager.get("date_range_end")
 
         if start_date and end_date:
-            self._date_range_panel._start_date.setDate(
-                QDate.fromString(start_date, "yyyy-MM-dd")
-            )
+            self._date_range_panel._start_date.setDate(QDate.fromString(start_date, "yyyy-MM-dd"))
             self._date_range_panel._end_date.setDate(QDate.fromString(end_date, "yyyy-MM-dd"))
 
     def _load_timeline_file_path(self) -> None:

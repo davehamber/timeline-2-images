@@ -101,9 +101,7 @@ class SegmentParser:
         matching_indices = segment_date_index.get(target_date_obj, [])
         timing["index_lookup"] = time.time() - step_start
 
-        return [
-            semantic_segs[index] for index in matching_indices if index < len(semantic_segs)
-        ]
+        return [semantic_segs[index] for index in matching_indices if index < len(semantic_segs)]
 
     def load_for_day(
         self, json_path: str, target_date: str, profile: bool = False
@@ -113,7 +111,9 @@ class SegmentParser:
         start = time.time()
 
         # Try cached segments first
-        result, found_cache = self._try_cached_segments(json_path, target_date, timing, start, profile)
+        result, found_cache = self._try_cached_segments(
+            json_path, target_date, timing, start, profile
+        )
         if found_cache:
             return result
 
