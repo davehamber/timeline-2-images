@@ -128,11 +128,7 @@ class MapRenderer:
         if place:
             return place
 
-        return (
-            self._extract_from_address_string(location.address)
-            if location.address
-            else ""
-        )
+        return self._extract_from_address_string(location.address) if location.address else ""
 
     def _is_valid_place_name(self, part: str) -> bool:
         """Check if a part is a valid place name (not empty, not digit-only, >2 chars)."""
