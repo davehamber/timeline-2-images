@@ -14,10 +14,8 @@ from PyQt6.QtWidgets import (
     QLabel,
     QPushButton,
     QMessageBox,
-    QToolTip,
     QFrame,
 )
-from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QCursor
 from PyQt6.QtCore import Qt
 
@@ -37,8 +35,11 @@ class PersistentTooltip(QFrame):
     def __init__(self, text: str, parent=None):
         """Initialize custom tooltip."""
         super().__init__(parent)
-        self.setWindowFlags(self.windowFlags() | Qt.WindowType.FramelessWindowHint |
-                           Qt.WindowType.NoDropShadowWindowHint)
+        self.setWindowFlags(
+            self.windowFlags()
+            | Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.NoDropShadowWindowHint
+        )
         self.setStyleSheet(
             "QFrame { background-color: #ffffdc; border: 1px solid #cccccc; "
             "border-radius: 3px; padding: 3px 5px; }"
@@ -78,7 +79,8 @@ class ClickableHelpLabel(QLabel):
                 ClickableHelpLabel._tooltip_widget.hide()
 
             # Create new tooltip
-            ClickableHelpLabel._tooltip_widget = PersistentTooltip(self._tooltip_text, self.window())
+            tooltip = PersistentTooltip(self._tooltip_text, self.window())
+            ClickableHelpLabel._tooltip_widget = tooltip
             pos = event.globalPosition().toPoint()
             pos.setY(pos.y() + 20)  # Offset below cursor
             ClickableHelpLabel._tooltip_widget.show_at(pos)
