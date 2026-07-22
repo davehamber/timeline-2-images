@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GUI image size setting now properly applied to rendered images (was always using default 500px)
 - Place names now appear in combined image mode (single image rendering)
 - GUI spinbox now clamps out-of-range values to valid range instead of reverting to previous value
-- Fixed tag v## [Unreleased] pointing to incorrect commit (now on main branch)
+- Fixed tag v0.4.0 pointing to incorrect commit (now on main branch)
 
 ### Changed
 - README.md: Updated with correct Google Timeline export process from Android device
@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Image size spinbox now uses constants (MIN_IMAGE_SIZE, MAX_IMAGE_SIZE) from configuration
 - TimelineProcessorAdapter now applies GUI config (image_size, add_place_names) before rendering
 
-## [## [Unreleased]] - 2026-07-20
+## [0.4.0] - 2026-07-20
 
 ### Changed
 - Reduced GUI window size and removed excessive empty space (more compact layout)
