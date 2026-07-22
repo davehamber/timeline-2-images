@@ -202,6 +202,7 @@ class TimelineWindow(QMainWindow):
         # ===== Progress Panel =====
         output_label_layout = QHBoxLayout()
         output_label = QLabel("Output Directory")
+        output_label.setStyleSheet("font-weight: bold;")
         output_label_layout.addWidget(output_label)
         output_help = ClickableHelpLabel("?")
         output_help.setStyleSheet("color: #0066cc; font-weight: bold; margin-top: 2px;")
