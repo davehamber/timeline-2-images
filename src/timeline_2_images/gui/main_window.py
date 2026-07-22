@@ -154,8 +154,13 @@ class TimelineWindow(QMainWindow):
         self._file_selector = FileSelector(self._presenter)
         self._file_selector.on_file_selected(self._on_file_selected_in_selector)
         self._file_selector.setToolTip("Select your exported Timeline.json file (JSON format)")
+        file_picker_container = QWidget()
+        file_picker_layout = QHBoxLayout()
+        file_picker_layout.setContentsMargins(0, 0, 0, 0)
+        file_picker_layout.addWidget(self._file_selector)
+        file_picker_container.setLayout(file_picker_layout)
         main_layout.addWidget(file_container)
-        main_layout.addWidget(self._file_selector)
+        main_layout.addWidget(file_picker_container)
 
         # ===== Output Directory =====
         output_label_layout = QHBoxLayout()
@@ -183,6 +188,7 @@ class TimelineWindow(QMainWindow):
             "Folder where generated map images will be saved\n"
             "Created automatically if it doesn't exist"
         )
+        output_picker_layout.setContentsMargins(0, 0, 0, 0)
         output_picker_layout.addWidget(self._output_input, 1)
         output_browse_btn = QPushButton("Browse...")
         output_browse_btn.setToolTip("Select or create output folder")

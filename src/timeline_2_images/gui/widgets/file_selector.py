@@ -24,6 +24,7 @@ class FileSelector(QWidget):
         self._on_file_selected = None
 
         layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
         self._path_input = QLineEdit()
