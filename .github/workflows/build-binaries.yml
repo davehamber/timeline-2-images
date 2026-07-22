@@ -87,17 +87,15 @@ jobs:
           Get-ChildItem -Path $CacheDir -Recurse | Write-Host
 
           Write-Host "✓ Dependency Walker is ready"
+          Write-Host "Adding to PATH: $CacheDir"
+          Add-Content -Path $env:GITHUB_PATH -Value $CacheDir
         shell: pwsh
 
       - name: Build CLI binary
         run: uv run bash ./build_executable.sh cli
-        env:
-          NUITKA_CACHE_DIR: ${{ runner.os == 'Windows' && format('{0}\Nuitka\depends', env.LOCALAPPDATA) || '' }}
 
       - name: Build GUI binary
         run: uv run bash ./build_executable.sh gui
-        env:
-          NUITKA_CACHE_DIR: ${{ runner.os == 'Windows' && format('{0}\Nuitka\depends', env.LOCALAPPDATA) || '' }}
 
       - name: Extract version
         id: version
