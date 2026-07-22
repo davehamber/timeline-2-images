@@ -3,7 +3,7 @@
 
 """Settings panel for image generation options."""
 
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,

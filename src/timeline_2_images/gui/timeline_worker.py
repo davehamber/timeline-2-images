@@ -3,14 +3,14 @@
 
 """Worker thread for timeline operations to prevent UI blocking."""
 
-from PyQt6.QtCore import QThread, pyqtSignal
+from PySide6.QtCore import QThread, Signal
 
 
 class TimelineWorker(QThread):
     """Worker thread for async timeline operations."""
 
-    validation_complete = pyqtSignal(bool, str)  # success, error_message
-    dates_loaded = pyqtSignal(list)  # list of date strings
+    validation_complete = Signal(bool, str)  # success, error_message
+    dates_loaded = Signal(list)  # list of date strings
 
     def __init__(self, processor, file_path: str):
         """Initialize worker.

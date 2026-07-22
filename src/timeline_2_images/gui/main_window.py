@@ -6,7 +6,7 @@
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
     QVBoxLayout,
@@ -18,8 +18,8 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QFileDialog,
 )
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QCursor
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCursor
 
 from timeline_2_images import __version__
 from timeline_2_images.gui.models import TimelineProcessorAdapter
@@ -415,7 +415,7 @@ class TimelineWindow(QMainWindow):
 
     def _load_date_range_dates(self) -> None:
         """Load start and end date settings."""
-        from PyQt6.QtCore import QDate
+        from PySide6.QtCore import QDate
 
         start_date = self._settings_manager.get("date_range_start")
         end_date = self._settings_manager.get("date_range_end")

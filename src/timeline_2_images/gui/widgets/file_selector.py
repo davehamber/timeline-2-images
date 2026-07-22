@@ -6,7 +6,7 @@
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QFileDialog, QLabel
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QFileDialog, QLabel
 
 
 class FileSelector(QWidget):

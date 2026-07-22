@@ -5,7 +5,7 @@
 
 from typing import Callable, Optional
 
-from PyQt6.QtCore import QThread, pyqtSignal
+from PySide6.QtCore import QThread, Signal
 
 from timeline_2_images.gui.models.interfaces import (
     ITimelineProcessor,
@@ -18,7 +18,7 @@ from timeline_2_images.gui.models.interfaces import (
 class GenerationWorker(QThread):
     """Worker thread for async image generation."""
 
-    generation_complete = pyqtSignal(GenerationResult)
+    generation_complete = Signal(GenerationResult)
 
     def __init__(
         self,

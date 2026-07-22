@@ -111,20 +111,11 @@ jobs:
         shell: bash
 
       - name: Build GUI binary
-        if: runner.os != 'macOS'
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then
             export PATH="$LOCALAPPDATA/Nuitka/depends:$PATH"
           fi
           uv run bash ./build_executable.sh gui
-        shell: bash
-
-      - name: Skip GUI build (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          echo "ℹ Skipping GUI build on macOS (PyQt6 not supported by Nuitka)"
-          echo "  Note: Nuitka requires PySide6 for macOS GUI support"
-          echo "  GUI binaries available for: Linux, Windows"
         shell: bash
 
       - name: Extract version

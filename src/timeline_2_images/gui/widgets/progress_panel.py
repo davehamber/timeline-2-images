@@ -3,7 +3,7 @@
 
 """Progress tracking panel for image generation."""
 
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QProgressBar, QLabel
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QProgressBar, QLabel
 
 
 class ProgressPanel(QWidget):

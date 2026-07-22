@@ -13,7 +13,7 @@ print_usage() {
     echo ""
     echo "Arguments:"
     echo "  cli   - Build CLI version (default)"
-    echo "  gui   - Build GUI version (requires PyQt6)"
+    echo "  gui   - Build GUI version (requires PySide6)"
     echo ""
     echo "Examples:"
     echo "  $0          # Build CLI version"
@@ -41,7 +41,7 @@ case "$BUILD_TYPE" in
         echo "Building GUI executable with Nuitka..."
         ENTRY_POINT="src/timeline_2_images/gui/app.py"
         OUTPUT_NAME="timeline2images-gui"
-        QT_FLAGS="--enable-plugin=pyqt6"
+        QT_FLAGS="--enable-plugin=pyside6"
         ;;
     *)
         echo "✗ Unknown build type: $BUILD_TYPE"

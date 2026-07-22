@@ -91,7 +91,7 @@ class TimelineGeneratorPresenter:
         Args:
             path: Path to selected file
         """
-        # Lazy import to avoid PyQt6 dependency in non-GUI contexts
+        # Lazy import to avoid PySide6 dependency in non-GUI contexts
         from timeline_2_images.gui.timeline_worker import TimelineWorker
 
         # Signal that loading has started

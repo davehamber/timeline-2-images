@@ -5,7 +5,7 @@
 
 from typing import Optional, Tuple
 
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import (
     QDateEdit,
     QLabel,
 )
-from PyQt6.QtCore import QDate
+from PySide6.QtCore import QDate
 
 
 class DateRangePanel(QWidget):

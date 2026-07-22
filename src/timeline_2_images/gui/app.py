@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: EUPL-1.2
 # Copyright (c) 2026 David Hamber
 
-"""Application entry point for PyQt6 GUI."""
+"""Application entry point for PySide6 GUI."""
 
 import sys
 
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 
 from timeline_2_images.gui.main_window import TimelineWindow
 
