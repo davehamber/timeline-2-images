@@ -28,7 +28,7 @@ class ProgressPanel(QWidget):
 
         # Status label
         self._status_label = QLabel("Ready")
-        self._status_label.setStyleSheet("color: #666666; font-size: 9pt;")
+        self._status_label.setStyleSheet("color: #999999; font-size: 9pt;")
         layout.addWidget(self._status_label)
 
         # Details label
