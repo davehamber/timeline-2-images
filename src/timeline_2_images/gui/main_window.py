@@ -65,7 +65,7 @@ class TimelineWindow(QMainWindow):
         file_label_layout.addWidget(file_label)
         file_help = QLabel("?")
         file_help.setStyleSheet("color: #0066cc; font-weight: bold;")
-        file_help.setCursor(QCursor(Qt.CursorShape.HelpCursor))
+        file_help.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
         file_help.setToolTip(
             "Export Timeline.json from your Android phone:\n"
             "1. Open Settings → Location → Location Services → Timeline\n"
