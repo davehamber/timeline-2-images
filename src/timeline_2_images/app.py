@@ -227,6 +227,31 @@ class TimelineApp:
                 error_message=str(exception),
             )
 
+    def _create_error_result(
+        self, date: str, error_message: str, output_path: Path | None = None
+    ) -> RenderResult:
+        """Create a failed RenderResult with error message."""
+        return RenderResult(
+            date=date,
+            output_path=output_path or (self.output_dir / f"{date}.jpg"),
+            segment_count=0,
+            point_count=0,
+            render_time=0.0,
+            success=False,
+            error_message=error_message,
+        )
+
+    def _read_rendered_image(self, result: RenderResult) -> bytes | None:
+        """Read rendered image bytes from disk.
+
+        Returns None if file cannot be read.
+        """
+        try:
+            with open(result.output_path, "rb") as f:
+                return f.read()
+        except (IOError, OSError):
+            return None
+
     def process_date_bytes(self, date: str) -> tuple[bytes | None, RenderResult]:
         """Process and render a single date, returning image bytes.
 
@@ -238,62 +263,29 @@ class TimelineApp:
         """
         try:
             segments = self.processor.load_segments_for_day(date)
-
             if not segments:
-                return None, RenderResult(
-                    date=date,
-                    output_path=self.output_dir / f"{date}.jpg",
-                    segment_count=0,
-                    point_count=0,
-                    render_time=0.0,
-                    success=False,
-                    error_message="No segments found for date",
-                )
+                return None, self._create_error_result(date, "No segments found for date")
 
             processed_segments = self.segment_processor.process_segments(segments)
-
             if not processed_segments:
-                return None, RenderResult(
-                    date=date,
-                    output_path=self.output_dir / f"{date}.jpg",
-                    segment_count=0,
-                    point_count=0,
-                    render_time=0.0,
-                    success=False,
-                    error_message="No segments after processing",
-                )
+                return None, self._create_error_result(date, "No segments after processing")
 
             output_path = self.output_dir / f"{date}.jpg"
             result = self.renderer.render_segments(processed_segments, str(output_path))
 
-            if result.was_successful():
-                try:
-                    with open(result.output_path, "rb") as f:
-                        image_bytes = f.read()
-                    return image_bytes, result
-                except (IOError, OSError) as e:
-                    return None, RenderResult(
-                        date=date,
-                        output_path=result.output_path,
-                        segment_count=result.segment_count,
-                        point_count=result.point_count,
-                        render_time=result.render_time,
-                        success=False,
-                        error_message=f"Failed to read rendered image: {str(e)}",
-                    )
+            if not result.was_successful():
+                return None, result
 
-            return None, result
+            image_bytes = self._read_rendered_image(result)
+            if image_bytes is None:
+                return None, self._create_error_result(
+                    date, "Failed to read rendered image", result.output_path
+                )
+
+            return image_bytes, result
 
         except (ValueError, OSError, IOError, RuntimeError) as exception:
-            return None, RenderResult(
-                date=date,
-                output_path=self.output_dir / f"{date}.jpg",
-                segment_count=0,
-                point_count=0,
-                render_time=0.0,
-                success=False,
-                error_message=str(exception),
-            )
+            return None, self._create_error_result(date, str(exception))
 
     def get_available_dates(self) -> list[str]:
         """Get all available dates in timeline.
@@ -342,6 +334,29 @@ class TimelineApp:
         self.processor.clear_cache()
         self.renderer.clear_cache()
 
+    def _emit_progress(self, on_progress: ProgressCallback | None, completed: int, total: int) -> None:
+        """Emit progress callback if provided."""
+        if on_progress:
+            on_progress(completed, total)
+
+    def _create_empty_range_result(
+        self, start_date: str | None, end_date: str | None
+    ) -> RenderResult:
+        """Create result for empty date range."""
+        return self._create_error_result(
+            f"{start_date or 'unknown'}_to_{end_date or 'unknown'}",
+            "No dates found in range",
+            self.output_dir / "combined.jpg",
+        )
+
+    def _create_no_segments_result(self, dates: list[str]) -> RenderResult:
+        """Create result when no segments found in date range."""
+        return self._create_error_result(
+            f"{dates[0]}_to_{dates[-1]}",
+            "No segments found in date range",
+            self.output_dir / f"{dates[0]}_to_{dates[-1]}.jpg",
+        )
+
     def process_date_range_single_image(
         self,
         start_date: str | None = None,
@@ -361,37 +376,15 @@ class TimelineApp:
             RenderResult with single combined image
         """
         dates = self.get_date_range(start_date=start_date, end_date=end_date, days=days)
-
         if not dates:
-            return RenderResult(
-                date=f"{start_date or 'unknown'}_to_{end_date or 'unknown'}",
-                output_path=self.output_dir / "combined.jpg",
-                segment_count=0,
-                point_count=0,
-                render_time=0.0,
-                success=False,
-                error_message="No dates found in range",
-            )
+            return self._create_empty_range_result(start_date, end_date)
 
-        if on_progress:
-            on_progress(0, len(dates))
-
+        self._emit_progress(on_progress, 0, len(dates))
         combined_segments = self.connector_builder.build_segments_with_connectors(dates)
-
-        if on_progress:
-            on_progress(len(dates), len(dates))
+        self._emit_progress(on_progress, len(dates), len(dates))
 
         if not combined_segments:
-            return RenderResult(
-                date=f"{dates[0]}_to_{dates[-1]}",
-                output_path=self.output_dir / f"{dates[0]}_to_{dates[-1]}.jpg",
-                segment_count=0,
-                point_count=0,
-                render_time=0.0,
-                success=False,
-                error_message="No segments found in date range",
-            )
+            return self._create_no_segments_result(dates)
 
         output_path = self.output_dir / f"{dates[0]}_to_{dates[-1]}.jpg"
-        result = self.renderer.render_combined_segments(combined_segments, str(output_path))
-        return result
+        return self.renderer.render_combined_segments(combined_segments, str(output_path))

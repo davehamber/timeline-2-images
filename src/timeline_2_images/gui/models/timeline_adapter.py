@@ -80,6 +80,16 @@ class TimelineProcessorAdapter(ITimelineProcessor):
                 error_message=str(e),
             )
 
+    def _cache_needs_reload(self, app: TimelineApp, config: ImageGenerationConfig) -> bool:
+        """Check if cache needs to be reloaded for this timeline."""
+        cache = app.processor._parser._timeline_cache
+        if cache.file_path is None or cache.data is None:
+            return True
+
+        json_path_normalized = str(Path(config.timeline_path).resolve())
+        cache_path_normalized = str(Path(cache.file_path).resolve())
+        return json_path_normalized != cache_path_normalized
+
     def _load_cache_if_needed(
         self,
         app: TimelineApp,
@@ -88,14 +98,8 @@ class TimelineProcessorAdapter(ITimelineProcessor):
     ) -> None:
         """Load cache if not already loaded for this timeline."""
         cache = app.processor._parser._timeline_cache
-        json_path_normalized = str(Path(config.timeline_path).resolve())
-        cache_path_normalized = str(Path(cache.file_path).resolve()) if cache.file_path else None
 
-        if (
-            cache.file_path is None
-            or json_path_normalized != cache_path_normalized
-            or cache.data is None
-        ):
+        if self._cache_needs_reload(app, config):
             try:
                 cache.load_file(config.timeline_path)
             except Exception:
@@ -142,6 +146,25 @@ class TimelineProcessorAdapter(ITimelineProcessor):
             error_message=error,
         )
 
+    def _build_batch_result(
+        self, config: ImageGenerationConfig, results: list, image_count: int
+    ) -> GenerationResult:
+        """Build GenerationResult from batch processing results."""
+        failed_dates = [r.date for r in results if not r.was_successful()]
+        if not failed_dates:
+            return GenerationResult(
+                success=True, output_dir=Path(config.output_dir), image_count=image_count
+            )
+
+        error_details = self._format_failed_dates(failed_dates)
+        error = f"Generated {image_count} of {len(results)} images. Failed dates: {error_details}"
+        return GenerationResult(
+            success=False,
+            output_dir=Path(config.output_dir),
+            image_count=image_count,
+            error_message=error,
+        )
+
     def _process_batch_generation(
         self,
         app: TimelineApp,
@@ -156,25 +179,8 @@ class TimelineProcessorAdapter(ITimelineProcessor):
             days=config.days,
             on_progress=on_progress,
         )
-        success = all(r.was_successful() for r in results)
         image_count = sum(1 for r in results if r.was_successful())
-
-        if success:
-            return GenerationResult(
-                success=True,
-                output_dir=Path(config.output_dir),
-                image_count=image_count,
-            )
-
-        failed_dates = [r.date for r in results if not r.was_successful()]
-        error_details = self._format_failed_dates(failed_dates)
-        error = f"Generated {image_count} of {len(results)} images. Failed dates: {error_details}"
-        return GenerationResult(
-            success=False,
-            output_dir=Path(config.output_dir),
-            image_count=image_count,
-            error_message=error,
-        )
+        return self._build_batch_result(config, results, image_count)
 
     @staticmethod
     def _apply_config_to_app(app: TimelineApp, config: ImageGenerationConfig) -> None:
