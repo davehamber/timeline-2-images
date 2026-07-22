@@ -417,7 +417,7 @@ class TimelineWindow(QMainWindow):
         )
 
     def _on_cancel(self) -> None:
-        """Handle cancel button click - stop generation or close app."""
+        """Handle cancel button click - stop generation if running."""
         if self._presenter.is_generating():
             # If generation is active, cancel it
             self._presenter.cancel_generation()
@@ -430,6 +430,3 @@ class TimelineWindow(QMainWindow):
             self._progress_panel.set_complete(result)
             # Re-enable Generate button
             self._generate_btn.setEnabled(True)
-        else:
-            # If nothing is running, close the app
-            self.close()
