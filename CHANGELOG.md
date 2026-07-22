@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GUI builds on macOS previously unavailable (PyQt6 had Nuitka compatibility issues)
 - Workflow version extraction now properly uses uv environment
 
-## [0.5.1] - 2026-07-22
+## [## [Unreleased]] - 2026-07-22
 
 ### Fixed
 - File picker width alignment: Timeline File and Output Directory pickers now have matching widths
