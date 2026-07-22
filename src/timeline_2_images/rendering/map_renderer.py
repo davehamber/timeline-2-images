@@ -112,6 +112,19 @@ class MapRenderer:
                 return str(address[key])
         return ""
 
+    def _extract_place_from_location(self, location) -> str:
+        """Extract place name from geocoded location object."""
+        if not location:
+            return ""
+
+        if hasattr(location, "raw") and location.raw:
+            address = location.raw.get("address", {})
+            place = self._extract_from_structured_address(address)
+            if place:
+                return place
+
+        return self._extract_from_address_string(location.address) if location.address else ""
+
     def _extract_from_address_string(self, address_str: str) -> str:
         """Extract place name from comma-separated address string.
 
@@ -139,22 +152,11 @@ class MapRenderer:
         """
         try:
             location = self.geocoder.reverse(f"{lat}, {lon}", language="en", timeout=5)
-            if location and hasattr(location, "raw") and location.raw:
-                address = location.raw.get("address", {})
-                place = self._extract_from_structured_address(address)
-                if place:
-                    return place
-
-            address_str = location.address if location else ""
-            if address_str:
-                return self._extract_from_address_string(address_str)
+            return self._extract_place_from_location(location)
         except (GeocoderTimedOut, GeocoderUnavailable):
-            # Silently continue on timeout/unavailable - network issues are temporary
             return ""
         except Exception:  # pylint: disable=broad-except
-            # Silently continue on any other error
             return ""
-        return ""
 
     def _format_location_label(self, start_place: str, end_place: str) -> str:
         """Format start and end place names into a label."""
@@ -230,6 +232,54 @@ class MapRenderer:
         minx, miny, maxx, maxy = self._apply_padding_and_minimum(minx, miny, maxx, maxy)
         return (minx, miny, maxx, maxy)
 
+    def _calculate_padded_bounds(
+        self, dx: float, dy: float, center_x: float, center_y: float
+    ) -> tuple:
+        """Calculate bounds with padding and aspect ratio correction."""
+        pad_ratio = 0.05
+        padded_dx = dx * (1 + 2 * pad_ratio)
+        padded_dy = dy * (1 + 2 * pad_ratio)
+
+        image_aspect = self.config.image_width / self.config.image_height
+        padded_aspect = padded_dx / padded_dy
+
+        if padded_aspect > image_aspect:
+            half_width = padded_dx / 2
+            half_height = padded_dx / (2 * image_aspect)
+        else:
+            half_height = padded_dy / 2
+            half_width = padded_dy * image_aspect / 2
+
+        return (
+            center_x - half_width,
+            center_y - half_height,
+            center_x + half_width,
+            center_y + half_height,
+        )
+
+    def _enforce_minimum_area(
+        self, minx: float, miny: float, maxx: float, maxy: float, center_x: float, center_y: float
+    ) -> tuple:
+        """Enforce minimum area constraint."""
+        width_m = maxx - minx
+        height_m = maxy - miny
+        area_sq_km = (width_m * height_m) / 1e6
+
+        if area_sq_km >= self.config.min_area_sq_km:
+            return (minx, miny, maxx, maxy)
+
+        area_sq_m = self.config.min_area_sq_km * 1e6
+        aspect_ratio = width_m / height_m if height_m > 0 else 1.0
+        half_height = math.sqrt(area_sq_m / aspect_ratio) / 2
+        half_width = half_height * aspect_ratio
+
+        return (
+            center_x - half_width,
+            center_y - half_height,
+            center_x + half_width,
+            center_y + half_height,
+        )
+
     def _apply_padding_and_minimum(
         self, minx: float, miny: float, maxx: float, maxy: float
     ) -> tuple:
@@ -246,41 +296,8 @@ class MapRenderer:
         center_x = (minx + maxx) / 2
         center_y = (miny + maxy) / 2
 
-        pad_ratio = 0.05
-        padded_dx = dx * (1 + 2 * pad_ratio)
-        padded_dy = dy * (1 + 2 * pad_ratio)
-
-        image_aspect = self.config.image_width / self.config.image_height
-        padded_aspect = padded_dx / padded_dy
-
-        if padded_aspect > image_aspect:
-            half_width = padded_dx / 2
-            half_height = padded_dx / (2 * image_aspect)
-        else:
-            half_height = padded_dy / 2
-            half_width = padded_dy * image_aspect / 2
-
-        minx = center_x - half_width
-        maxx = center_x + half_width
-        miny = center_y - half_height
-        maxy = center_y + half_height
-
-        # Enforce minimum area
-        width_m = maxx - minx
-        height_m = maxy - miny
-        area_sq_km = (width_m * height_m) / 1e6
-
-        if area_sq_km < self.config.min_area_sq_km:
-            area_sq_m = self.config.min_area_sq_km * 1e6
-            aspect_ratio = width_m / height_m if height_m > 0 else 1.0
-            half_height = math.sqrt(area_sq_m / aspect_ratio) / 2
-            half_width = half_height * aspect_ratio
-            minx = center_x - half_width
-            maxx = center_x + half_width
-            miny = center_y - half_height
-            maxy = center_y + half_height
-
-        return (minx, miny, maxx, maxy)
+        minx, miny, maxx, maxy = self._calculate_padded_bounds(dx, dy, center_x, center_y)
+        return self._enforce_minimum_area(minx, miny, maxx, maxy, center_x, center_y)
 
     def _render_map(
         self, segments: list[ProcessedSegment], bounds: tuple, output_path: Path
@@ -419,6 +436,22 @@ class MapRenderer:
         """Clear tile cache."""
         self.tile_cache.clear()
 
+    def _get_contextily_cache_info(self) -> dict:
+        """Get contextily cache statistics if it exists."""
+        contextily_cache_dir = Path.home() / ".cache" / "contextily"
+        if not contextily_cache_dir.exists():
+            return {}
+
+        cache_files = list(contextily_cache_dir.rglob("*"))
+        cached_tiles = sum(1 for f in cache_files if f.is_file())
+        cache_size_bytes = sum(f.stat().st_size for f in cache_files if f.is_file())
+        cache_size_mb = cache_size_bytes / 1024 / 1024
+
+        return {
+            "contextily_tiles": cached_tiles,
+            "contextily_cache_size_mb": round(cache_size_mb, 2),
+        }
+
     def get_cache_info(self) -> dict:
         """Get cache information including contextily tiles.
 
@@ -426,17 +459,7 @@ class MapRenderer:
             Dictionary with cache stats
         """
         info = self.tile_cache.get_info()
-
-        contextily_cache_dir = Path.home() / ".cache" / "contextily"
-        if contextily_cache_dir.exists():
-            cache_files = list(contextily_cache_dir.rglob("*"))
-            cached_tiles = sum(1 for f in cache_files if f.is_file())
-            cache_size_bytes = sum(f.stat().st_size for f in cache_files if f.is_file())
-            cache_size_mb = cache_size_bytes / 1024 / 1024
-
-            info["contextily_tiles"] = cached_tiles
-            info["contextily_cache_size_mb"] = round(cache_size_mb, 2)
-
+        info.update(self._get_contextily_cache_info())
         return info
 
     def render_combined_segments(
@@ -489,36 +512,24 @@ class MapRenderer:
                 error_message=str(exception),
             )
 
-    def _calculate_combined_bounds(self, waypoints: list[tuple[float, float]]) -> tuple:
-        """Calculate bounds with ~5 pixel border respecting image aspect ratio.
-
-        Args:
-            waypoints: List of (lat, lon) tuples
-
-        Returns:
-            Tuple of (minx, miny, maxx, maxy) in Web Mercator
-        """
+    def _get_latlon_bounds(self, waypoints: list[tuple[float, float]]) -> tuple:
+        """Extract lat/lon bounds from waypoints."""
         lats = [p[0] for p in waypoints]
         lons = [p[1] for p in waypoints]
-        min_lat, max_lat = min(lats), max(lats)
-        min_lon, max_lon = min(lons), max(lons)
+        return min(lats), max(lats), min(lons), max(lons)
 
+    def _project_to_mercator(self, min_lat: float, max_lat: float, min_lon: float, max_lon: float) -> tuple:
+        """Project lat/lon bounds to Web Mercator coordinates."""
         bounds_gdf = gpd.GeoDataFrame(
-            geometry=[
-                Point(min_lon, min_lat),
-                Point(max_lon, max_lat),
-            ],
+            geometry=[Point(min_lon, min_lat), Point(max_lon, max_lat)],
             crs="EPSG:4326",
         ).to_crs(epsg=3857)
+        return bounds_gdf.total_bounds
 
-        minx, miny, maxx, maxy = bounds_gdf.total_bounds
-
-        dx = maxx - minx or 500
-        dy = maxy - miny or 500
-
-        center_x = (minx + maxx) / 2
-        center_y = (miny + maxy) / 2
-
+    def _calculate_border_padded_bounds(
+        self, dx: float, dy: float, center_x: float, center_y: float
+    ) -> tuple:
+        """Calculate bounds with pixel-based border respecting aspect ratio."""
         pixel_size_x = dx / (self.config.image_width or 1000)
         pixel_size_y = dy / (self.config.image_height or 1000)
 
@@ -544,6 +555,25 @@ class MapRenderer:
             center_x + half_width,
             center_y + half_height,
         )
+
+    def _calculate_combined_bounds(self, waypoints: list[tuple[float, float]]) -> tuple:
+        """Calculate bounds with ~5 pixel border respecting image aspect ratio.
+
+        Args:
+            waypoints: List of (lat, lon) tuples
+
+        Returns:
+            Tuple of (minx, miny, maxx, maxy) in Web Mercator
+        """
+        min_lat, max_lat, min_lon, max_lon = self._get_latlon_bounds(waypoints)
+        minx, miny, maxx, maxy = self._project_to_mercator(min_lat, max_lat, min_lon, max_lon)
+
+        dx = maxx - minx or 500
+        dy = maxy - miny or 500
+        center_x = (minx + maxx) / 2
+        center_y = (miny + maxy) / 2
+
+        return self._calculate_border_padded_bounds(dx, dy, center_x, center_y)
 
     def _render_combined_map(
         self, segments: list[ProcessedSegment], bounds: tuple, output_path: Path

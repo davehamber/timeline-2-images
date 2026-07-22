@@ -35,6 +35,37 @@ class DateExtractor:
         return dates
 
     @staticmethod
+    def _parse_iso_datetime(start_str: str) -> datetime | None:
+        """Parse ISO 8601 datetime string."""
+        try:
+            if start_str.endswith("Z"):
+                return datetime.fromisoformat(start_str.replace("Z", "+00:00"))
+            return datetime.fromisoformat(start_str)
+        except (ValueError, TypeError):
+            return None
+
+    @staticmethod
+    def _parse_timestamp(start_str) -> datetime | None:
+        """Parse numeric timestamp (milliseconds)."""
+        try:
+            if isinstance(start_str, (int, float)):
+                return datetime.fromtimestamp(start_str / 1000, tz=timezone.utc)
+        except (ValueError, TypeError, OSError):
+            pass
+        return None
+
+    @staticmethod
+    def _parse_with_pandas(start_str) -> date | None:
+        """Parse with pandas as fallback."""
+        try:
+            dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
+            if pd.isna(dt_timestamp):
+                return None
+            return dt_timestamp.to_pydatetime().astimezone(timezone.utc).date()
+        except Exception:
+            return None
+
+    @staticmethod
     def get_segment_start_date(segment: dict) -> date | None:
         """Extract start date from a timeline segment."""
         start_str = segment.get("startTime")
@@ -43,26 +74,15 @@ class DateExtractor:
             start_str = duration.get("startTimestamp") or duration.get("startTimestampMs")
         if start_str is None:
             return None
-        # Try fast path first: fromisoformat
-        try:
-            if isinstance(start_str, str):
-                if start_str.endswith("Z"):
-                    parsed_datetime = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
-                else:
-                    parsed_datetime = datetime.fromisoformat(start_str)
-            else:
-                # Handle numeric timestamps (milliseconds)
-                parsed_datetime = datetime.fromtimestamp(start_str / 1000, tz=timezone.utc)
+
+        parsed_datetime = DateExtractor._parse_iso_datetime(
+            start_str
+        ) or DateExtractor._parse_timestamp(start_str)
+
+        if parsed_datetime:
             return parsed_datetime.astimezone(timezone.utc).date()
-        except (ValueError, TypeError):
-            # Fallback to pandas for non-standard formats
-            try:
-                dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
-                if pd.isna(dt_timestamp):
-                    return None
-                return dt_timestamp.to_pydatetime().astimezone(timezone.utc).date()
-            except Exception:
-                return None
+
+        return DateExtractor._parse_with_pandas(start_str)
 
     def extract_from_timeline_objects(self) -> Set[date]:
         """Extract unique dates from timelineObjects."""
@@ -83,6 +103,14 @@ class DateExtractor:
         )
         return dates
 
+    def _extract_date_from_segment_str(self, start_str: str) -> date | None:
+        """Extract date from a segment startTime string."""
+        parsed_datetime = self._parse_iso_datetime(start_str)
+        if parsed_datetime:
+            return parsed_datetime.astimezone(timezone.utc).date()
+
+        return self._parse_with_pandas(start_str)
+
     def extract_from_segments(self) -> Set[date]:
         """Extract unique dates from semanticSegments."""
         start = time.time()
@@ -91,22 +119,11 @@ class DateExtractor:
             start_str = segment.get("startTime")
             if not start_str:
                 continue
-            # Try fast path first: fromisoformat (10x faster than pd.to_datetime)
-            try:
-                # Handle ISO 8601 format with Z or ±HH:MM timezone
-                if start_str.endswith("Z"):
-                    parsed_datetime = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
-                else:
-                    parsed_datetime = datetime.fromisoformat(start_str)
-                dates.add(parsed_datetime.astimezone(timezone.utc).date())
-            except (ValueError, TypeError):
-                # Fallback to pandas for non-standard formats
-                try:
-                    parsed_datetime = pd.to_datetime(start_str, utc=True, errors="coerce")
-                    if not pd.isna(parsed_datetime):
-                        dates.add(parsed_datetime.to_pydatetime().astimezone(timezone.utc).date())
-                except Exception:
-                    pass  # Skip unparseable timestamps
+
+            parsed_date = self._extract_date_from_segment_str(start_str)
+            if parsed_date:
+                dates.add(parsed_date)
+
         elapsed = time.time() - start
         segment_count = len(self.data.get("semanticSegments", []))
         print(

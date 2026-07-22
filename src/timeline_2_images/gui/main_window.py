@@ -302,56 +302,71 @@ class TimelineWindow(QMainWindow):
         else:
             QMessageBox.critical(self, "Generation Failed", result.error_message or "Unknown error")
 
-    def _load_settings(self) -> None:
-        """Load saved settings from previous session."""
-        # Load image size (width and height)
+    def _load_image_size(self) -> None:
+        """Load image width and height settings."""
         image_width = self._settings_manager.get("image_width", 500)
         image_height = self._settings_manager.get("image_height", 500)
         self._settings_panel._width_spin.setValue(image_width)
         self._settings_panel._height_spin.setValue(image_height)
 
-        # Load output directory
+    def _load_output_directory(self) -> None:
+        """Load output directory setting."""
         output_dir = self._settings_manager.get("output_dir")
-        if output_dir:
-            self._settings_panel._output_input.setText(output_dir)
-            self._settings_panel._output_dir = output_dir
+        if not output_dir:
+            return
+        self._settings_panel._output_input.setText(output_dir)
+        self._settings_panel._output_dir = output_dir
 
-        # Load place names setting
+    def _load_checkbox_settings(self) -> None:
+        """Load place names and single image checkbox settings."""
         add_place_names = self._settings_manager.get("add_place_names", True)
         self._settings_panel._place_names_check.setChecked(add_place_names)
 
-        # Load single image setting
         single_image = self._settings_manager.get("single_image", False)
         self._settings_panel._single_image_check.setChecked(single_image)
 
-        # Load date range settings
+    def _load_date_range_settings(self) -> None:
+        """Load date range mode and dates."""
         date_range_mode = self._settings_manager.get("date_range_mode", "days")
+
         if date_range_mode == "range":
             self._date_range_panel._range_radio.setChecked(True)
-            start_date = self._settings_manager.get("date_range_start")
-            end_date = self._settings_manager.get("date_range_end")
-            if start_date and end_date:
-                from PyQt6.QtCore import QDate
-
-                self._date_range_panel._start_date.setDate(
-                    QDate.fromString(start_date, "yyyy-MM-dd")
-                )
-                self._date_range_panel._end_date.setDate(QDate.fromString(end_date, "yyyy-MM-dd"))
+            self._load_date_range_dates()
         else:
             self._date_range_panel._days_radio.setChecked(True)
             days = self._settings_manager.get("date_range_days", 14)
             self._date_range_panel._days_spin.setValue(days)
 
-        # Load Timeline file path (just restore the path, don't load the file)
-        timeline_path = self._settings_manager.get("timeline_file_path")
-        if timeline_path:
-            from pathlib import Path
+    def _load_date_range_dates(self) -> None:
+        """Load start and end date settings."""
+        from PyQt6.QtCore import QDate
 
-            if Path(timeline_path).exists():
-                self._file_selector._selected_path = timeline_path
-                self._file_selector._path_input.setText(timeline_path)
-                # Enable Generate button since file path is valid
-                self._on_file_selected_in_selector(timeline_path)
+        start_date = self._settings_manager.get("date_range_start")
+        end_date = self._settings_manager.get("date_range_end")
+
+        if start_date and end_date:
+            self._date_range_panel._start_date.setDate(
+                QDate.fromString(start_date, "yyyy-MM-dd")
+            )
+            self._date_range_panel._end_date.setDate(QDate.fromString(end_date, "yyyy-MM-dd"))
+
+    def _load_timeline_file_path(self) -> None:
+        """Load and restore timeline file path."""
+        timeline_path = self._settings_manager.get("timeline_file_path")
+        if not timeline_path or not Path(timeline_path).exists():
+            return
+
+        self._file_selector._selected_path = timeline_path
+        self._file_selector._path_input.setText(timeline_path)
+        self._on_file_selected_in_selector(timeline_path)
+
+    def _load_settings(self) -> None:
+        """Load saved settings from previous session."""
+        self._load_image_size()
+        self._load_output_directory()
+        self._load_checkbox_settings()
+        self._load_date_range_settings()
+        self._load_timeline_file_path()
 
     def _save_settings(self) -> None:
         """Save current settings for next session."""
