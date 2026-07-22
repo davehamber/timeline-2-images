@@ -210,7 +210,10 @@ class CLIRunner:
             "--image-size",
             type=self._validate_image_size,
             default=None,
-            help=f"Output image size in pixels (sets both width and height, {MIN_IMAGE_SIZE}-{MAX_IMAGE_SIZE})",
+            help=(
+                f"Output image size in pixels (sets both width and height, "
+                f"{MIN_IMAGE_SIZE}-{MAX_IMAGE_SIZE})"
+            ),
         )
         parser.add_argument(
             "--image-width",
