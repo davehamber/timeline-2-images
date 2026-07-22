@@ -37,6 +37,7 @@ class ClickableHelpLabel(QLabel):
         super().__init__(text)
         self._tooltip_text = ""
         self._tooltip_visible = False
+        self._last_pos = None
 
     def set_click_tooltip(self, text: str):
         """Set tooltip to show on click (not on hover)."""
@@ -45,14 +46,24 @@ class ClickableHelpLabel(QLabel):
     def mousePressEvent(self, event):
         """Show tooltip when clicked."""
         if self._tooltip_text:
-            QToolTip.showText(event.globalPosition().toPoint(), self._tooltip_text, self)
+            self._last_pos = event.globalPosition().toPoint()
+            QToolTip.showText(self._last_pos, self._tooltip_text)
             self._tooltip_visible = True
+            # Re-show tooltip periodically to keep it visible
+            self.setMouseTracking(True)
+
+    def mouseMoveEvent(self, event):
+        """Keep tooltip visible while mouse is over widget."""
+        if self._tooltip_visible and self._last_pos:
+            global_pos = self.mapToGlobal(event.pos())
+            QToolTip.showText(global_pos, self._tooltip_text)
 
     def leaveEvent(self, event):
         """Hide tooltip when mouse leaves widget."""
         if self._tooltip_visible:
             QToolTip.hideText()
             self._tooltip_visible = False
+            self.setMouseTracking(False)
         super().leaveEvent(event)
 
 
