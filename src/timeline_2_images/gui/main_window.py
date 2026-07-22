@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QFileDialog,
 )
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QCursor
 from PyQt6.QtCore import Qt
 
@@ -160,8 +161,8 @@ class TimelineWindow(QMainWindow):
         file_picker_layout.setContentsMargins(0, 0, 0, 0)
         file_picker_layout.addWidget(self._file_selector)
         file_picker_container.setLayout(file_picker_layout)
-        main_layout.addWidget(file_container)
-        main_layout.addWidget(file_picker_container)
+        timeline_file_box = self._create_section_box(file_container, file_picker_container)
+        main_layout.addWidget(timeline_file_box)
         main_layout.addSpacing(3)
 
         # ===== Output Directory =====
@@ -179,7 +180,6 @@ class TimelineWindow(QMainWindow):
         output_label_layout.addStretch()
         output_container = QWidget()
         output_container.setLayout(output_label_layout)
-        main_layout.addWidget(output_container)
 
         # Output directory picker
         self._output_dir = str(Path.home() / "Downloads")
@@ -198,7 +198,8 @@ class TimelineWindow(QMainWindow):
         output_picker_layout.addWidget(output_browse_btn, 0)
         output_picker_container = QWidget()
         output_picker_container.setLayout(output_picker_layout)
-        main_layout.addWidget(output_picker_container)
+        output_directory_box = self._create_section_box(output_container, output_picker_container)
+        main_layout.addWidget(output_directory_box)
         main_layout.addSpacing(3)
 
         # ===== Date Range Panel =====
@@ -219,8 +220,8 @@ class TimelineWindow(QMainWindow):
         date_container = QWidget()
         date_container.setLayout(date_label_layout)
         self._date_range_panel = DateRangePanel()
-        main_layout.addWidget(date_container)
-        main_layout.addWidget(self._date_range_panel)
+        date_range_box = self._create_section_box(date_container, self._date_range_panel)
+        main_layout.addWidget(date_range_box)
         main_layout.addSpacing(3)
 
         # ===== Settings Panel =====
@@ -243,8 +244,8 @@ class TimelineWindow(QMainWindow):
         settings_container = QWidget()
         settings_container.setLayout(settings_label_layout)
         self._settings_panel = SettingsPanel()
-        main_layout.addWidget(settings_container)
-        main_layout.addWidget(self._settings_panel)
+        image_settings_box = self._create_section_box(settings_container, self._settings_panel)
+        main_layout.addWidget(image_settings_box)
         main_layout.addSpacing(3)
 
         self._progress_panel = ProgressPanel()
@@ -273,6 +274,29 @@ class TimelineWindow(QMainWindow):
         footer_layout.addStretch()
         footer_layout.addWidget(metadata)
         main_layout.addLayout(footer_layout)
+
+    def _create_section_box(self, title_widget: QWidget, content_widget: QWidget) -> QWidget:
+        """Create a framed section with title and content.
+
+        Args:
+            title_widget: Widget containing section title and help icon
+            content_widget: Widget containing section content
+
+        Returns:
+            QWidget with frame border containing both title and content
+        """
+        section_layout = QVBoxLayout()
+        section_layout.setContentsMargins(8, 8, 8, 8)
+        section_layout.setSpacing(4)
+        section_layout.addWidget(title_widget)
+        section_layout.addWidget(content_widget)
+
+        section_frame = QFrame()
+        section_frame.setFrameStyle(QFrame.Shape.StyledPanel | QFrame.Shadow.Plain)
+        section_frame.setLineWidth(1)
+        section_frame.setStyleSheet("QFrame { border: 1px solid #555555; border-radius: 4px; }")
+        section_frame.setLayout(section_layout)
+        return section_frame
 
     def _register_callbacks(self) -> None:
         """Register presenter callbacks."""
