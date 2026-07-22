@@ -39,6 +39,8 @@ class PersistentTooltip(QFrame):
             self.windowFlags()
             | Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.NoDropShadowWindowHint
+            | Qt.WindowType.WindowStaysOnTopHint
+            | Qt.WindowType.ToolTip
         )
         self.setStyleSheet(
             "QFrame { background-color: #ffffdc; border: 1px solid #cccccc; "
@@ -82,12 +84,12 @@ class ClickableHelpLabel(QLabel):
             # Create new tooltip (None parent = top-level window)
             tooltip = PersistentTooltip(self._tooltip_text, None)
             ClickableHelpLabel._tooltip_widget = tooltip
-            tooltip.show()  # Show first to get size
-            # Position to the right of cursor with small offset
+            # Position to the right of cursor with small offset (BEFORE show)
             cursor_pos = event.globalPosition().toPoint()
             cursor_pos.setX(cursor_pos.x() + 10)  # Right offset
             cursor_pos.setY(cursor_pos.y() + 10)  # Down offset
             ClickableHelpLabel._tooltip_widget.move(cursor_pos)
+            ClickableHelpLabel._tooltip_widget.show()
 
     def leaveEvent(self, event):
         """Hide tooltip when mouse leaves widget."""
