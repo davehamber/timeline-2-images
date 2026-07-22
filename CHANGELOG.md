@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-07-22
+
+### Added
+- Image size validation: enforced 200-4000 pixel range with clear error messages
+- CLI argument validation for `--image-size` and `--days` with helpful feedback
+
+### Fixed
+- GUI image size setting now properly applied to rendered images (was always using default 500px)
+- Place names now appear in combined image mode (single image rendering)
+- GUI spinbox now clamps out-of-range values to valid range instead of reverting to previous value
+- Fixed tag v0.4.0 pointing to incorrect commit (now on main branch)
+
+### Changed
+- README.md: Updated with correct Google Timeline export process from Android device
+- README.md: Improved Development section with complete quality tools reference
+- README.md: Documented 200-4000 pixel image size range and performance impact
+- Image size spinbox now uses constants (MIN_IMAGE_SIZE, MAX_IMAGE_SIZE) from configuration
+- TimelineProcessorAdapter now applies GUI config (image_size, add_place_names) before rendering
+
 ## [0.4.0] - 2026-07-20
 
 ### Changed

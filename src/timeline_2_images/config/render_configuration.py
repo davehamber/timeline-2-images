@@ -2,6 +2,9 @@
 
 from dataclasses import dataclass
 
+MIN_IMAGE_SIZE = 200
+MAX_IMAGE_SIZE = 4000
+
 
 @dataclass
 class RenderConfiguration:
@@ -34,8 +37,10 @@ class RenderConfiguration:
 
     def validate(self) -> bool:
         """Validate configuration."""
-        if self.image_size <= 0:
-            raise ValueError("image_size must be positive")
+        if self.image_size < MIN_IMAGE_SIZE:
+            raise ValueError(f"image_size must be at least {MIN_IMAGE_SIZE} pixels")
+        if self.image_size > MAX_IMAGE_SIZE:
+            raise ValueError(f"image_size must not exceed {MAX_IMAGE_SIZE} pixels")
         if self.dpi <= 0:
             raise ValueError("dpi must be positive")
         if self.min_area_sq_km < 0:
