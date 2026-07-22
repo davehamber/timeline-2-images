@@ -30,6 +30,7 @@ class DateRangePanel(QWidget):
     def _create_ui(self) -> None:
         """Create the UI."""
         layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
         # Last N days option

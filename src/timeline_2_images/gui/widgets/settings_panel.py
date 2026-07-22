@@ -25,6 +25,7 @@ class SettingsPanel(QWidget):
     def _create_ui(self) -> None:
         """Create the UI."""
         layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
         # Image size (width and height)
