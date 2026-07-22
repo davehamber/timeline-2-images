@@ -43,6 +43,10 @@ class SettingsPanel(QWidget):
         self._width_spin.setMaximum(MAX_IMAGE_SIZE)
         self._width_spin.setValue(500)
         self._width_spin.editingFinished.connect(self._on_width_finished)
+        self._width_spin.setToolTip(
+            f"Image width in pixels ({MIN_IMAGE_SIZE}-{MAX_IMAGE_SIZE})\n"
+            "Larger values produce higher quality but take longer to render"
+        )
         size_layout.addWidget(self._width_spin)
         size_layout.addWidget(QLabel("px"))
 
@@ -52,6 +56,10 @@ class SettingsPanel(QWidget):
         self._height_spin.setMaximum(MAX_IMAGE_SIZE)
         self._height_spin.setValue(500)
         self._height_spin.editingFinished.connect(self._on_height_finished)
+        self._height_spin.setToolTip(
+            f"Image height in pixels ({MIN_IMAGE_SIZE}-{MAX_IMAGE_SIZE})\n"
+            "Larger values produce higher quality but take longer to render"
+        )
         size_layout.addWidget(self._height_spin)
         size_layout.addWidget(QLabel("px"))
 
@@ -63,8 +71,13 @@ class SettingsPanel(QWidget):
         output_layout.addWidget(QLabel("Output Folder:"))
         self._output_input = QLineEdit()
         self._output_input.setText(self._output_dir)
+        self._output_input.setToolTip(
+            "Folder where generated map images will be saved\n"
+            "Created automatically if it doesn't exist"
+        )
         output_layout.addWidget(self._output_input)
         browse_btn = QPushButton("Browse...")
+        browse_btn.setToolTip("Select or create output folder")
         browse_btn.clicked.connect(self._on_browse_output)
         output_layout.addWidget(browse_btn)
         layout.addLayout(output_layout)
@@ -72,10 +85,18 @@ class SettingsPanel(QWidget):
         # Checkboxes
         self._place_names_check = QCheckBox("Add place names")
         self._place_names_check.setChecked(True)
+        self._place_names_check.setToolTip(
+            "When enabled, maps will include the names of start and end locations\n"
+            "Uses reverse geocoding to look up place names (requires internet)"
+        )
         layout.addWidget(self._place_names_check)
 
         self._single_image_check = QCheckBox("Single combined image")
         self._single_image_check.setChecked(False)
+        self._single_image_check.setToolTip(
+            "When enabled, generates one large map with all routes from the date range\n"
+            "When disabled, generates individual maps for each day"
+        )
         layout.addWidget(self._single_image_check)
 
     def _on_width_finished(self) -> None:

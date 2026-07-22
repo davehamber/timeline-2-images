@@ -57,31 +57,88 @@ class TimelineWindow(QMainWindow):
         central_widget.setLayout(main_layout)
 
         # ===== File Selector =====
+        file_label_layout = QHBoxLayout()
         file_label = QLabel("Timeline File:")
         file_label.setStyleSheet("font-weight: bold;")
+        file_label_layout.addWidget(file_label)
+        file_help = QLabel("?")
+        file_help.setStyleSheet("color: #0066cc; font-weight: bold; cursor: help;")
+        file_help.setToolTip(
+            "Export Timeline.json from your Android phone:\n"
+            "1. Open Settings → Location → Location Services → Timeline\n"
+            "2. Tap 'Export Timeline data'\n"
+            "3. Authenticate with your device lock method\n"
+            "4. Choose where to save the file\n"
+            "5. Transfer the file to your computer"
+        )
+        file_label_layout.addWidget(file_help)
+        file_label_layout.addStretch()
+        file_container = QWidget()
+        file_container.setLayout(file_label_layout)
         self._file_selector = FileSelector(self._presenter)
         self._file_selector.on_file_selected(self._on_file_selected_in_selector)
-        main_layout.addWidget(file_label)
+        self._file_selector.setToolTip("Select your exported Timeline.json file (JSON format)")
+        main_layout.addWidget(file_container)
         main_layout.addWidget(self._file_selector)
 
         # ===== Date Range Panel =====
+        date_label_layout = QHBoxLayout()
         date_label = QLabel("Date Range")
         date_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
+        date_label_layout.addWidget(date_label)
+        date_help = QLabel("?")
+        date_help.setStyleSheet("color: #0066cc; font-weight: bold; cursor: help;")
+        date_help.setToolTip(
+            "Choose how to select dates:\n"
+            "• Last N days: Process the most recent N days with location data\n"
+            "• Specific range: Process dates between start and end dates (inclusive)"
+        )
+        date_label_layout.addWidget(date_help)
+        date_label_layout.addStretch()
+        date_container = QWidget()
+        date_container.setLayout(date_label_layout)
         self._date_range_panel = DateRangePanel()
-        main_layout.addWidget(date_label)
+        main_layout.addWidget(date_container)
         main_layout.addWidget(self._date_range_panel)
 
         # ===== Settings Panel =====
+        settings_label_layout = QHBoxLayout()
         settings_label = QLabel("Image Settings")
         settings_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
+        settings_label_layout.addWidget(settings_label)
+        settings_help = QLabel("?")
+        settings_help.setStyleSheet("color: #0066cc; font-weight: bold; cursor: help;")
+        settings_help.setToolTip(
+            "Configure map rendering:\n"
+            "• Width/Height: Image dimensions in pixels (200-4000 range)\n"
+            "  Larger images take longer to render\n"
+            "• Add place names: Show location names on maps\n"
+            "• Single image: Combine all dates into one map"
+        )
+        settings_label_layout.addWidget(settings_help)
+        settings_label_layout.addStretch()
+        settings_container = QWidget()
+        settings_container.setLayout(settings_label_layout)
         self._settings_panel = SettingsPanel()
-        main_layout.addWidget(settings_label)
+        main_layout.addWidget(settings_container)
         main_layout.addWidget(self._settings_panel)
 
         # ===== Progress Panel =====
-        progress_label = QLabel("Output Directory:")
+        output_label_layout = QHBoxLayout()
+        output_label = QLabel("Output Directory:")
+        output_label_layout.addWidget(output_label)
+        output_help = QLabel("?")
+        output_help.setStyleSheet("color: #0066cc; font-weight: bold; cursor: help;")
+        output_help.setToolTip(
+            "Destination folder for generated map images\n"
+            "Organized by date (e.g., 2024-01-15.jpg)"
+        )
+        output_label_layout.addWidget(output_help)
+        output_label_layout.addStretch()
+        output_container = QWidget()
+        output_container.setLayout(output_label_layout)
         self._output_dir_label = QLabel("(select a timeline file)")
-        main_layout.addWidget(progress_label)
+        main_layout.addWidget(output_container)
         main_layout.addWidget(self._output_dir_label)
 
         self._progress_panel = ProgressPanel()
