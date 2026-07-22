@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GUI settings panel redesigned with dual spinboxes for width/height instead of single size
 - All data models updated to use image_width and image_height instead of image_size
 
-## [## [Unreleased]] - 2026-07-22
+## [0.4.1] - 2026-07-22
 
 ### Added
 - Image size validation: enforced 200-4000 pixel range with clear error messages
