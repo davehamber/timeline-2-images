@@ -120,6 +120,7 @@ class TimelineProcessorAdapter(ITimelineProcessor):
         on_progress: Optional[ProgressCallback],
     ) -> GenerationResult:
         """Process single image generation."""
+        self._apply_config_to_app(app, config)
         result = app.process_date_range_single_image(
             start_date=config.start_date,
             end_date=config.end_date,
@@ -148,6 +149,7 @@ class TimelineProcessorAdapter(ITimelineProcessor):
         on_progress: Optional[ProgressCallback],
     ) -> GenerationResult:
         """Process batch generation."""
+        self._apply_config_to_app(app, config)
         results = app.process_date_range(
             start_date=config.start_date,
             end_date=config.end_date,
@@ -173,6 +175,17 @@ class TimelineProcessorAdapter(ITimelineProcessor):
             image_count=image_count,
             error_message=error,
         )
+
+    @staticmethod
+    def _apply_config_to_app(app: TimelineApp, config: ImageGenerationConfig) -> None:
+        """Apply GUI config settings to TimelineApp's render config.
+
+        Args:
+            app: TimelineApp instance
+            config: ImageGenerationConfig with user-selected settings
+        """
+        app.config.image_size = config.image_size
+        app.config.add_place_names = config.add_place_names
 
     @staticmethod
     def _format_failed_dates(failed_dates: list[str]) -> str:

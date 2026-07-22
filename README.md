@@ -1,16 +1,17 @@
 # Timeline 2 Images
 
-Generate daily route map images from Google Timeline JSON exports. Visualize where you've been each day with beautiful map visualizations.
+Generate daily route map images from Google Timeline JSON exports.
 
 ## What It Does
 
 This tool processes Google Timeline location history exports and creates a JPG image for each day showing:
-- Your route traced as a blue line
-- Individual location points marked in red
-- Map background from OpenStreetMap
-- Automatically sized to fit the day's travel area
+- Your route traced as blue lines
+- Green circles marking the start of each journey segment
+- Red circles marking the end of each journey segment
+- OpenStreetMap basemap for geographic context
+- Automatically sized to show your entire day's travel area
 
-Perfect for reviewing your movement patterns, creating visual logs, or analyzing daily routines.
+Use it to review movement patterns, create travel logs, or analyze daily routines.
 
 ## Quick Start
 
@@ -27,15 +28,27 @@ uv sync
 
 ### Usage
 
-Export your Google Timeline data from your phone as JSON, then:
+#### GUI (Graphical Interface)
+
+```bash
+uv run python -m timeline_2_images gui
+```
+
+Opens an interactive window where you can:
+- Select your Timeline.json file
+- Choose date ranges for processing
+- Configure rendering options
+- Monitor generation progress
+
+#### CLI (Command Line)
 
 ```bash
 uv run python -m timeline_2_images.main path/to/Timeline.json
 ```
 
-This generates JPG images in the `output/` directory for the last 14 days with location data.
+Generates JPG images in the `output/` directory for the last 14 days with location data.
 
-### Options
+#### CLI Options
 
 ```bash
 # Generate maps for last 30 days
@@ -44,9 +57,14 @@ uv run python -m timeline_2_images.main Timeline.json --days 30
 # Save to a custom directory
 uv run python -m timeline_2_images.main Timeline.json --output-dir my_maps
 
-# Change image resolution (pixels)
+# Change image resolution (pixels, max 4000)
 uv run python -m timeline_2_images.main Timeline.json --image-size 1500
+
+# Specific date range
+uv run python -m timeline_2_images.main Timeline.json --start-date 2026-01-01 --end-date 2026-01-31
 ```
+
+**Note on image size:** Larger image sizes (1500px+) will significantly increase processing time. Range: 200-4000 pixels.
 
 ### Working with Large Timelines
 
@@ -85,32 +103,81 @@ The tool automatically cleans up chaotic GPS data:
 - **Minimum Viewing Area**: Every image shows at least 5 square kilometers
   - Ensures context even on days with minimal movement
   - Prevents excessive zoom on tightly clustered points
-- **Image Dimensions**: 1000×1000 pixels (fixed)
+- **Image Size**: Default 500 pixels, range 200-4000 pixels
+  - Minimum 200 pixels for adequate visibility of routes and markers
+  - Larger sizes increase processing time and memory usage
+  - Recommended: 500-2000 pixels for most use cases
 - **Map Projection**: Web Mercator (EPSG:3857) for accurate distance calculations
 
 ## Getting Your Timeline Data
 
-1. On your Android phone: Settings → Location → Location Settings → Timeline
-2. Tap "Export Timeline data"
-3. Authenticate with your device lock method
-4. Save as JSON file
-5. Transfer to your computer
+Google Timeline data can only be extracted directly from your Android device where the location history is stored.
 
-More details on Google's [Location Timeline help page](https://support.google.com/maps/answer/3854828).
+### Export from Android Device
 
-## Testing
+On your Android phone:
 
-```bash
-# Run all tests
-uv run pytest
+1. Open **Settings**
+2. Go to **Location** → **Location Services** → **Timeline**
+3. Tap **Export Timeline data**
+4. Tap **Continue**
+5. Verify your identity (authenticate with your device lock method)
+6. Choose where to save the file
+7. Tap **Save**
 
-# With coverage report
-uv run pytest --cov
-```
+The exported `Timeline.json` file will be saved to your device. Transfer it to your computer via email, cloud storage, USB cable, or another method.
+
+**Note:** The exact menu paths may vary slightly depending on your phone manufacturer and Android version. This process has been verified on Samsung Galaxy devices.
+
+See Google's [Location Timeline help page](https://support.google.com/maps/answer/3854828) for more details.
 
 ## Development
 
-See [CLAUDE.md](CLAUDE.md) for architecture details and module documentation.
+### Quick Quality Check
+
+Run all code quality checks at once:
+
+```bash
+./run_quality_checks.sh
+```
+
+This runs:
+- **Ruff** - Linting and formatting
+- **MyPy** - Type checking
+- **PyLint** - Advanced linting
+- **Radon** - Cyclomatic complexity analysis
+- **PyTest** - Unit tests with coverage
+
+### Individual Tools
+
+```bash
+# Linting
+uv run ruff check .
+
+# Auto-format code
+uv run ruff format .
+
+# Type checking
+uv run mypy src/timeline_2_images
+
+# Advanced linting
+uv run pylint src/timeline_2_images
+
+# Complexity analysis
+uv run radon cc src/timeline_2_images -a
+
+# Maintainability index
+uv run radon mi src/timeline_2_images
+
+# Unit tests
+uv run pytest
+
+# Tests with coverage
+uv run pytest --cov=src/timeline_2_images --cov-report=term-missing
+
+# License compliance
+uv run python check_licenses.py
+```
 
 ## License
 

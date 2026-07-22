@@ -550,6 +550,26 @@ class MapRenderer:
         self._draw_large_span_waypoint_markers(ax, segments)
         self._draw_first_and_last_markers(ax, segments)
 
+        if self.config.add_place_names:
+            location_label = self._get_location_label(segments)
+            if location_label:
+                fig.text(
+                    0.98,
+                    0.98,
+                    location_label,
+                    ha="right",
+                    va="top",
+                    fontsize=11,
+                    fontweight="bold",
+                    bbox={
+                        "boxstyle": "round,pad=0.5",
+                        "facecolor": "white",
+                        "alpha": 0.85,
+                        "edgecolor": "gray",
+                    },
+                    zorder=200,
+                )
+
         ax.set_axis_off()
         plt.tight_layout(pad=0)
         fig.savefig(

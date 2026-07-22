@@ -12,12 +12,66 @@ from typing import Any
 from timeline_2_images.banner import print_banner
 from timeline_2_images.app import TimelineApp
 from timeline_2_images.config import RenderConfiguration, DateRangeQuery
+from timeline_2_images.config.render_configuration import MIN_IMAGE_SIZE, MAX_IMAGE_SIZE
 from timeline_2_images.validators import TimelineValidationError
 from timeline_2_images.console_formatter import ConsoleFormatter
 
 
 class CLIRunner:
     """Handles CLI argument parsing and timeline processing orchestration."""
+
+    @staticmethod
+    def _validate_image_size(value: str) -> int:
+        """Validate image size argument.
+
+        Args:
+            value: String value from argparse
+
+        Returns:
+            Valid integer image size
+
+        Raises:
+            argparse.ArgumentTypeError: If value is invalid
+        """
+        try:
+            size = int(value)
+        except ValueError:
+            raise argparse.ArgumentTypeError(f"image size must be an integer, got '{value}'")
+
+        if size < MIN_IMAGE_SIZE:
+            raise argparse.ArgumentTypeError(
+                f"image size must be at least {MIN_IMAGE_SIZE} pixels, got {size}"
+            )
+
+        if size > MAX_IMAGE_SIZE:
+            raise argparse.ArgumentTypeError(
+                f"image size must not exceed {MAX_IMAGE_SIZE} pixels, got {size}"
+            )
+
+        return size
+
+    @staticmethod
+    def _validate_days(value: str) -> int:
+        """Validate days argument.
+
+        Args:
+            value: String value from argparse
+
+        Returns:
+            Valid positive integer number of days
+
+        Raises:
+            argparse.ArgumentTypeError: If value is invalid
+        """
+        try:
+            days = int(value)
+        except ValueError:
+            raise argparse.ArgumentTypeError(f"days must be an integer, got '{value}'")
+
+        if days < 1:
+            raise argparse.ArgumentTypeError("days must be positive (minimum 1 day)")
+
+        return days
 
     def validate_dates(self, start_date: str | None, end_date: str | None, days: int) -> None:
         """Validate date arguments from CLI.
@@ -137,13 +191,13 @@ class CLIRunner:
             "--output-dir", default="output", help="Output directory for JPG images"
         )
         parser.add_argument(
-            "--days", type=int, default=14, help="Number of days to process (default: 14)"
+            "--days", type=self._validate_days, default=14, help="Number of days to process (default: 14)"
         )
         parser.add_argument(
             "--image-size",
-            type=int,
+            type=self._validate_image_size,
             default=500,
-            help="Output image size in pixels (default: 500)",
+            help=f"Output image size in pixels ({MIN_IMAGE_SIZE}-{MAX_IMAGE_SIZE}, default: 500)",
         )
         parser.add_argument(
             "--start-date",

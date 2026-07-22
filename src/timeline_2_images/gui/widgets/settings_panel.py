@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QFileDialog,
 )
+from timeline_2_images.config.render_configuration import MIN_IMAGE_SIZE, MAX_IMAGE_SIZE
 
 
 class SettingsPanel(QWidget):
@@ -36,9 +37,10 @@ class SettingsPanel(QWidget):
         size_layout = QHBoxLayout()
         size_layout.addWidget(QLabel("Image Size:"))
         self._size_spin = QSpinBox()
-        self._size_spin.setMinimum(100)
-        self._size_spin.setMaximum(2000)
+        self._size_spin.setMinimum(1)
+        self._size_spin.setMaximum(MAX_IMAGE_SIZE)
         self._size_spin.setValue(500)
+        self._size_spin.valueChanged.connect(self._on_size_changed)
         size_layout.addWidget(self._size_spin)
         size_layout.addWidget(QLabel("pixels"))
         size_layout.addStretch()
@@ -63,6 +65,21 @@ class SettingsPanel(QWidget):
         self._single_image_check = QCheckBox("Single combined image")
         self._single_image_check.setChecked(False)
         layout.addWidget(self._single_image_check)
+
+    def _on_size_changed(self, value: int) -> None:
+        """Handle image size value changes - clamp to valid range.
+
+        Args:
+            value: The new spinbox value
+        """
+        if value < MIN_IMAGE_SIZE:
+            self._size_spin.blockSignals(True)
+            self._size_spin.setValue(MIN_IMAGE_SIZE)
+            self._size_spin.blockSignals(False)
+        elif value > MAX_IMAGE_SIZE:
+            self._size_spin.blockSignals(True)
+            self._size_spin.setValue(MAX_IMAGE_SIZE)
+            self._size_spin.blockSignals(False)
 
     def _on_browse_output(self) -> None:
         """Handle output directory browse."""
