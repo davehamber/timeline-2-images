@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-07-22
+
+### Fixed
+- File picker width alignment: Timeline File and Output Directory pickers now have matching widths
+- Vertical spacing between sections reduced by half for more compact layout
+- Tooltip positioning: question mark help icons now appear next to cursor instead of centered in app
+- Question mark icon vertical alignment with neighboring text labels
+- Cancel button behavior: now stops image processing instead of closing the app
+- UI freezing when Cancel button clicked during processing
+- Loading label spacing in file selector preventing proper width matching
+- Nested border appearance around section titles and icons in bordered boxes
+- Progress status text color now matches percentage complete text color
+
+### Changed
+- Reorganized GUI layout: Output Directory section moved between Timeline File and Date Range sections
+- Added bordered boxes around all four main sections (Timeline File, Output Directory, Date Range, Image Settings)
+- Added bordered box around progress panel and buttons section
+- Enhanced visual hierarchy with consistent spacing and borders throughout GUI
+- Code quality: Refactored all Grade B complexity methods to Grade A (335+ Grade A methods total)
+
 ## [0.5.0] - 2026-07-22
 
 ### Added
