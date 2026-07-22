@@ -38,6 +38,7 @@ class FileSelector(QWidget):
 
         self._loading_label = QLabel("")
         self._loading_label.setStyleSheet("color: #0066cc; font-size: 9pt;")
+        self._loading_label.setVisible(False)
         layout.addWidget(self._loading_label, 0)
 
     def _on_browse(self) -> None:
@@ -69,8 +70,10 @@ class FileSelector(QWidget):
         """
         if is_loading:
             self._loading_label.setText("⟳ Loading file...")
+            self._loading_label.setVisible(True)
         else:
             self._loading_label.setText("")
+            self._loading_label.setVisible(False)
 
     def on_file_selected(self, callback) -> None:
         """Register callback when file is selected.
