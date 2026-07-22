@@ -77,9 +77,10 @@ class ClickableHelpLabel(QLabel):
             # Hide any existing tooltip
             if ClickableHelpLabel._tooltip_widget:
                 ClickableHelpLabel._tooltip_widget.hide()
+                ClickableHelpLabel._tooltip_widget.deleteLater()
 
-            # Create new tooltip
-            tooltip = PersistentTooltip(self._tooltip_text, self.window())
+            # Create new tooltip (None parent = top-level window)
+            tooltip = PersistentTooltip(self._tooltip_text, None)
             ClickableHelpLabel._tooltip_widget = tooltip
             pos = event.globalPosition().toPoint()
             pos.setY(pos.y() + 20)  # Offset below cursor
