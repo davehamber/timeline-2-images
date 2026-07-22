@@ -47,29 +47,36 @@ jobs:
       - name: Sync dependencies
         run: uv sync
 
-      - name: Install Dependency Walker (Windows)
+      - name: Download Dependency Walker (Windows)
         if: runner.os == 'Windows'
         run: |
           $DepWalkerURL = "https://www.dependencywalker.com/depends22_x64.zip"
-          $DepWalkerZip = "$env:TEMP\depends.zip"
-          $DepWalkerDir = "$env:LOCALAPPDATA\nuitka\dependency_walker"
+          $CacheDir = "$env:LOCALAPPDATA\Nuitka\depends"
+          $DepWalkerZip = "$CacheDir\depends.zip"
 
-          New-Item -ItemType Directory -Path $DepWalkerDir -Force | Out-Null
+          Write-Host "Creating cache directory..."
+          New-Item -ItemType Directory -Path $CacheDir -Force | Out-Null
 
           Write-Host "Downloading Dependency Walker..."
           Invoke-WebRequest -Uri $DepWalkerURL -OutFile $DepWalkerZip
 
-          Write-Host "Extracting to $DepWalkerDir..."
-          Expand-Archive -Path $DepWalkerZip -DestinationPath $DepWalkerDir -Force
+          Write-Host "Extracting..."
+          Expand-Archive -Path $DepWalkerZip -DestinationPath $CacheDir -Force
 
-          Write-Host "Dependency Walker installed"
+          Write-Host "Dependency Walker ready at: $CacheDir"
+          Get-ChildItem $CacheDir
         shell: pwsh
+        continue-on-error: true
 
       - name: Build CLI binary
         run: uv run bash ./build_executable.sh cli
+        env:
+          NUITKA_CACHE_DIR: ${{ runner.os == 'Windows' && format('{0}\Nuitka\depends', env.LOCALAPPDATA) || '' }}
 
       - name: Build GUI binary
         run: uv run bash ./build_executable.sh gui
+        env:
+          NUITKA_CACHE_DIR: ${{ runner.os == 'Windows' && format('{0}\Nuitka\depends', env.LOCALAPPDATA) || '' }}
 
       - name: Extract version
         id: version
