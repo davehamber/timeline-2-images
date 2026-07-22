@@ -15,6 +15,8 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QMessageBox,
 )
+from PyQt6.QtGui import QCursor
+from PyQt6.QtCore import Qt
 
 from timeline_2_images import __version__
 from timeline_2_images.gui.models import TimelineProcessorAdapter
@@ -62,7 +64,8 @@ class TimelineWindow(QMainWindow):
         file_label.setStyleSheet("font-weight: bold;")
         file_label_layout.addWidget(file_label)
         file_help = QLabel("?")
-        file_help.setStyleSheet("color: #0066cc; font-weight: bold; cursor: help;")
+        file_help.setStyleSheet("color: #0066cc; font-weight: bold;")
+        file_help.setCursor(QCursor(Qt.CursorShape.HelpCursor))
         file_help.setToolTip(
             "Export Timeline.json from your Android phone:\n"
             "1. Open Settings → Location → Location Services → Timeline\n"
@@ -87,7 +90,8 @@ class TimelineWindow(QMainWindow):
         date_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
         date_label_layout.addWidget(date_label)
         date_help = QLabel("?")
-        date_help.setStyleSheet("color: #0066cc; font-weight: bold; cursor: help;")
+        date_help.setStyleSheet("color: #0066cc; font-weight: bold;")
+        date_help.setCursor(QCursor(Qt.CursorShape.HelpCursor))
         date_help.setToolTip(
             "Choose how to select dates:\n"
             "• Last N days: Process the most recent N days with location data\n"
@@ -107,7 +111,8 @@ class TimelineWindow(QMainWindow):
         settings_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
         settings_label_layout.addWidget(settings_label)
         settings_help = QLabel("?")
-        settings_help.setStyleSheet("color: #0066cc; font-weight: bold; cursor: help;")
+        settings_help.setStyleSheet("color: #0066cc; font-weight: bold;")
+        settings_help.setCursor(QCursor(Qt.CursorShape.HelpCursor))
         settings_help.setToolTip(
             "Configure map rendering:\n"
             "• Width/Height: Image dimensions in pixels (200-4000 range)\n"
@@ -128,7 +133,8 @@ class TimelineWindow(QMainWindow):
         output_label = QLabel("Output Directory:")
         output_label_layout.addWidget(output_label)
         output_help = QLabel("?")
-        output_help.setStyleSheet("color: #0066cc; font-weight: bold; cursor: help;")
+        output_help.setStyleSheet("color: #0066cc; font-weight: bold;")
+        output_help.setCursor(QCursor(Qt.CursorShape.HelpCursor))
         output_help.setToolTip(
             "Destination folder for generated map images\nOrganized by date (e.g., 2024-01-15.jpg)"
         )
