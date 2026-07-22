@@ -49,7 +49,18 @@ class GenerationWorker(QThread):
                 on_progress=self.on_progress,
                 on_file_loading=self.on_file_loading,
             )
-            self.generation_complete.emit(result)
+            # Check if thread was interrupted during generation
+            if self.isInterruptionRequested():
+                self.generation_complete.emit(
+                    GenerationResult(
+                        success=False,
+                        output_dir=self.config.output_dir,
+                        image_count=0,
+                        error_message="Generation cancelled by user",
+                    )
+                )
+            else:
+                self.generation_complete.emit(result)
         except Exception as e:
             self.generation_complete.emit(
                 GenerationResult(

@@ -203,5 +203,5 @@ class TimelineGeneratorPresenter:
     def cancel_generation(self) -> None:
         """Cancel the current image generation process."""
         if self._generation_worker is not None and self._generation_worker.isRunning():
+            self._generation_worker.requestInterruption()
             self._generation_worker.quit()
-            self._generation_worker.wait()

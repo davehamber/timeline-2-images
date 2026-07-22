@@ -419,14 +419,6 @@ class TimelineWindow(QMainWindow):
     def _on_cancel(self) -> None:
         """Handle cancel button click - stop generation if running."""
         if self._presenter.is_generating():
-            # If generation is active, cancel it
+            # If generation is active, request cancellation
+            # (worker will emit the cancellation result)
             self._presenter.cancel_generation()
-            result = GenerationResult(
-                success=False,
-                output_dir=Path(self._settings_panel.get_output_dir() or ""),
-                image_count=0,
-                error_message="Generation cancelled by user",
-            )
-            self._progress_panel.set_complete(result)
-            # Re-enable Generate button
-            self._generate_btn.setEnabled(True)
