@@ -134,7 +134,7 @@ class TimelineWindow(QMainWindow):
         file_label.setStyleSheet("font-weight: bold;")
         file_label_layout.addWidget(file_label)
         file_help = ClickableHelpLabel("?")
-        file_help.setStyleSheet("color: #0066cc; font-weight: bold;")
+        file_help.setStyleSheet("color: #0066cc; font-weight: bold; margin-top: 2px;")
         file_help.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         file_help.set_click_tooltip(
             "Export Timeline.json from your Android phone:\n"
@@ -160,7 +160,7 @@ class TimelineWindow(QMainWindow):
         date_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
         date_label_layout.addWidget(date_label)
         date_help = ClickableHelpLabel("?")
-        date_help.setStyleSheet("color: #0066cc; font-weight: bold;")
+        date_help.setStyleSheet("color: #0066cc; font-weight: bold; margin-top: 2px;")
         date_help.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         date_help.set_click_tooltip(
             "Choose how to select dates:\n"
@@ -181,7 +181,7 @@ class TimelineWindow(QMainWindow):
         settings_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
         settings_label_layout.addWidget(settings_label)
         settings_help = ClickableHelpLabel("?")
-        settings_help.setStyleSheet("color: #0066cc; font-weight: bold;")
+        settings_help.setStyleSheet("color: #0066cc; font-weight: bold; margin-top: 2px;")
         settings_help.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         settings_help.set_click_tooltip(
             "Configure map rendering:\n"
@@ -203,7 +203,7 @@ class TimelineWindow(QMainWindow):
         output_label = QLabel("Output Directory:")
         output_label_layout.addWidget(output_label)
         output_help = ClickableHelpLabel("?")
-        output_help.setStyleSheet("color: #0066cc; font-weight: bold;")
+        output_help.setStyleSheet("color: #0066cc; font-weight: bold; margin-top: 2px;")
         output_help.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         output_help.set_click_tooltip(
             "Destination folder for generated map images\nOrganized by date (e.g., 2024-01-15.jpg)"
