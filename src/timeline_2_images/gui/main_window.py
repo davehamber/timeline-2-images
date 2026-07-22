@@ -279,8 +279,9 @@ class TimelineWindow(QMainWindow):
             QWidget with frame border containing both title and content
         """
         section_layout = QVBoxLayout()
-        section_layout.setContentsMargins(8, 8, 8, 8)
-        section_layout.setSpacing(4)
+        section_layout.setContentsMargins(8, 6, 8, 8)
+        section_layout.setSpacing(0)
+        title_layout.setContentsMargins(0, 0, 0, 6)
         section_layout.addLayout(title_layout)
         section_layout.addWidget(content_widget)
 
