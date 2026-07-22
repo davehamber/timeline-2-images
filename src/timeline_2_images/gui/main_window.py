@@ -21,6 +21,7 @@ from PyQt6.QtCore import Qt
 
 from timeline_2_images import __version__
 from timeline_2_images.gui.models import TimelineProcessorAdapter
+from timeline_2_images.gui.models.interfaces import GenerationResult
 from timeline_2_images.gui.presenter import TimelineGeneratorPresenter
 from timeline_2_images.gui.settings_manager import SettingsManager
 from timeline_2_images.gui.widgets.file_selector import FileSelector
@@ -418,6 +419,15 @@ class TimelineWindow(QMainWindow):
     def _on_cancel(self) -> None:
         """Handle cancel button click - stop generation if running."""
         if self._presenter.is_generating():
-            # If generation is active, request cancellation
-            # (worker will emit the cancellation result)
+            # If generation is active, cancel it immediately
             self._presenter.cancel_generation()
+            # Show cancellation result immediately
+            result = GenerationResult(
+                success=False,
+                output_dir=Path(self._settings_panel.get_output_dir() or ""),
+                image_count=0,
+                error_message="Generation cancelled by user",
+            )
+            self._progress_panel.set_complete(result)
+            # Re-enable Generate button
+            self._generate_btn.setEnabled(True)

@@ -204,4 +204,8 @@ class TimelineGeneratorPresenter:
         """Cancel the current image generation process."""
         if self._generation_worker is not None and self._generation_worker.isRunning():
             self._generation_worker.requestInterruption()
-            self._generation_worker.quit()
+            # Wait briefly for graceful shutdown
+            if not self._generation_worker.wait(1000):  # 1 second timeout
+                # Force terminate if thread doesn't exit
+                self._generation_worker.terminate()
+                self._generation_worker.wait()
