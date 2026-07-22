@@ -201,7 +201,10 @@ class CLIRunner:
             "--output-dir", default="output", help="Output directory for JPG images"
         )
         parser.add_argument(
-            "--days", type=self._validate_days, default=14, help="Number of days to process (default: 14)"
+            "--days",
+            type=self._validate_days,
+            default=14,
+            help="Number of days to process (default: 14)",
         )
         parser.add_argument(
             "--image-size",
@@ -296,12 +299,26 @@ def main(
         single_image: If True, combine all dates into single image (default: False)
     """
     # Handle backward compatibility: image_size sets both width and height
-    width = image_size if image_size is not None else (image_width if image_width is not None else 500)
-    height = image_size if image_size is not None else (image_height if image_height is not None else 500)
+    width = (
+        image_size if image_size is not None else (image_width if image_width is not None else 500)
+    )
+    height = (
+        image_size
+        if image_size is not None
+        else (image_height if image_height is not None else 500)
+    )
 
     runner = CLIRunner()
     runner.process_images(
-        timeline_json, output_dir, days, width, height, start_date, end_date, place_names, single_image
+        timeline_json,
+        output_dir,
+        days,
+        width,
+        height,
+        start_date,
+        end_date,
+        place_names,
+        single_image,
     )
 
 
