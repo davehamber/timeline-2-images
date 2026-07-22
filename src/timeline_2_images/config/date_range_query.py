@@ -12,6 +12,16 @@ class DateRangeQuery:
     end_date: str | None = None
     days: int = 14
 
+    def _get_filter_strategy(self) -> tuple[str, dict]:
+        """Determine which filter strategy and parameters to use."""
+        if self.start_date and self.end_date:
+            return "range", {"start": self.start_date, "end": self.end_date}
+        if self.start_date:
+            return "from_start", {"start": self.start_date, "days": self.days}
+        if self.end_date:
+            return "before_end", {"end": self.end_date, "days": self.days}
+        return "last_n_days", {"days": self.days}
+
     def get_dates(self, available_dates: list[str]) -> list[str]:
         """
         Get dates matching query parameters from available dates.
@@ -26,17 +36,15 @@ class DateRangeQuery:
             return []
 
         sorted_dates = sorted(available_dates)
+        strategy, params = self._get_filter_strategy()
 
-        if self.start_date and self.end_date:
-            return self._filter_between_dates(sorted_dates, self.start_date, self.end_date)
-
-        if self.start_date:
-            return self._filter_from_start_date(sorted_dates, self.start_date, self.days)
-
-        if self.end_date:
-            return self._filter_before_end_date(sorted_dates, self.end_date, self.days)
-
-        return sorted_dates[-self.days :]
+        if strategy == "range":
+            return self._filter_between_dates(sorted_dates, params["start"], params["end"])
+        if strategy == "from_start":
+            return self._filter_from_start_date(sorted_dates, params["start"], params["days"])
+        if strategy == "before_end":
+            return self._filter_before_end_date(sorted_dates, params["end"], params["days"])
+        return sorted_dates[-params["days"] :]
 
     def _filter_between_dates(self, available_dates: list[str], start: str, end: str) -> list[str]:
         """Filter dates between start and end (inclusive)."""

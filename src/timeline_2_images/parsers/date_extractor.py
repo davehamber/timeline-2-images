@@ -66,12 +66,19 @@ class DateExtractor:
             return None
 
     @staticmethod
+    def _extract_start_str(segment: dict) -> str | None:
+        """Extract start time string from segment or duration."""
+        start_str = segment.get("startTime")
+        if start_str:
+            return start_str
+
+        duration = segment.get("duration", {})
+        return duration.get("startTimestamp") or duration.get("startTimestampMs")
+
+    @staticmethod
     def get_segment_start_date(segment: dict) -> date | None:
         """Extract start date from a timeline segment."""
-        start_str = segment.get("startTime")
-        if not start_str:
-            duration = segment.get("duration", {})
-            start_str = duration.get("startTimestamp") or duration.get("startTimestampMs")
+        start_str = DateExtractor._extract_start_str(segment)
         if start_str is None:
             return None
 

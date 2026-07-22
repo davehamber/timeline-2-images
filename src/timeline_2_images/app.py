@@ -252,6 +252,36 @@ class TimelineApp:
         except (IOError, OSError):
             return None
 
+    def _validate_and_process_segments(
+        self, date: str
+    ) -> tuple[list | None, RenderResult | None]:
+        """Validate and process segments for a date. Returns (segments, error_result)."""
+        segments = self.processor.load_segments_for_day(date)
+        if not segments:
+            return None, self._create_error_result(date, "No segments found for date")
+
+        processed_segments = self.segment_processor.process_segments(segments)
+        if not processed_segments:
+            return None, self._create_error_result(date, "No segments after processing")
+
+        return processed_segments, None
+
+    def _render_and_read_image(
+        self, date: str, processed_segments: list, output_path: Path
+    ) -> tuple[bytes | None, RenderResult]:
+        """Render segments and read resulting image bytes."""
+        result = self.renderer.render_segments(processed_segments, str(output_path))
+        if not result.was_successful():
+            return None, result
+
+        image_bytes = self._read_rendered_image(result)
+        if image_bytes is None:
+            return None, self._create_error_result(
+                date, "Failed to read rendered image", result.output_path
+            )
+
+        return image_bytes, result
+
     def process_date_bytes(self, date: str) -> tuple[bytes | None, RenderResult]:
         """Process and render a single date, returning image bytes.
 
@@ -262,27 +292,12 @@ class TimelineApp:
             Tuple of (image_bytes, RenderResult) where image_bytes is None if rendering failed
         """
         try:
-            segments = self.processor.load_segments_for_day(date)
-            if not segments:
-                return None, self._create_error_result(date, "No segments found for date")
-
-            processed_segments = self.segment_processor.process_segments(segments)
-            if not processed_segments:
-                return None, self._create_error_result(date, "No segments after processing")
+            processed_segments, error = self._validate_and_process_segments(date)
+            if error:
+                return None, error
 
             output_path = self.output_dir / f"{date}.jpg"
-            result = self.renderer.render_segments(processed_segments, str(output_path))
-
-            if not result.was_successful():
-                return None, result
-
-            image_bytes = self._read_rendered_image(result)
-            if image_bytes is None:
-                return None, self._create_error_result(
-                    date, "Failed to read rendered image", result.output_path
-                )
-
-            return image_bytes, result
+            return self._render_and_read_image(date, processed_segments, output_path)
 
         except (ValueError, OSError, IOError, RuntimeError) as exception:
             return None, self._create_error_result(date, str(exception))

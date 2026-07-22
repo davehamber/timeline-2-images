@@ -118,12 +118,15 @@ class MapRenderer:
             return ""
 
         if hasattr(location, "raw") and location.raw:
-            address = location.raw.get("address", {})
-            place = self._extract_from_structured_address(address)
+            place = self._extract_from_structured_address(location.raw.get("address", {}))
             if place:
                 return place
 
         return self._extract_from_address_string(location.address) if location.address else ""
+
+    def _is_valid_place_name(self, part: str) -> bool:
+        """Check if a part is a valid place name (not empty, not digit-only, >2 chars)."""
+        return bool(part) and not part.isdigit() and len(part) > 2
 
     def _extract_from_address_string(self, address_str: str) -> str:
         """Extract place name from comma-separated address string.
@@ -135,9 +138,11 @@ class MapRenderer:
             Place name or empty string
         """
         parts = [p.strip() for p in address_str.split(",")]
+
         for part in parts[1:-1]:
-            if part and not part.isdigit() and len(part) > 2:
+            if self._is_valid_place_name(part):
                 return str(part)
+
         return str(parts[0].strip()) if parts else ""
 
     def _get_place_name(self, lat: float, lon: float) -> str:
@@ -436,6 +441,14 @@ class MapRenderer:
         """Clear tile cache."""
         self.tile_cache.clear()
 
+    def _calculate_cache_stats(self, cache_files: list) -> tuple[int, float]:
+        """Calculate tile count and cache size from cache files."""
+        files = [f for f in cache_files if f.is_file()]
+        cached_tiles = len(files)
+        cache_size_bytes = sum(f.stat().st_size for f in files)
+        cache_size_mb = cache_size_bytes / 1024 / 1024
+        return cached_tiles, cache_size_mb
+
     def _get_contextily_cache_info(self) -> dict:
         """Get contextily cache statistics if it exists."""
         contextily_cache_dir = Path.home() / ".cache" / "contextily"
@@ -443,9 +456,7 @@ class MapRenderer:
             return {}
 
         cache_files = list(contextily_cache_dir.rglob("*"))
-        cached_tiles = sum(1 for f in cache_files if f.is_file())
-        cache_size_bytes = sum(f.stat().st_size for f in cache_files if f.is_file())
-        cache_size_mb = cache_size_bytes / 1024 / 1024
+        cached_tiles, cache_size_mb = self._calculate_cache_stats(cache_files)
 
         return {
             "contextily_tiles": cached_tiles,
