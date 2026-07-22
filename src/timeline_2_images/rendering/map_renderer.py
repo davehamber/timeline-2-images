@@ -112,17 +112,27 @@ class MapRenderer:
                 return str(address[key])
         return ""
 
+    def _try_structured_address(self, location) -> str:
+        """Try to extract place from structured address in location.raw."""
+        if not hasattr(location, "raw") or not location.raw:
+            return ""
+        address = location.raw.get("address", {})
+        return self._extract_from_structured_address(address)
+
     def _extract_place_from_location(self, location) -> str:
         """Extract place name from geocoded location object."""
         if not location:
             return ""
 
-        if hasattr(location, "raw") and location.raw:
-            place = self._extract_from_structured_address(location.raw.get("address", {}))
-            if place:
-                return place
+        place = self._try_structured_address(location)
+        if place:
+            return place
 
-        return self._extract_from_address_string(location.address) if location.address else ""
+        return (
+            self._extract_from_address_string(location.address)
+            if location.address
+            else ""
+        )
 
     def _is_valid_place_name(self, part: str) -> bool:
         """Check if a part is a valid place name (not empty, not digit-only, >2 chars)."""
