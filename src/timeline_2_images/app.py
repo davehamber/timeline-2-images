@@ -252,9 +252,7 @@ class TimelineApp:
         except (IOError, OSError):
             return None
 
-    def _validate_and_process_segments(
-        self, date: str
-    ) -> tuple[list | None, RenderResult | None]:
+    def _validate_and_process_segments(self, date: str) -> tuple[list | None, RenderResult | None]:
         """Validate and process segments for a date. Returns (segments, error_result)."""
         segments = self.processor.load_segments_for_day(date)
         if not segments:
