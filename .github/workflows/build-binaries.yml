@@ -54,19 +54,32 @@ jobs:
           $CacheDir = "$env:LOCALAPPDATA\Nuitka\depends"
           $DepWalkerZip = "$CacheDir\depends.zip"
 
-          Write-Host "Creating cache directory..."
+          Write-Host "Creating cache directory at: $CacheDir"
           New-Item -ItemType Directory -Path $CacheDir -Force | Out-Null
 
-          Write-Host "Downloading Dependency Walker..."
-          Invoke-WebRequest -Uri $DepWalkerURL -OutFile $DepWalkerZip
+          Write-Host "Downloading Dependency Walker from: $DepWalkerURL"
+          try {
+            Invoke-WebRequest -Uri $DepWalkerURL -OutFile $DepWalkerZip -ErrorAction Stop
+            Write-Host "✓ Download successful"
+          } catch {
+            Write-Host "✗ Download failed: $_"
+            exit 1
+          }
 
-          Write-Host "Extracting..."
-          Expand-Archive -Path $DepWalkerZip -DestinationPath $CacheDir -Force
+          Write-Host "Extracting to: $CacheDir"
+          try {
+            Expand-Archive -Path $DepWalkerZip -DestinationPath $CacheDir -Force -ErrorAction Stop
+            Write-Host "✓ Extraction successful"
+          } catch {
+            Write-Host "✗ Extraction failed: $_"
+            exit 1
+          }
 
-          Write-Host "Dependency Walker ready at: $CacheDir"
-          Get-ChildItem $CacheDir
+          Write-Host "Verifying installation..."
+          Get-ChildItem -Path $CacheDir -Recurse | Write-Host
+
+          Write-Host "✓ Dependency Walker is ready"
         shell: pwsh
-        continue-on-error: true
 
       - name: Build CLI binary
         run: uv run bash ./build_executable.sh cli
