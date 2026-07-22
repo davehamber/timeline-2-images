@@ -49,3 +49,9 @@ timelines/
 Timeline.json
 Timeline_merged.json
 Timeline_restored.json
+
+# Screenshots
+Screenshot*.png
+screenshot*.png
+*.screenshot
+*screenshot*
