@@ -59,20 +59,25 @@ uv run nuitka \
   --remove-output \
   "$ENTRY_POINT"
 
-if [ -f "./dist/app.bin" ]; then
+if [ -f "./dist/main.bin" ]; then
+    mv "./dist/main.bin" "./dist/$OUTPUT_NAME"
+    chmod +x "./dist/$OUTPUT_NAME"
+    echo "✓ $BUILD_TYPE executable built successfully at ./dist/$OUTPUT_NAME"
+elif [ -f "./dist/app.bin" ]; then
     mv "./dist/app.bin" "./dist/$OUTPUT_NAME"
     chmod +x "./dist/$OUTPUT_NAME"
     echo "✓ $BUILD_TYPE executable built successfully at ./dist/$OUTPUT_NAME"
-    echo ""
-    if [ "$BUILD_TYPE" = "cli" ]; then
-        echo "Usage examples:"
-        echo "  ./dist/timeline2images Timeline.json --start-date 2026-01-01 --days 7"
-        echo "  ./dist/timeline2images Timeline.json --image-size 800"
-    else
-        echo "Usage:"
-        echo "  ./dist/timeline2images-gui"
-    fi
 else
     echo "✗ Build failed or executable not found"
     exit 1
+fi
+
+echo ""
+if [ "$BUILD_TYPE" = "cli" ]; then
+    echo "Usage examples:"
+    echo "  ./dist/timeline2images Timeline.json --start-date 2026-01-01 --days 7"
+    echo "  ./dist/timeline2images Timeline.json --image-size 800"
+else
+    echo "Usage:"
+    echo "  ./dist/timeline2images-gui"
 fi
