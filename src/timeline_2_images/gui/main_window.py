@@ -241,8 +241,8 @@ class TimelineWindow(QMainWindow):
         main_layout.addWidget(image_settings_box)
         main_layout.addSpacing(3)
 
+        # ===== Progress and Buttons Section =====
         self._progress_panel = ProgressPanel()
-        main_layout.addWidget(self._progress_panel)
 
         # ===== Buttons =====
         button_layout = QHBoxLayout()
@@ -255,7 +255,32 @@ class TimelineWindow(QMainWindow):
         button_layout.addStretch()
         button_layout.addWidget(self._cancel_btn)
         button_layout.addWidget(self._generate_btn)
-        main_layout.addLayout(button_layout)
+
+        # Create a container for progress and buttons
+        progress_buttons_layout = QVBoxLayout()
+        progress_buttons_layout.setContentsMargins(0, 0, 0, 0)
+        progress_buttons_layout.setSpacing(6)
+        progress_buttons_layout.addWidget(self._progress_panel)
+        progress_buttons_layout.addLayout(button_layout)
+
+        progress_buttons_container = QWidget()
+        progress_buttons_container.setLayout(progress_buttons_layout)
+
+        # Create a frame box around progress and buttons
+        progress_box_layout = QVBoxLayout()
+        progress_box_layout.setContentsMargins(8, 8, 8, 8)
+        progress_box_layout.setSpacing(0)
+        progress_box_layout.addWidget(progress_buttons_container)
+
+        progress_box_frame = QFrame()
+        progress_box_frame.setFrameStyle(QFrame.Shape.NoFrame)
+        progress_box_frame.setStyleSheet(
+            "QFrame { background-color: rgba(255, 255, 255, 0.03); "
+            "border: 1px solid #444444; border-radius: 4px; }"
+        )
+        progress_box_frame.setLayout(progress_box_layout)
+
+        main_layout.addWidget(progress_box_frame)
 
         # ===== Footer =====
         footer_layout = QHBoxLayout()
