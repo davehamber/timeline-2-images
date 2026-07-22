@@ -47,6 +47,24 @@ jobs:
       - name: Sync dependencies
         run: uv sync
 
+      - name: Install Dependency Walker (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $DepWalkerURL = "https://www.dependencywalker.com/depends22_x64.zip"
+          $DepWalkerZip = "$env:TEMP\depends.zip"
+          $DepWalkerDir = "$env:LOCALAPPDATA\nuitka\dependency_walker"
+
+          New-Item -ItemType Directory -Path $DepWalkerDir -Force | Out-Null
+
+          Write-Host "Downloading Dependency Walker..."
+          Invoke-WebRequest -Uri $DepWalkerURL -OutFile $DepWalkerZip
+
+          Write-Host "Extracting to $DepWalkerDir..."
+          Expand-Archive -Path $DepWalkerZip -DestinationPath $DepWalkerDir -Force
+
+          Write-Host "Dependency Walker installed"
+        shell: pwsh
+
       - name: Build CLI binary
         run: uv run bash ./build_executable.sh cli
 
