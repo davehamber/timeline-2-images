@@ -157,6 +157,41 @@ class TimelineWindow(QMainWindow):
         main_layout.addWidget(file_container)
         main_layout.addWidget(self._file_selector)
 
+        # ===== Output Directory =====
+        output_label_layout = QHBoxLayout()
+        output_label = QLabel("Output Directory")
+        output_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
+        output_label_layout.addWidget(output_label)
+        output_help = ClickableHelpLabel("?")
+        output_help.setStyleSheet("color: #0066cc; font-weight: bold; margin-top: 10px;")
+        output_help.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        output_help.set_click_tooltip(
+            "Destination folder for generated map images\nOrganized by date (e.g., 2024-01-15.jpg)"
+        )
+        output_label_layout.addWidget(output_help, 0, Qt.AlignmentFlag.AlignVCenter)
+        output_label_layout.addStretch()
+        output_container = QWidget()
+        output_container.setLayout(output_label_layout)
+        main_layout.addWidget(output_container)
+
+        # Output directory picker
+        self._output_dir = str(Path.home() / "Downloads")
+        output_picker_layout = QHBoxLayout()
+        self._output_input = QLineEdit()
+        self._output_input.setText(self._output_dir)
+        self._output_input.setToolTip(
+            "Folder where generated map images will be saved\n"
+            "Created automatically if it doesn't exist"
+        )
+        output_picker_layout.addWidget(self._output_input)
+        output_browse_btn = QPushButton("Browse...")
+        output_browse_btn.setToolTip("Select or create output folder")
+        output_browse_btn.clicked.connect(self._on_browse_output)
+        output_picker_layout.addWidget(output_browse_btn)
+        output_picker_container = QWidget()
+        output_picker_container.setLayout(output_picker_layout)
+        main_layout.addWidget(output_picker_container)
+
         # ===== Date Range Panel =====
         date_label_layout = QHBoxLayout()
         date_label = QLabel("Date Range")
@@ -200,41 +235,6 @@ class TimelineWindow(QMainWindow):
         self._settings_panel = SettingsPanel()
         main_layout.addWidget(settings_container)
         main_layout.addWidget(self._settings_panel)
-
-        # ===== Output Directory =====
-        output_label_layout = QHBoxLayout()
-        output_label = QLabel("Output Directory")
-        output_label.setStyleSheet("font-weight: bold;")
-        output_label_layout.addWidget(output_label)
-        output_help = ClickableHelpLabel("?")
-        output_help.setStyleSheet("color: #0066cc; font-weight: bold; margin-top: 2px;")
-        output_help.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        output_help.set_click_tooltip(
-            "Destination folder for generated map images\nOrganized by date (e.g., 2024-01-15.jpg)"
-        )
-        output_label_layout.addWidget(output_help, 0, Qt.AlignmentFlag.AlignVCenter)
-        output_label_layout.addStretch()
-        output_container = QWidget()
-        output_container.setLayout(output_label_layout)
-        main_layout.addWidget(output_container)
-
-        # Output directory picker
-        self._output_dir = str(Path.home() / "Downloads")
-        output_picker_layout = QHBoxLayout()
-        self._output_input = QLineEdit()
-        self._output_input.setText(self._output_dir)
-        self._output_input.setToolTip(
-            "Folder where generated map images will be saved\n"
-            "Created automatically if it doesn't exist"
-        )
-        output_picker_layout.addWidget(self._output_input)
-        output_browse_btn = QPushButton("Browse...")
-        output_browse_btn.setToolTip("Select or create output folder")
-        output_browse_btn.clicked.connect(self._on_browse_output)
-        output_picker_layout.addWidget(output_browse_btn)
-        output_picker_container = QWidget()
-        output_picker_container.setLayout(output_picker_layout)
-        main_layout.addWidget(output_picker_container)
 
         self._progress_panel = ProgressPanel()
         main_layout.addWidget(self._progress_panel)
