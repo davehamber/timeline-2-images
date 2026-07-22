@@ -3,18 +3,13 @@
 
 """Settings panel for image generation options."""
 
-from pathlib import Path
-
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
     QLabel,
     QSpinBox,
-    QLineEdit,
-    QPushButton,
     QCheckBox,
-    QFileDialog,
 )
 from timeline_2_images.config.render_configuration import MIN_IMAGE_SIZE, MAX_IMAGE_SIZE
 
@@ -25,7 +20,6 @@ class SettingsPanel(QWidget):
     def __init__(self):
         """Initialize settings panel."""
         super().__init__()
-        self._output_dir = str(Path.home() / "Downloads")
         self._create_ui()
 
     def _create_ui(self) -> None:
@@ -66,22 +60,6 @@ class SettingsPanel(QWidget):
         size_layout.addStretch()
         layout.addLayout(size_layout)
 
-        # Output directory
-        output_layout = QHBoxLayout()
-        output_layout.addWidget(QLabel("Output Folder:"))
-        self._output_input = QLineEdit()
-        self._output_input.setText(self._output_dir)
-        self._output_input.setToolTip(
-            "Folder where generated map images will be saved\n"
-            "Created automatically if it doesn't exist"
-        )
-        output_layout.addWidget(self._output_input)
-        browse_btn = QPushButton("Browse...")
-        browse_btn.setToolTip("Select or create output folder")
-        browse_btn.clicked.connect(self._on_browse_output)
-        output_layout.addWidget(browse_btn)
-        layout.addLayout(output_layout)
-
         # Checkboxes
         self._place_names_check = QCheckBox("Add place names")
         self._place_names_check.setChecked(True)
@@ -115,20 +93,9 @@ class SettingsPanel(QWidget):
         elif value > MAX_IMAGE_SIZE:
             self._height_spin.setValue(MAX_IMAGE_SIZE)
 
-    def _on_browse_output(self) -> None:
-        """Handle output directory browse."""
-        dir_path = QFileDialog.getExistingDirectory(self, "Select Output Directory")
-        if dir_path:
-            self._output_dir = dir_path
-            self._output_input.setText(dir_path)
-
     def get_image_size(self) -> tuple[int, int]:
         """Get selected image size (width, height)."""
         return (self._width_spin.value(), self._height_spin.value())
-
-    def get_output_dir(self) -> str:
-        """Get selected output directory."""
-        return self._output_input.text() or self._output_dir
 
     def get_add_place_names(self) -> bool:
         """Get add place names setting."""

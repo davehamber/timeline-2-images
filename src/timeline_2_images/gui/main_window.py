@@ -15,6 +15,8 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QMessageBox,
     QFrame,
+    QLineEdit,
+    QFileDialog,
 )
 from PyQt6.QtGui import QCursor
 from PyQt6.QtCore import Qt
@@ -199,7 +201,7 @@ class TimelineWindow(QMainWindow):
         main_layout.addWidget(settings_container)
         main_layout.addWidget(self._settings_panel)
 
-        # ===== Progress Panel =====
+        # ===== Output Directory =====
         output_label_layout = QHBoxLayout()
         output_label = QLabel("Output Directory")
         output_label.setStyleSheet("font-weight: bold;")
@@ -214,9 +216,24 @@ class TimelineWindow(QMainWindow):
         output_label_layout.addStretch()
         output_container = QWidget()
         output_container.setLayout(output_label_layout)
-        self._output_dir_label = QLabel("(select a timeline file)")
         main_layout.addWidget(output_container)
-        main_layout.addWidget(self._output_dir_label)
+
+        # Output directory picker
+        self._output_dir = str(Path.home() / "Downloads")
+        output_picker_layout = QHBoxLayout()
+        self._output_input = QLineEdit()
+        self._output_input.setText(self._output_dir)
+        self._output_input.setToolTip(
+            "Folder where generated map images will be saved\nCreated automatically if it doesn't exist"
+        )
+        output_picker_layout.addWidget(self._output_input)
+        output_browse_btn = QPushButton("Browse...")
+        output_browse_btn.setToolTip("Select or create output folder")
+        output_browse_btn.clicked.connect(self._on_browse_output)
+        output_picker_layout.addWidget(output_browse_btn)
+        output_picker_container = QWidget()
+        output_picker_container.setLayout(output_picker_layout)
+        main_layout.addWidget(output_picker_container)
 
         self._progress_panel = ProgressPanel()
         main_layout.addWidget(self._progress_panel)
@@ -315,8 +332,8 @@ class TimelineWindow(QMainWindow):
         output_dir = self._settings_manager.get("output_dir")
         if not output_dir:
             return
-        self._settings_panel._output_input.setText(output_dir)
-        self._settings_panel._output_dir = output_dir
+        self._output_input.setText(output_dir)
+        self._output_dir = output_dir
 
     def _load_checkbox_settings(self) -> None:
         """Load place names and single image checkbox settings."""
@@ -377,7 +394,7 @@ class TimelineWindow(QMainWindow):
         settings = {
             "image_width": image_width,
             "image_height": image_height,
-            "output_dir": self._settings_panel.get_output_dir(),
+            "output_dir": self.get_output_dir(),
             "add_place_names": self._settings_panel.get_add_place_names(),
             "single_image": self._settings_panel.get_single_image(),
             "date_range_mode": date_range_mode,
@@ -406,7 +423,7 @@ class TimelineWindow(QMainWindow):
             QMessageBox.warning(self, "No File", "Please select a Timeline.json file")
             return
 
-        output_dir = self._settings_panel.get_output_dir()
+        output_dir = self.get_output_dir()
         image_width, image_height = self._settings_panel.get_image_size()
         add_place_names = self._settings_panel.get_add_place_names()
         single_image = self._settings_panel.get_single_image()
@@ -430,6 +447,17 @@ class TimelineWindow(QMainWindow):
             on_file_loading=self._progress_panel.set_loading_file,
         )
 
+    def _on_browse_output(self) -> None:
+        """Handle output directory browse."""
+        dir_path = QFileDialog.getExistingDirectory(self, "Select Output Directory")
+        if dir_path:
+            self._output_dir = dir_path
+            self._output_input.setText(dir_path)
+
+    def get_output_dir(self) -> str:
+        """Get selected output directory."""
+        return self._output_input.text() or self._output_dir
+
     def _on_cancel(self) -> None:
         """Handle cancel button click - stop generation if running."""
         if self._presenter.is_generating():
@@ -438,7 +466,7 @@ class TimelineWindow(QMainWindow):
             # Show cancellation result immediately
             result = GenerationResult(
                 success=False,
-                output_dir=Path(self._settings_panel.get_output_dir() or ""),
+                output_dir=Path(self.get_output_dir() or ""),
                 image_count=0,
                 error_message="Generation cancelled by user",
             )
