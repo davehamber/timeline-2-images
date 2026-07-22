@@ -91,7 +91,7 @@ class TimelineWindow(QMainWindow):
         date_label_layout.addWidget(date_label)
         date_help = QLabel("?")
         date_help.setStyleSheet("color: #0066cc; font-weight: bold;")
-        date_help.setCursor(QCursor(Qt.CursorShape.HelpCursor))
+        date_help.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
         date_help.setToolTip(
             "Choose how to select dates:\n"
             "• Last N days: Process the most recent N days with location data\n"
@@ -112,7 +112,7 @@ class TimelineWindow(QMainWindow):
         settings_label_layout.addWidget(settings_label)
         settings_help = QLabel("?")
         settings_help.setStyleSheet("color: #0066cc; font-weight: bold;")
-        settings_help.setCursor(QCursor(Qt.CursorShape.HelpCursor))
+        settings_help.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
         settings_help.setToolTip(
             "Configure map rendering:\n"
             "• Width/Height: Image dimensions in pixels (200-4000 range)\n"
@@ -134,7 +134,7 @@ class TimelineWindow(QMainWindow):
         output_label_layout.addWidget(output_label)
         output_help = QLabel("?")
         output_help.setStyleSheet("color: #0066cc; font-weight: bold;")
-        output_help.setCursor(QCursor(Qt.CursorShape.HelpCursor))
+        output_help.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
         output_help.setToolTip(
             "Destination folder for generated map images\nOrganized by date (e.g., 2024-01-15.jpg)"
         )
