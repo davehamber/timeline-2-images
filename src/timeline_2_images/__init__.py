@@ -25,7 +25,7 @@ from timeline_2_images.models import Segment, ProcessedSegment, RenderResult
 from timeline_2_images.main import main
 from timeline_2_images.exceptions import TimelineException
 
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 
 __all__ = [
     "TimelineApp",

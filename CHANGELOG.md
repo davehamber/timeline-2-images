@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced visual hierarchy with consistent spacing and borders throughout GUI
 - Code quality: Refactored all Grade B complexity methods to Grade A (335+ Grade A methods total)
 
-## [0.5.0] - 2026-07-22
+## [## [Unreleased]] - 2026-07-22
 
 ### Added
 - Separate image width and height controls (image_width, image_height parameters)

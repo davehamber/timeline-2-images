@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "timeline-2-images"
-version = "0.5.0"
+version = "0.5.1"
 requires-python = ">=3.12"
 description = "Generate daily route map images from Google Timeline exports"
 authors = [{name = "Dave", email = "david.hamber@proton.me"}]
