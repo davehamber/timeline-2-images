@@ -71,13 +71,15 @@ jobs:
           $DepWalkerDir = "$CacheDir\depends"
           $DepWalkerZip = "$env:TEMP\depends.zip"
 
+          Write-Host "LOCALAPPDATA: $env:LOCALAPPDATA"
           Write-Host "Creating Nuitka cache directory: $CacheDir"
           New-Item -ItemType Directory -Path $CacheDir -Force | Out-Null
 
           Write-Host "Downloading Dependency Walker from: $DepWalkerURL"
           try {
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
             Invoke-WebRequest -Uri $DepWalkerURL -OutFile $DepWalkerZip -ErrorAction Stop
-            Write-Host "✓ Download successful"
+            Write-Host "✓ Download successful, file size: $((Get-Item $DepWalkerZip).Length) bytes"
           } catch {
             Write-Host "✗ Download failed: $_"
             exit 1
@@ -94,10 +96,7 @@ jobs:
           }
 
           Write-Host "Dependency Walker files:"
-          Get-ChildItem -Path $DepWalkerDir
-
-          Write-Host "Setting PATH environment variable"
-          Add-Content -Path $env:GITHUB_PATH -Value $DepWalkerDir
+          Get-ChildItem -Path $DepWalkerDir -Recurse | Select-Object -ExpandProperty FullName
 
           Write-Host "✓ Dependency Walker ready at: $DepWalkerDir"
         shell: pwsh
@@ -105,7 +104,9 @@ jobs:
       - name: Build CLI binary
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then
-            export PATH="$LOCALAPPDATA/Nuitka/depends:$PATH"
+            export PATH="/c/Users/runneradmin/AppData/Local/Nuitka/depends:$PATH"
+            echo "PATH=$PATH"
+            ls -la /c/Users/runneradmin/AppData/Local/Nuitka/depends/ 2>/dev/null || echo "Dependency Walker directory not found"
           fi
           uv run bash ./build_executable.sh cli
         shell: bash
@@ -113,7 +114,9 @@ jobs:
       - name: Build GUI binary
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then
-            export PATH="$LOCALAPPDATA/Nuitka/depends:$PATH"
+            export PATH="/c/Users/runneradmin/AppData/Local/Nuitka/depends:$PATH"
+            echo "PATH=$PATH"
+            ls -la /c/Users/runneradmin/AppData/Local/Nuitka/depends/ 2>/dev/null || echo "Dependency Walker directory not found"
           fi
           uv run bash ./build_executable.sh gui
         shell: bash
