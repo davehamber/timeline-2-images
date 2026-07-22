@@ -32,11 +32,19 @@ from timeline_2_images.gui.widgets.progress_panel import ProgressPanel
 class ClickableHelpLabel(QLabel):
     """QLabel that shows tooltip on click instead of hover."""
 
+    def __init__(self, text=""):
+        """Initialize with text and store tooltip separately."""
+        super().__init__(text)
+        self._tooltip_text = ""
+
+    def set_click_tooltip(self, text: str):
+        """Set tooltip to show on click (not on hover)."""
+        self._tooltip_text = text
+
     def mousePressEvent(self, event):
         """Show tooltip when clicked."""
-        tooltip_text = self.toolTip()
-        if tooltip_text:
-            QToolTip.showText(event.globalPos(), tooltip_text, self)
+        if self._tooltip_text:
+            QToolTip.showText(event.globalPosition().toPoint(), self._tooltip_text, self)
 
 
 class TimelineWindow(QMainWindow):
@@ -77,7 +85,7 @@ class TimelineWindow(QMainWindow):
         file_help = ClickableHelpLabel("?")
         file_help.setStyleSheet("color: #0066cc; font-weight: bold;")
         file_help.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        file_help.setToolTip(
+        file_help.set_click_tooltip(
             "Export Timeline.json from your Android phone:\n"
             "1. Open Settings → Location → Location Services → Timeline\n"
             "2. Tap 'Export Timeline data'\n"
@@ -103,7 +111,7 @@ class TimelineWindow(QMainWindow):
         date_help = ClickableHelpLabel("?")
         date_help.setStyleSheet("color: #0066cc; font-weight: bold;")
         date_help.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        date_help.setToolTip(
+        date_help.set_click_tooltip(
             "Choose how to select dates:\n"
             "• Last N days: Process the most recent N days with location data\n"
             "• Specific range: Process dates between start and end dates (inclusive)"
@@ -124,7 +132,7 @@ class TimelineWindow(QMainWindow):
         settings_help = ClickableHelpLabel("?")
         settings_help.setStyleSheet("color: #0066cc; font-weight: bold;")
         settings_help.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        settings_help.setToolTip(
+        settings_help.set_click_tooltip(
             "Configure map rendering:\n"
             "• Width/Height: Image dimensions in pixels (200-4000 range)\n"
             "  Larger images take longer to render\n"
@@ -146,7 +154,7 @@ class TimelineWindow(QMainWindow):
         output_help = ClickableHelpLabel("?")
         output_help.setStyleSheet("color: #0066cc; font-weight: bold;")
         output_help.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        output_help.setToolTip(
+        output_help.set_click_tooltip(
             "Destination folder for generated map images\nOrganized by date (e.g., 2024-01-15.jpg)"
         )
         output_label_layout.addWidget(output_help)
