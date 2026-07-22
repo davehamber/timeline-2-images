@@ -160,7 +160,7 @@ class TimelineWindow(QMainWindow):
         file_picker_layout.setContentsMargins(0, 0, 0, 0)
         file_picker_layout.addWidget(self._file_selector)
         file_picker_container.setLayout(file_picker_layout)
-        timeline_file_box = self._create_section_box(file_container, file_picker_container)
+        timeline_file_box = self._create_section_box(file_label_layout, file_picker_container)
         main_layout.addWidget(timeline_file_box)
         main_layout.addSpacing(3)
 
@@ -197,7 +197,7 @@ class TimelineWindow(QMainWindow):
         output_picker_layout.addWidget(output_browse_btn, 0)
         output_picker_container = QWidget()
         output_picker_container.setLayout(output_picker_layout)
-        output_directory_box = self._create_section_box(output_container, output_picker_container)
+        output_directory_box = self._create_section_box(output_label_layout, output_picker_container)
         main_layout.addWidget(output_directory_box)
         main_layout.addSpacing(3)
 
@@ -216,10 +216,8 @@ class TimelineWindow(QMainWindow):
         )
         date_label_layout.addWidget(date_help, 0, Qt.AlignmentFlag.AlignVCenter)
         date_label_layout.addStretch()
-        date_container = QWidget()
-        date_container.setLayout(date_label_layout)
         self._date_range_panel = DateRangePanel()
-        date_range_box = self._create_section_box(date_container, self._date_range_panel)
+        date_range_box = self._create_section_box(date_label_layout, self._date_range_panel)
         main_layout.addWidget(date_range_box)
         main_layout.addSpacing(3)
 
@@ -240,10 +238,8 @@ class TimelineWindow(QMainWindow):
         )
         settings_label_layout.addWidget(settings_help, 0, Qt.AlignmentFlag.AlignVCenter)
         settings_label_layout.addStretch()
-        settings_container = QWidget()
-        settings_container.setLayout(settings_label_layout)
         self._settings_panel = SettingsPanel()
-        image_settings_box = self._create_section_box(settings_container, self._settings_panel)
+        image_settings_box = self._create_section_box(settings_label_layout, self._settings_panel)
         main_layout.addWidget(image_settings_box)
         main_layout.addSpacing(3)
 
@@ -274,11 +270,13 @@ class TimelineWindow(QMainWindow):
         footer_layout.addWidget(metadata)
         main_layout.addLayout(footer_layout)
 
-    def _create_section_box(self, title_widget: QWidget, content_widget: QWidget) -> QWidget:
+    def _create_section_box(
+        self, title_layout: QHBoxLayout, content_widget: QWidget
+    ) -> QWidget:
         """Create a framed section with title and content.
 
         Args:
-            title_widget: Widget containing section title and help icon
+            title_layout: Layout containing section title and help icon
             content_widget: Widget containing section content
 
         Returns:
@@ -287,7 +285,7 @@ class TimelineWindow(QMainWindow):
         section_layout = QVBoxLayout()
         section_layout.setContentsMargins(8, 8, 8, 8)
         section_layout.setSpacing(4)
-        section_layout.addWidget(title_widget)
+        section_layout.addLayout(title_layout)
         section_layout.addWidget(content_widget)
 
         section_frame = QFrame()
