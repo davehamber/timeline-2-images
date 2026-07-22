@@ -14,6 +14,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -43,6 +44,13 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v2
+
+      - name: Install system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install ccache
+          echo "ccache installed"
+        shell: bash
 
       - name: Sync dependencies
         run: uv sync
