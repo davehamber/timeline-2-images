@@ -1,0 +1,120 @@
+name: Build Cross-Platform Binaries
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: amd64
+            suffix: ""
+          - os: windows-latest
+            platform: windows
+            arch: amd64
+            suffix: ".exe"
+          - os: macos-latest
+            platform: macos
+            arch: amd64
+            suffix: ""
+          - os: macos-latest
+            platform: macos
+            arch: arm64
+            suffix: ""
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Build CLI binary
+        run: uv run bash ./build_executable.sh cli
+
+      - name: Build GUI binary
+        run: uv run bash ./build_executable.sh gui
+
+      - name: Extract version
+        id: version
+        run: |
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            VERSION=$(python -c "import sys; sys.path.insert(0, 'src'); from timeline_2_images import __version__; print(__version__)")
+          else
+            VERSION=$(python3 -c "import sys; sys.path.insert(0, 'src'); from timeline_2_images import __version__; print(__version__)")
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Rename CLI binary (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mv dist/timeline2images dist/timeline2images-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}
+
+      - name: Rename GUI binary (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mv dist/timeline2images-gui dist/timeline2images-gui-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}
+
+      - name: Rename CLI binary (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          move dist\timeline2images.exe dist\timeline2images-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}.exe
+        shell: cmd
+
+      - name: Rename GUI binary (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          move dist\timeline2images-gui.exe dist\timeline2images-gui-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}.exe
+        shell: cmd
+
+      - name: Generate checksums (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd dist
+          sha256sum timeline2images-* > CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256
+          cat CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256
+
+      - name: Generate checksums (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd dist
+          $files = @(Get-ChildItem -Filter "timeline2images-*" -Name)
+          foreach ($file in $files) {
+            $hash = (Get-FileHash -Path $file -Algorithm SHA256).Hash
+            "$hash  $file" | Add-Content -Path "CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256"
+          }
+          Get-Content "CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256"
+        shell: pwsh
+
+      - name: Upload binaries to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/timeline2images-*
+            dist/CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  verify:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
