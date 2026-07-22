@@ -231,7 +231,7 @@ class MapRenderer:
     def _apply_padding_and_minimum(
         self, minx: float, miny: float, maxx: float, maxy: float
     ) -> tuple:
-        """Apply padding and enforce minimum area.
+        """Apply padding and enforce minimum area respecting image aspect ratio.
 
         Args:
             minx, miny, maxx, maxy: Web Mercator bounds
@@ -243,15 +243,25 @@ class MapRenderer:
         dy = (maxy - miny) or 500
         center_x = (minx + maxx) / 2
         center_y = (miny + maxy) / 2
-        max_dim = max(dx, dy)
-        pad_ratio = 0.05
-        padded_dim = max_dim * (1 + 2 * pad_ratio)
-        half_side = padded_dim / 2
 
-        minx = center_x - half_side
-        miny = center_y - half_side
-        maxx = center_x + half_side
-        maxy = center_y + half_side
+        pad_ratio = 0.05
+        padded_dx = dx * (1 + 2 * pad_ratio)
+        padded_dy = dy * (1 + 2 * pad_ratio)
+
+        image_aspect = self.config.image_width / self.config.image_height
+        padded_aspect = padded_dx / padded_dy
+
+        if padded_aspect > image_aspect:
+            half_width = padded_dx / 2
+            half_height = padded_dx / (2 * image_aspect)
+        else:
+            half_height = padded_dy / 2
+            half_width = padded_dy * image_aspect / 2
+
+        minx = center_x - half_width
+        maxx = center_x + half_width
+        miny = center_y - half_height
+        maxy = center_y + half_height
 
         # Enforce minimum area
         width_m = maxx - minx
@@ -260,11 +270,13 @@ class MapRenderer:
 
         if area_sq_km < self.config.min_area_sq_km:
             area_sq_m = self.config.min_area_sq_km * 1e6
-            half_side = math.sqrt(area_sq_m) / 2
-            minx = center_x - half_side
-            miny = center_y - half_side
-            maxx = center_x + half_side
-            maxy = center_y + half_side
+            aspect_ratio = width_m / height_m if height_m > 0 else 1.0
+            half_height = math.sqrt(area_sq_m / aspect_ratio) / 2
+            half_width = half_height * aspect_ratio
+            minx = center_x - half_width
+            maxx = center_x + half_width
+            miny = center_y - half_height
+            maxy = center_y + half_height
 
         return (minx, miny, maxx, maxy)
 
@@ -285,7 +297,7 @@ class MapRenderer:
         fig.subplots_adjust(left=0, right=1, top=1, bottom=0, hspace=0, wspace=0)
         ax.set_xlim(minx, maxx)
         ax.set_ylim(miny, maxy)
-        ax.set_aspect("equal")
+        ax.set_aspect("auto")
 
         osm_url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         cx.add_basemap(ax, source=osm_url, zoom="auto")
@@ -476,7 +488,7 @@ class MapRenderer:
             )
 
     def _calculate_combined_bounds(self, waypoints: list[tuple[float, float]]) -> tuple:
-        """Calculate bounds with ~5 pixel border around waypoints.
+        """Calculate bounds with ~5 pixel border respecting image aspect ratio.
 
         Args:
             waypoints: List of (lat, lon) tuples
@@ -514,14 +526,21 @@ class MapRenderer:
         padded_dx = dx + 2 * border_x
         padded_dy = dy + 2 * border_y
 
-        max_dim = max(padded_dx, padded_dy)
-        half_side = max_dim / 2
+        image_aspect = self.config.image_width / self.config.image_height
+        padded_aspect = padded_dx / padded_dy
+
+        if padded_aspect > image_aspect:
+            half_width = padded_dx / 2
+            half_height = padded_dx / (2 * image_aspect)
+        else:
+            half_height = padded_dy / 2
+            half_width = padded_dy * image_aspect / 2
 
         return (
-            center_x - half_side,
-            center_y - half_side,
-            center_x + half_side,
-            center_y + half_side,
+            center_x - half_width,
+            center_y - half_height,
+            center_x + half_width,
+            center_y + half_height,
         )
 
     def _render_combined_map(
@@ -541,7 +560,7 @@ class MapRenderer:
         fig.subplots_adjust(left=0, right=1, top=1, bottom=0, hspace=0, wspace=0)
         ax.set_xlim(minx, maxx)
         ax.set_ylim(miny, maxy)
-        ax.set_aspect("equal")
+        ax.set_aspect("auto")
 
         osm_url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         cx.add_basemap(ax, source=osm_url, zoom="auto")
