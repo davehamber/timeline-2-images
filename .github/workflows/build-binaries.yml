@@ -67,10 +67,11 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           $DepWalkerURL = "https://www.dependencywalker.com/depends22_x64.zip"
-          $CacheDir = "$env:LOCALAPPDATA\Nuitka\depends"
-          $DepWalkerZip = "$CacheDir\depends.zip"
+          $CacheDir = "$env:LOCALAPPDATA\Nuitka"
+          $DepWalkerDir = "$CacheDir\depends"
+          $DepWalkerZip = "$env:TEMP\depends.zip"
 
-          Write-Host "Creating cache directory at: $CacheDir"
+          Write-Host "Creating Nuitka cache directory: $CacheDir"
           New-Item -ItemType Directory -Path $CacheDir -Force | Out-Null
 
           Write-Host "Downloading Dependency Walker from: $DepWalkerURL"
@@ -82,28 +83,40 @@ jobs:
             exit 1
           }
 
-          Write-Host "Extracting to: $CacheDir"
+          Write-Host "Extracting to: $DepWalkerDir"
+          New-Item -ItemType Directory -Path $DepWalkerDir -Force | Out-Null
           try {
-            Expand-Archive -Path $DepWalkerZip -DestinationPath $CacheDir -Force -ErrorAction Stop
+            Expand-Archive -Path $DepWalkerZip -DestinationPath $DepWalkerDir -Force -ErrorAction Stop
             Write-Host "✓ Extraction successful"
           } catch {
             Write-Host "✗ Extraction failed: $_"
             exit 1
           }
 
-          Write-Host "Verifying installation..."
-          Get-ChildItem -Path $CacheDir -Recurse | Write-Host
+          Write-Host "Dependency Walker files:"
+          Get-ChildItem -Path $DepWalkerDir
 
-          Write-Host "✓ Dependency Walker is ready"
-          Write-Host "Adding to PATH: $CacheDir"
-          Add-Content -Path $env:GITHUB_PATH -Value $CacheDir
+          Write-Host "Setting PATH environment variable"
+          Add-Content -Path $env:GITHUB_PATH -Value $DepWalkerDir
+
+          Write-Host "✓ Dependency Walker ready at: $DepWalkerDir"
         shell: pwsh
 
       - name: Build CLI binary
-        run: uv run bash ./build_executable.sh cli
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            export PATH="$LOCALAPPDATA/Nuitka/depends:$PATH"
+          fi
+          uv run bash ./build_executable.sh cli
+        shell: bash
 
       - name: Build GUI binary
-        run: uv run bash ./build_executable.sh gui
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            export PATH="$LOCALAPPDATA/Nuitka/depends:$PATH"
+          fi
+          uv run bash ./build_executable.sh gui
+        shell: bash
 
       - name: Extract version
         id: version
