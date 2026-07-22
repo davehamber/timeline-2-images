@@ -29,15 +29,15 @@ class FileSelector(QWidget):
         self._path_input = QLineEdit()
         self._path_input.setPlaceholderText("/path/to/Timeline.json")
         self._path_input.setReadOnly(True)
-        layout.addWidget(self._path_input)
+        layout.addWidget(self._path_input, 1)
 
         browse_btn = QPushButton("Browse...")
         browse_btn.clicked.connect(self._on_browse)
-        layout.addWidget(browse_btn)
+        layout.addWidget(browse_btn, 0)
 
         self._loading_label = QLabel("")
         self._loading_label.setStyleSheet("color: #0066cc; font-size: 9pt;")
-        layout.addWidget(self._loading_label)
+        layout.addWidget(self._loading_label, 0)
 
     def _on_browse(self) -> None:
         """Handle browse button click."""

@@ -183,11 +183,11 @@ class TimelineWindow(QMainWindow):
             "Folder where generated map images will be saved\n"
             "Created automatically if it doesn't exist"
         )
-        output_picker_layout.addWidget(self._output_input)
+        output_picker_layout.addWidget(self._output_input, 1)
         output_browse_btn = QPushButton("Browse...")
         output_browse_btn.setToolTip("Select or create output folder")
         output_browse_btn.clicked.connect(self._on_browse_output)
-        output_picker_layout.addWidget(output_browse_btn)
+        output_picker_layout.addWidget(output_browse_btn, 0)
         output_picker_container = QWidget()
         output_picker_container.setLayout(output_picker_layout)
         main_layout.addWidget(output_picker_container)
