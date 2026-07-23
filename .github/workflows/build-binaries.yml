@@ -130,6 +130,7 @@ jobs:
             dist/timeline2images-* \
             dist/CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256 \
             --clobber
+        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
