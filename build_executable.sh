@@ -50,21 +50,26 @@ case "$BUILD_TYPE" in
         ;;
 esac
 
-EXTRA_FLAGS=""
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-  # Windows: auto-download Dependency Walker without prompting
-  EXTRA_FLAGS="--assume-yes-for-downloads"
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" || "$OSTYPE" == "cygwin" ]]; then
+  # Windows: pipe "yes" to auto-download Dependency Walker
+  yes | uv run nuitka \
+    --onefile \
+    --output-dir=./dist \
+    --follow-imports \
+    --include-package=timeline_2_images \
+    $QT_FLAGS \
+    --remove-output \
+    "$ENTRY_POINT"
+else
+  uv run nuitka \
+    --onefile \
+    --output-dir=./dist \
+    --follow-imports \
+    --include-package=timeline_2_images \
+    $QT_FLAGS \
+    --remove-output \
+    "$ENTRY_POINT"
 fi
-
-uv run nuitka \
-  --onefile \
-  --output-dir=./dist \
-  --follow-imports \
-  --include-package=timeline_2_images \
-  $QT_FLAGS \
-  $EXTRA_FLAGS \
-  --remove-output \
-  "$ENTRY_POINT"
 
 echo "Checking for binary in dist directory..."
 ls -lh ./dist/ 2>/dev/null | grep -E "\.bin|timeline"
