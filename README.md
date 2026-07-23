@@ -15,6 +15,53 @@ Use it to review movement patterns, create travel logs, or analyze daily routine
 
 ## Quick Start
 
+## Using Compiled Binaries
+
+Pre-compiled standalone executables are available for Windows, macOS, and Linux. These run without requiring Python installation.
+
+Download the latest binaries from the [Releases](https://github.com/yourusername/timeline-2-images/releases) page for your platform.
+
+### Linux & macOS
+
+```bash
+# Make executable
+chmod +x timeline2images
+chmod +x timeline2images-gui
+
+# Run CLI version
+./timeline2images Timeline.json --days 30
+
+# Run GUI version
+./timeline2images-gui
+```
+
+### Windows
+
+#### GUI Version
+```bash
+timeline2images-gui.exe
+```
+
+Simply double-click to launch the graphical interface.
+
+**If Windows blocks the app:** Windows SmartScreen may display "This App Has Been Blocked for Your Protection" for unsigned executables. To bypass:
+
+1. Right-click the `.exe` file
+2. Select **Properties**
+3. Check the **"Unblock"** checkbox at the bottom
+4. Click **Apply** → **OK**
+5. Run the executable normally
+
+This is a one-time step per executable.
+
+#### CLI Version
+```bash
+timeline2images.exe Timeline.json --days 30
+timeline2images.exe Timeline.json --start-date 2026-01-01 --end-date 2026-01-31
+```
+
+### Usage (Python)
+
 ### Prerequisites
 - Python 3.13+
 - `uv` package manager (or pip)
@@ -25,8 +72,6 @@ Use it to review movement patterns, create travel logs, or analyze daily routine
 # Clone/download this repository, then:
 uv sync
 ```
-
-### Usage
 
 #### GUI (Graphical Interface)
 
