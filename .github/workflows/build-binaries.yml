@@ -120,12 +120,13 @@ jobs:
         shell: pwsh
 
       - name: Upload binaries to release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ github.event.release.tag_name || github.event.inputs.version }}
-          files: |
-            dist/timeline2images-*
-            dist/CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name || github.event.inputs.version }}"
+          echo "Uploading to release: $TAG_NAME"
+          gh release upload "$TAG_NAME" \
+            dist/timeline2images-* \
+            dist/CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256 \
+            --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
