@@ -61,16 +61,26 @@ uv run nuitka \
   "$ENTRY_POINT"
 
 echo "Checking for binary in dist directory..."
-ls -lh ./dist/ 2>/dev/null | grep -E "\.bin|timeline"
+ls -lh ./dist/ 2>/dev/null | grep -E "\.bin|\.exe|timeline"
 
+# Check for main.bin (Linux/macOS)
 if [ -f "./dist/main.bin" ]; then
     mv "./dist/main.bin" "./dist/$OUTPUT_NAME"
     chmod +x "./dist/$OUTPUT_NAME"
     echo "✓ $BUILD_TYPE executable built successfully at ./dist/$OUTPUT_NAME"
+# Check for main.exe (Windows)
+elif [ -f "./dist/main.exe" ]; then
+    mv "./dist/main.exe" "./dist/${OUTPUT_NAME}.exe"
+    echo "✓ $BUILD_TYPE executable built successfully at ./dist/${OUTPUT_NAME}.exe"
+# Check for app.bin (Linux/macOS)
 elif [ -f "./dist/app.bin" ]; then
     mv "./dist/app.bin" "./dist/$OUTPUT_NAME"
     chmod +x "./dist/$OUTPUT_NAME"
     echo "✓ $BUILD_TYPE executable built successfully at ./dist/$OUTPUT_NAME"
+# Check for app.exe (Windows)
+elif [ -f "./dist/app.exe" ]; then
+    mv "./dist/app.exe" "./dist/${OUTPUT_NAME}.exe"
+    echo "✓ $BUILD_TYPE executable built successfully at ./dist/${OUTPUT_NAME}.exe"
 else
     echo "✗ Build failed or executable not found"
     exit 1
