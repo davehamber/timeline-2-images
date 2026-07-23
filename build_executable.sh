@@ -50,12 +50,19 @@ case "$BUILD_TYPE" in
         ;;
 esac
 
+EXTRA_FLAGS=""
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+  # Windows: auto-download Dependency Walker without prompting
+  EXTRA_FLAGS="--assume-yes-for-downloads"
+fi
+
 uv run nuitka \
   --onefile \
   --output-dir=./dist \
   --follow-imports \
   --include-package=timeline_2_images \
   $QT_FLAGS \
+  $EXTRA_FLAGS \
   --remove-output \
   "$ENTRY_POINT"
 

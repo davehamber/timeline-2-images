@@ -64,14 +64,10 @@ jobs:
         run: uv sync
 
       - name: Build CLI binary
-        env:
-          NUITKA_NUITKA_DOWNLOAD_DEPENDENCIES: "yes"
         run: uv run bash ./build_executable.sh cli
         shell: bash
 
       - name: Build GUI binary
-        env:
-          NUITKA_NUITKA_DOWNLOAD_DEPENDENCIES: "yes"
         run: uv run bash ./build_executable.sh gui
         shell: bash
 
