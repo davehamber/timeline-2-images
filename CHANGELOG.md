@@ -36,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows binary builds now include installer (.exe) in addition to standalone executables
 - README documentation expanded with Windows installer instructions and new feature documentation
 
-## [0.6.0] - 2026-07-22
+## [## [Unreleased]] - 2026-07-22
 
 ### Changed
 - Migrated GUI framework from PyQt6 to PySide6 for better cross-platform support
