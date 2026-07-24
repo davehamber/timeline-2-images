@@ -12,7 +12,12 @@ from typing import Any
 from timeline_2_images.banner import print_banner
 from timeline_2_images.app import TimelineApp
 from timeline_2_images.config import RenderConfiguration, DateRangeQuery
-from timeline_2_images.config.render_configuration import MIN_IMAGE_SIZE, MAX_IMAGE_SIZE
+from timeline_2_images.config.render_configuration import (
+    MIN_IMAGE_SIZE,
+    MAX_IMAGE_SIZE,
+    MIN_LINE_WIDTH,
+    MAX_LINE_WIDTH,
+)
 from timeline_2_images.validators import TimelineValidationError
 from timeline_2_images.console_formatter import ConsoleFormatter
 
@@ -73,6 +78,31 @@ class CLIRunner:
 
         return days
 
+    @staticmethod
+    def _validate_blue_line_width(value: str) -> int:
+        """Validate blue line width argument.
+
+        Args:
+            value: String value from argparse
+
+        Returns:
+            Valid integer line width (1-10)
+
+        Raises:
+            argparse.ArgumentTypeError: If value is invalid
+        """
+        try:
+            width = int(value)
+        except ValueError:
+            raise argparse.ArgumentTypeError(f"blue line width must be an integer, got '{value}'")
+
+        if width < MIN_LINE_WIDTH or width > MAX_LINE_WIDTH:
+            raise argparse.ArgumentTypeError(
+                f"blue line width must be between {MIN_LINE_WIDTH} and {MAX_LINE_WIDTH}, got {width}"
+            )
+
+        return width
+
     def validate_dates(self, start_date: str | None, end_date: str | None, days: int) -> None:
         """Validate date arguments from CLI.
 
@@ -98,6 +128,7 @@ class CLIRunner:
         image_width: int,
         image_height: int,
         place_names: bool,
+        blue_line_width: int = 2,
     ) -> TimelineApp:
         """Initialize TimelineApp with CLI configuration.
 
@@ -107,6 +138,7 @@ class CLIRunner:
             image_width: Width of output images in pixels
             image_height: Height of output images in pixels
             place_names: Whether to add place names to maps
+            blue_line_width: Thickness of blue journey lines in points (1-10)
 
         Returns:
             Initialized TimelineApp instance
@@ -116,7 +148,10 @@ class CLIRunner:
         """
         try:
             config = RenderConfiguration(
-                image_width=image_width, image_height=image_height, add_place_names=place_names
+                image_width=image_width,
+                image_height=image_height,
+                add_place_names=place_names,
+                blue_line_width=blue_line_width,
             )
             return TimelineApp(str(timeline_json), output_dir=output_dir, config=config)
         except TimelineValidationError as e:
@@ -134,6 +169,7 @@ class CLIRunner:
         end_date: str | None,
         place_names: bool,
         single_image: bool,
+        blue_line_width: int = 2,
     ) -> None:
         """Process and render timeline images.
 
@@ -147,9 +183,12 @@ class CLIRunner:
             end_date: Optional end date in YYYY-MM-DD format
             place_names: Whether to add place names to maps
             single_image: Whether to render as single combined image
+            blue_line_width: Thickness of blue journey lines in points (1-10)
         """
         self.validate_dates(start_date, end_date, days)
-        app = self.initialize_app(timeline_json, output_dir, image_width, image_height, place_names)
+        app = self.initialize_app(
+            timeline_json, output_dir, image_width, image_height, place_names, blue_line_width
+        )
         timeline_path = Path(timeline_json)
 
         # Load and display available dates
@@ -245,6 +284,16 @@ class CLIRunner:
             action="store_true",
             help="Combine all dates into single image with connected routes",
         )
+        parser.add_argument(
+            "--blue-line-width",
+            type=self._validate_blue_line_width,
+            default=2,
+            help=(
+                f"Thickness of blue journey lines in points "
+                f"({MIN_LINE_WIDTH}-{MAX_LINE_WIDTH}, default: 2). "
+                f"Black border is automatically 2pt wider."
+            ),
+        )
         return parser
 
     def run(self, args: argparse.Namespace) -> None:
@@ -268,6 +317,7 @@ class CLIRunner:
                 args.end_date,
                 not args.no_place_names,
                 args.single_image,
+                args.blue_line_width,
             )
         else:
             parser = self.build_argument_parser()
@@ -286,6 +336,7 @@ def main(
     end_date: str | None = None,
     place_names: bool = True,
     single_image: bool = False,
+    blue_line_width: int = 2,
 ) -> None:
     """Generate daily route maps from Timeline JSON export.
 
@@ -300,6 +351,7 @@ def main(
         end_date: End date in YYYY-MM-DD format
         place_names: If True, add place names to maps (default: True)
         single_image: If True, combine all dates into single image (default: False)
+        blue_line_width: Thickness of blue journey lines in points, 1-10 (default: 2)
     """
     # Handle backward compatibility: image_size sets both width and height
     width = (
@@ -322,6 +374,7 @@ def main(
         end_date,
         place_names,
         single_image,
+        blue_line_width,
     )
 
 

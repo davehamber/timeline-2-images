@@ -2,6 +2,7 @@
 
 import time
 from datetime import datetime, date, timezone
+from typing import Any
 
 import pandas as pd
 
@@ -12,17 +13,30 @@ from timeline_2_images.cache.segment_cache import SegmentCache
 class SegmentParser:
     """Parses timeline segments from JSON data."""
 
-    def __init__(self, cache: TimelineCache, segment_cache: SegmentCache | None = None):
+    def __init__(
+        self, cache: TimelineCache, segment_cache: SegmentCache | None = None
+    ) -> None:
         self.cache = cache
         self.segment_cache = segment_cache or SegmentCache()
 
     @staticmethod
-    def parse_waypoints(path: list) -> list:
-        """Parse waypoints from timeline path with string coordinates."""
+    def _strip_geo_prefix(point: str) -> str:
+        """Strip geo: URI prefix from coordinate string (iOS format)."""
+        if point.startswith("geo:"):
+            return point[len("geo:") :]
+        return point
+
+    @staticmethod
+    def parse_waypoints(path: list[Any]) -> list[tuple[float, float]]:
+        """Parse waypoints from timeline path with string coordinates.
+
+        Handles both Android (plain coordinates) and iOS (geo: prefixed) formats.
+        """
         waypoints = []
         for wp in path:
             point = wp.get("point")
             if isinstance(point, str) and "," in point:
+                point = SegmentParser._strip_geo_prefix(point)
                 lat_s, lon_s = point.split(",")
                 lat_s = lat_s.replace("°", "").strip()
                 lon_s = lon_s.replace("°", "").strip()
@@ -38,15 +52,15 @@ class SegmentParser:
         dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
         if pd.isna(dt_timestamp):
             return None
-        iso_str = str(dt_timestamp.isoformat())  # type: ignore[union-attr]
+        iso_str = str(dt_timestamp.isoformat())  # type: ignore[attr-defined]
         parsed_datetime = datetime.fromisoformat(iso_str)
         if parsed_datetime.astimezone(timezone.utc).date() != target:
             return None
         return start_str
 
     def build_segments_with_waypoints(
-        self, segment_list: list[dict], step_start: float, timing: dict
-    ) -> list[dict]:
+        self, segment_list: list[dict[str, Any]], step_start: float, timing: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Build segment dicts with parsed waypoints from a segment list."""
         segments = []
         for segment in segment_list:
@@ -68,8 +82,13 @@ class SegmentParser:
         return segments
 
     def _try_cached_segments(
-        self, json_path: str, target_date: str, timing: dict, start: float, profile: bool
-    ) -> tuple[list[dict] | tuple[list[dict], dict] | None, bool]:
+        self,
+        json_path: str,
+        target_date: str,
+        timing: dict[str, Any],
+        start: float,
+        profile: bool,
+    ) -> tuple[list[dict[str, Any]] | tuple[list[dict[str, Any]], dict[str, Any]] | None, bool]:
         """Try to return cached segments if available."""
         cached_segments = self.segment_cache.get(json_path, target_date)
         if cached_segments is None:
@@ -79,7 +98,9 @@ class SegmentParser:
         timing["cache_source"] = "segment_cached"
         return (cached_segments, timing) if profile else cached_segments, True
 
-    def _load_and_index_segments(self, json_path: str, timing: dict) -> tuple[list, dict]:
+    def _load_and_index_segments(
+        self, json_path: str, timing: dict[str, Any]
+    ) -> tuple[list[dict[str, Any]], dict[date, list[int]]]:
         """Load and build index for segments."""
         step_start = time.time()
         data = self.cache.load_file(json_path)
@@ -93,8 +114,12 @@ class SegmentParser:
         return data.get("semanticSegments", []), segment_date_index
 
     def _match_segments_for_date(
-        self, semantic_segs: list, target_date: str, segment_date_index: dict, timing: dict
-    ) -> list:
+        self,
+        semantic_segs: list[dict[str, Any]],
+        target_date: str,
+        segment_date_index: dict[date, list[int]],
+        timing: dict[str, Any],
+    ) -> list[dict[str, Any]]:
         """Find segments matching the target date."""
         step_start = time.time()
         target_date_obj = datetime.strptime(target_date, "%Y-%m-%d").date()
@@ -105,9 +130,9 @@ class SegmentParser:
 
     def load_for_day(
         self, json_path: str, target_date: str, profile: bool = False
-    ) -> list[dict] | tuple[list[dict], dict]:
+    ) -> list[dict[str, Any]] | tuple[list[dict[str, Any]], dict[str, Any]]:
         """Extract semantic segments for a given date with waypoints."""
-        timing: dict = {}
+        timing: dict[str, Any] = {}
         start = time.time()
 
         # Try cached segments first

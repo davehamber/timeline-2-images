@@ -8,7 +8,7 @@ directly depends on TimelineApp or other core implementation details.
 """
 
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 from timeline_2_images.app import TimelineApp
 from timeline_2_images.exceptions import TimelineException
@@ -27,7 +27,7 @@ class TimelineProcessorAdapter(ITimelineProcessor):
     All GUI code depends on ITimelineProcessor interface, not TimelineApp.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize adapter (creates nothing until first operation)."""
         self._app: Optional[TimelineApp] = None
 
@@ -110,7 +110,7 @@ class TimelineProcessorAdapter(ITimelineProcessor):
             on_file_loading(is_from_cache)
 
     @staticmethod
-    def _get_cache_source(cache) -> bool:
+    def _get_cache_source(cache: Any) -> bool:
         """Check if cache was loaded from session."""
         try:
             return cache.cache_source == "session"
@@ -147,7 +147,7 @@ class TimelineProcessorAdapter(ITimelineProcessor):
         )
 
     def _build_batch_result(
-        self, config: ImageGenerationConfig, results: list, image_count: int
+        self, config: ImageGenerationConfig, results: list[Any], image_count: int
     ) -> GenerationResult:
         """Build GenerationResult from batch processing results."""
         failed_dates = [r.date for r in results if not r.was_successful()]

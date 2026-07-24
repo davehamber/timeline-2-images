@@ -21,7 +21,7 @@ from PySide6.QtCore import QDate
 class DateRangePanel(QWidget):
     """Panel for selecting date range for processing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize date range panel."""
         super().__init__()
         self._available_dates: list[str] = []

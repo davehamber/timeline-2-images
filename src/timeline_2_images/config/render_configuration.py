@@ -4,6 +4,8 @@ from dataclasses import dataclass
 
 MIN_IMAGE_SIZE = 200
 MAX_IMAGE_SIZE = 4000
+MIN_LINE_WIDTH = 1
+MAX_LINE_WIDTH = 10
 
 
 @dataclass
@@ -15,12 +17,21 @@ class RenderConfiguration:
     output_format: str = "jpg"
     dpi: int = 100
     min_area_sq_km: float = 5.0
-    line_width: int = 2
-    line_border_width: int = 4
+    blue_line_width: int = 2
     line_alpha: float = 0.9
     start_marker_size: int = 35
     end_marker_size: int = 25
     add_place_names: bool = True
+
+    @property
+    def line_width(self) -> int:
+        """Get the blue line width."""
+        return self.blue_line_width
+
+    @property
+    def line_border_width(self) -> int:
+        """Get the black border width (always 2pt wider than blue line)."""
+        return self.blue_line_width + 2
 
     def get_figure_size(self) -> tuple[float, float]:
         """Get figure size in inches (width, height)."""
@@ -56,6 +67,11 @@ class RenderConfiguration:
             raise ValueError("min_area_sq_km must be non-negative")
         if not 0 <= self.line_alpha <= 1:
             raise ValueError("line_alpha must be between 0 and 1")
+        if not MIN_LINE_WIDTH <= self.blue_line_width <= MAX_LINE_WIDTH:
+            raise ValueError(
+                f"blue_line_width must be between {MIN_LINE_WIDTH} and {MAX_LINE_WIDTH}, "
+                f"got {self.blue_line_width}"
+            )
 
     def validate(self) -> bool:
         """Validate configuration."""

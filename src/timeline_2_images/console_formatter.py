@@ -63,7 +63,7 @@ class ConsoleFormatter:
         print(f"Total time: {total_time:.2f}s")
 
     @staticmethod
-    def print_cache_info(cache_info: dict) -> None:
+    def print_cache_info(cache_info: dict[str, Any]) -> None:
         """Print cache information."""
         if not cache_info:
             return

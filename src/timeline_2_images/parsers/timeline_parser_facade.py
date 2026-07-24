@@ -1,6 +1,7 @@
 """Facade providing OOP interface for timeline parsing operations."""
 
 from datetime import date
+from typing import Any
 
 import pandas as pd
 
@@ -22,7 +23,7 @@ class TimelineParserFacade:
         timeline_cache: TimelineCache | None = None,
         segment_parser: SegmentParser | None = None,
         point_extractor: PointExtractor | None = None,
-    ):
+    ) -> None:
         """Initialize timeline parser facade with optional dependency injection.
 
         Args:
@@ -36,7 +37,7 @@ class TimelineParserFacade:
 
     def load_segments_for_day(
         self, json_path: str, target_date: str, profile: bool = False
-    ) -> list[dict] | tuple[list[dict], dict]:
+    ) -> list[dict[str, Any]] | tuple[list[dict[str, Any]], dict[str, Any]]:
         """Extract semantic segments for a given date with waypoints."""
         return self._segment_parser.load_for_day(json_path, target_date, profile)
 

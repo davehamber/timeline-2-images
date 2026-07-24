@@ -3,13 +3,15 @@
 
 """Progress tracking panel for image generation."""
 
+from typing import Any
+
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QProgressBar, QLabel
 
 
 class ProgressPanel(QWidget):
     """Panel showing progress of image generation."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize progress panel."""
         super().__init__()
         self._create_ui()
@@ -68,7 +70,7 @@ class ProgressPanel(QWidget):
             self._status_label.setText(f"Processing: {completed}/{total} images")
             self._details_label.setText(f"{percentage}% complete")
 
-    def set_complete(self, result) -> None:
+    def set_complete(self, result: Any) -> None:
         """Mark progress as complete.
 
         Args:

@@ -3,7 +3,7 @@
 import json
 import time
 from datetime import date
-from typing import Dict
+from typing import Any, Dict
 
 
 class TimelineCache:
@@ -12,19 +12,21 @@ class TimelineCache:
     Caches the full parsed JSON structure in memory for the lifetime of the session.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.file_path: str | None = None
-        self.data: dict | None = None
+        self.data: dict[str, Any] | None = None
         self.date_index: Dict[date, bool] | None = None
         self.segment_date_index: Dict[date, list[int]] | None = None
         self.cache_source: str = "none"
 
-    def load_file(self, json_path: str) -> dict:
+    def load_file(self, json_path: str) -> dict[str, Any]:
         """Load and cache Timeline JSON file.
 
         Try loading from cache in order:
         1. Session-level in-memory cache
         2. Disk file
+
+        Auto-detects and wraps bare array root (iOS format) as {"semanticSegments": array}.
         """
         if self.file_path == json_path and self.data is not None:
             self.cache_source = "session"
@@ -35,9 +37,15 @@ class TimelineCache:
         # Load from disk
         start = time.time()
         with open(json_path, "r", encoding="utf-8") as f:
-            self.data = json.load(f)
+            raw_data = json.load(f)
         disk_time = time.time() - start
         print(f"[TIMING] Disk load (json.load): {disk_time:.2f}s")
+
+        # Auto-wrap bare array (iOS format) as semanticSegments
+        if isinstance(raw_data, list):
+            self.data = {"semanticSegments": raw_data}
+        else:
+            self.data = raw_data
 
         self.date_index = None
         self.cache_source = "parsed"

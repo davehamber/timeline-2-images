@@ -2,12 +2,13 @@
 
 from pathlib import Path
 import sqlite3
+from typing import Any
 
 
 class TileCacheManager:
     """Manages tile caching for map rendering."""
 
-    def __init__(self, cache_dir: str | None = None):
+    def __init__(self, cache_dir: str | None = None) -> None:
         """Initialize tile cache manager.
 
         Args:
@@ -20,7 +21,7 @@ class TileCacheManager:
         self.cache_dir.mkdir(exist_ok=True, parents=True)
         self.db_path = self.cache_dir / "tiles.sqlite"
 
-    def get_cache_stats(self) -> dict:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics.
 
         Returns:
@@ -65,7 +66,7 @@ class TileCacheManager:
         except OSError:
             pass
 
-    def get_info(self) -> dict:
+    def get_info(self) -> dict[str, Any]:
         """Get complete cache information.
 
         Returns:

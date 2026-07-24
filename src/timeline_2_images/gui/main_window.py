@@ -4,7 +4,7 @@
 """Main application window for timeline-2-images GUI."""
 
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -35,7 +35,7 @@ from timeline_2_images.gui.widgets.progress_panel import ProgressPanel
 class PersistentTooltip(QFrame):
     """Custom persistent tooltip that stays visible on click."""
 
-    def __init__(self, text: str, parent=None):
+    def __init__(self, text: str, parent: Any = None) -> None:
         """Initialize custom tooltip."""
         super().__init__(parent)
         self.setWindowFlags(
@@ -56,7 +56,7 @@ class PersistentTooltip(QFrame):
         layout.addWidget(label)
         self.setLayout(layout)
 
-    def show_at(self, pos):
+    def show_at(self, pos: Any) -> None:
         """Show tooltip at specified position."""
         self.move(pos)
         self.show()
@@ -67,16 +67,16 @@ class ClickableHelpLabel(QLabel):
 
     _tooltip_widget = None  # Class variable for the persistent tooltip
 
-    def __init__(self, text=""):
+    def __init__(self, text: str = "") -> None:
         """Initialize with text and store tooltip separately."""
         super().__init__(text)
         self._tooltip_text = ""
 
-    def set_click_tooltip(self, text: str):
+    def set_click_tooltip(self, text: str) -> None:
         """Set tooltip to show on click."""
         self._tooltip_text = text
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: Any) -> None:
         """Show persistent tooltip when clicked."""
         if self._tooltip_text:
             # Hide any existing tooltip
@@ -94,7 +94,7 @@ class ClickableHelpLabel(QLabel):
             ClickableHelpLabel._tooltip_widget.move(cursor_pos)
             ClickableHelpLabel._tooltip_widget.show()
 
-    def leaveEvent(self, event):
+    def leaveEvent(self, event: Any) -> None:
         """Hide tooltip when mouse leaves widget."""
         if ClickableHelpLabel._tooltip_widget:
             ClickableHelpLabel._tooltip_widget.hide()
@@ -104,7 +104,7 @@ class ClickableHelpLabel(QLabel):
 class TimelineWindow(QMainWindow):
     """Main GUI window for timeline image generation."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize main window."""
         super().__init__()
         self.setWindowTitle("Timeline 2 Images")
@@ -141,18 +141,28 @@ class TimelineWindow(QMainWindow):
         file_help.setStyleSheet("color: #0066cc; font-weight: bold; margin-top: 2px;")
         file_help.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         file_help.set_click_tooltip(
-            "Export Timeline.json from your Android phone:\n"
+            "ANDROID: Export Timeline.json\n"
             "1. Open Settings → Location → Location Services → Timeline\n"
             "2. Tap 'Export Timeline data'\n"
             "3. Authenticate with your device lock method\n"
             "4. Choose where to save the file\n"
-            "5. Transfer the file to your computer"
+            "5. Transfer to computer\n"
+            "\n"
+            "iPhone: Export location-history.json\n"
+            "1. Open Settings → Privacy & Security → Location Services\n"
+            "2. Scroll to bottom → Export Timeline Data\n"
+            "3. Choose export format (JSON)\n"
+            "4. Authenticate with Face/Touch ID or passcode\n"
+            "5. Share or save the location-history.json file\n"
+            "6. Transfer to computer"
         )
         file_label_layout.addWidget(file_help, 0, Qt.AlignmentFlag.AlignVCenter)
         file_label_layout.addStretch()
         self._file_selector = FileSelector(self._presenter)
         self._file_selector.on_file_selected(self._on_file_selected_in_selector)
-        self._file_selector.setToolTip("Select your exported Timeline.json file (JSON format)")
+        self._file_selector.setToolTip(
+            "Select your exported Timeline.json (Android) or location-history.json (iPhone) file"
+        )
         file_picker_container = QWidget()
         file_picker_layout = QHBoxLayout()
         file_picker_layout.setContentsMargins(0, 0, 0, 0)
@@ -360,7 +370,7 @@ class TimelineWindow(QMainWindow):
         """Handle available dates loaded."""
         self._date_range_panel.set_available_dates(dates)
 
-    def _on_generation_complete(self, result) -> None:
+    def _on_generation_complete(self, result: Any) -> None:
         """Handle generation completion."""
         self._progress_panel.set_complete(result)
 
@@ -465,7 +475,7 @@ class TimelineWindow(QMainWindow):
         }
         self._settings_manager.save_settings(settings)
 
-    def closeEvent(self, event) -> None:
+    def closeEvent(self, event: Any) -> None:
         """Handle window close event - save settings.
 
         Args:

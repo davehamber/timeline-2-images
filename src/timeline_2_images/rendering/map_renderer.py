@@ -386,8 +386,20 @@ class MapRenderer:
         if len(all_waypoints) > 1:
             line = LineString([(lon, lat) for lat, lon in all_waypoints])
             gdf_line = gpd.GeoDataFrame(geometry=[line], crs="EPSG:4326").to_crs(epsg=3857)
-            gdf_line.plot(ax=ax, color="#000000", linewidth=4, alpha=0.8, zorder=99)
-            gdf_line.plot(ax=ax, color="#1a73e8", linewidth=2, alpha=0.9, zorder=100)
+            gdf_line.plot(
+                ax=ax,
+                color="#000000",
+                linewidth=self.config.line_border_width,
+                alpha=0.8,
+                zorder=99,
+            )
+            gdf_line.plot(
+                ax=ax,
+                color="#1a73e8",
+                linewidth=self.config.line_width,
+                alpha=self.config.line_alpha,
+                zorder=100,
+            )
 
     def _draw_combined_journey_line(self, ax: Any, segments: list[ProcessedSegment]) -> None:
         """Draw journey line for combined routes without closing the loop.
@@ -407,8 +419,20 @@ class MapRenderer:
             line = LineString([(lon, lat) for lat, lon in all_waypoints])
             gdf_line = gpd.GeoDataFrame(geometry=[line], crs="EPSG:4326").to_crs(epsg=3857)
 
-            gdf_line.plot(ax=ax, color="#000000", linewidth=4, alpha=0.8, zorder=99)
-            gdf_line.plot(ax=ax, color="#1a73e8", linewidth=2, alpha=0.9, zorder=100)
+            gdf_line.plot(
+                ax=ax,
+                color="#000000",
+                linewidth=self.config.line_border_width,
+                alpha=0.8,
+                zorder=99,
+            )
+            gdf_line.plot(
+                ax=ax,
+                color="#1a73e8",
+                linewidth=self.config.line_width,
+                alpha=self.config.line_alpha,
+                zorder=100,
+            )
 
     def _draw_markers(self, ax: Any, segments: list[ProcessedSegment]) -> None:
         """Draw start and end markers.

@@ -2,7 +2,7 @@
 
 import time
 from datetime import date, datetime, timedelta, timezone
-from typing import Set
+from typing import Any, Set
 
 import pandas as pd
 
@@ -10,7 +10,7 @@ import pandas as pd
 class DateExtractor:
     """Extracts and filters dates from timeline JSON data."""
 
-    def __init__(self, data: dict):
+    def __init__(self, data: dict[str, Any]) -> None:
         self.data = data
 
     def extract_from_flat_locations(self) -> Set[date]:
@@ -45,7 +45,7 @@ class DateExtractor:
             return None
 
     @staticmethod
-    def _parse_timestamp(start_str) -> datetime | None:
+    def _parse_timestamp(start_str: Any) -> datetime | None:
         """Parse numeric timestamp (milliseconds)."""
         try:
             if isinstance(start_str, (int, float)):
@@ -55,18 +55,18 @@ class DateExtractor:
         return None
 
     @staticmethod
-    def _parse_with_pandas(start_str) -> date | None:
+    def _parse_with_pandas(start_str: Any) -> date | None:
         """Parse with pandas as fallback."""
         try:
             dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
             if pd.isna(dt_timestamp):
                 return None
-            return dt_timestamp.to_pydatetime().astimezone(timezone.utc).date()
+            return dt_timestamp.to_pydatetime().astimezone(timezone.utc).date()  # type: ignore[union-attr]
         except Exception:
             return None
 
     @staticmethod
-    def _extract_start_str(segment: dict) -> str | None:
+    def _extract_start_str(segment: dict[str, Any]) -> str | None:
         """Extract start time string from segment or duration."""
         start_str = segment.get("startTime")
         if start_str:
@@ -76,7 +76,7 @@ class DateExtractor:
         return duration.get("startTimestamp") or duration.get("startTimestampMs")
 
     @staticmethod
-    def get_segment_start_date(segment: dict) -> date | None:
+    def get_segment_start_date(segment: dict[str, Any]) -> date | None:
         """Extract start date from a timeline segment."""
         start_str = DateExtractor._extract_start_str(segment)
         if start_str is None:

@@ -4,9 +4,7 @@
 """Session-level cache for parsed timeline segments with MD5-based invalidation."""
 
 import hashlib
-from typing import Optional
-
-from timeline_2_images.models import Segment
+from typing import Any, Optional
 
 
 class SegmentCache:
@@ -16,9 +14,9 @@ class SegmentCache:
     Cache is automatically invalidated if the source file's MD5 changes.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.file_md5: Optional[str] = None
-        self.segments_by_date: dict[str, list[Segment]] = {}
+        self.segments_by_date: dict[str, list[dict[str, Any]]] = {}
 
     def _compute_md5(self, json_path: str) -> str:
         """Compute MD5 hash of the JSON file."""
@@ -45,7 +43,7 @@ class SegmentCache:
 
         return True
 
-    def get(self, json_path: str, date_str: str) -> Optional[list[Segment]]:
+    def get(self, json_path: str, date_str: str) -> Optional[list[dict[str, Any]]]:
         """Get cached segments for a date if file hasn't changed.
 
         Args:
@@ -59,7 +57,7 @@ class SegmentCache:
             return None
         return self.segments_by_date.get(date_str)
 
-    def set(self, json_path: str, date_str: str, segments: list[Segment]) -> None:
+    def set(self, json_path: str, date_str: str, segments: list[dict[str, Any]]) -> None:
         """Cache segments for a date.
 
         Args:

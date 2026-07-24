@@ -176,6 +176,23 @@ The exported `Timeline.json` file will be saved to your device. Transfer it to y
 
 See Google's [Location Timeline help page](https://support.google.com/maps/answer/3854828) for more details.
 
+### Export from iPhone
+
+On your iPhone:
+
+1. Open **Settings**
+2. Go to **Privacy & Security** → **Location Services**
+3. Scroll to the bottom of the page
+4. Tap **Export Timeline Data** (if available)
+5. Choose export format: **JSON**
+6. Authenticate with Face ID, Touch ID, or your passcode
+7. Choose where to save: email, cloud storage (iCloud Drive, Google Drive, etc.), or AirDrop to another device
+8. Save the `location-history.json` file
+
+Transfer the `location-history.json` file to your computer via the method you chose.
+
+**Note:** This process exports your on-device location history. The file uses the JSON format with coordinates in `geo:` URI format, which this tool supports.
+
 ## Development
 
 ### Quick Quality Check

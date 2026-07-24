@@ -4,7 +4,7 @@
 """File selector widget for choosing Timeline.json."""
 
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QFileDialog, QLabel
 
@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QFil
 class FileSelector(QWidget):
     """Widget for selecting Timeline.json file."""
 
-    def __init__(self, presenter):
+    def __init__(self, presenter: Any) -> None:
         """Initialize file selector.
 
         Args:
@@ -75,7 +75,7 @@ class FileSelector(QWidget):
             self._loading_label.setText("")
             self._loading_label.setVisible(False)
 
-    def on_file_selected(self, callback) -> None:
+    def on_file_selected(self, callback: Any) -> None:
         """Register callback when file is selected.
 
         Args:

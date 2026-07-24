@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Any
 
 
 @dataclass
@@ -12,7 +13,7 @@ class DateRangeQuery:
     end_date: str | None = None
     days: int = 14
 
-    def _get_filter_strategy(self) -> tuple[str, dict]:
+    def _get_filter_strategy(self) -> tuple[str, dict[str, Any]]:
         """Determine which filter strategy and parameters to use."""
         if self.start_date and self.end_date:
             return "range", {"start": self.start_date, "end": self.end_date}

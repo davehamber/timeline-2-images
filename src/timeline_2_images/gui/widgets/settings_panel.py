@@ -17,7 +17,7 @@ from timeline_2_images.config.render_configuration import MIN_IMAGE_SIZE, MAX_IM
 class SettingsPanel(QWidget):
     """Panel for image generation settings."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize settings panel."""
         super().__init__()
         self._create_ui()

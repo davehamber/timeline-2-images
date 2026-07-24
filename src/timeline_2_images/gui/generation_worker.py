@@ -3,6 +3,7 @@
 
 """Worker thread for image generation to prevent UI blocking."""
 
+from pathlib import Path
 from typing import Callable, Optional
 
 from PySide6.QtCore import QThread, Signal
@@ -26,7 +27,7 @@ class GenerationWorker(QThread):
         config: ImageGenerationConfig,
         on_progress: Optional[ProgressCallback] = None,
         on_file_loading: Optional[Callable[[bool], None]] = None,
-    ):
+    ) -> None:
         """Initialize worker.
 
         Args:
@@ -54,7 +55,7 @@ class GenerationWorker(QThread):
                 self.generation_complete.emit(
                     GenerationResult(
                         success=False,
-                        output_dir=self.config.output_dir,
+                        output_dir=Path(self.config.output_dir),
                         image_count=0,
                         error_message="Generation cancelled by user",
                     )
@@ -65,7 +66,7 @@ class GenerationWorker(QThread):
             self.generation_complete.emit(
                 GenerationResult(
                     success=False,
-                    output_dir=self.config.output_dir,
+                    output_dir=Path(self.config.output_dir),
                     image_count=0,
                     error_message=f"Generation failed: {str(e)}",
                 )

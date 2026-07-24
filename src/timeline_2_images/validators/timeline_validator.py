@@ -11,7 +11,9 @@ class TimelineValidator:
     """Validates Timeline.json structure with detailed error messages."""
 
     @staticmethod
-    def validate_field_is_list(data: dict, field: str, errors: list) -> bool:
+    def validate_field_is_list(
+        data: dict[str, Any], field: str, errors: list[str]
+    ) -> bool:
         """Check if a field exists and is a list. Returns True if field is valid."""
         if field not in data:
             return False
@@ -46,7 +48,7 @@ class TimelineValidator:
             raise TimelineValidationError(f"Cannot read Timeline file: {e}") from e
 
     @staticmethod
-    def check_data_is_dict(data: dict) -> None:
+    def check_data_is_dict(data: dict[str, Any]) -> None:
         """Verify data is a dictionary."""
         if not isinstance(data, dict):
             raise TimelineValidationError(
@@ -58,7 +60,7 @@ class TimelineValidator:
             )
 
     @staticmethod
-    def check_has_data_sources(data: dict) -> None:
+    def check_has_data_sources(data: dict[str, Any]) -> None:
         """Verify data has at least one data source."""
         errors: list[str] = []
         fields = ["semanticSegments", "timelineObjects", "locations"]
@@ -82,7 +84,7 @@ class TimelineValidator:
                 "and includes 'Location History' in the export."
             )
 
-    def validate_timeline_structure(self, json_path: str) -> dict:
+    def validate_timeline_structure(self, json_path: str) -> dict[str, Any]:
         """Validate Timeline.json structure and return parsed data."""
         path = Path(json_path)
         if not path.exists():
@@ -91,10 +93,10 @@ class TimelineValidator:
         data: Any = self.load_json_file(json_path)
         self.check_data_is_dict(data)
         self.check_has_data_sources(data)
-        return data  # type: ignore
+        return data  # type: ignore[return-value]
 
     @staticmethod
-    def collect_segment_errors(segment: dict, segment_index: int) -> list[str]:
+    def collect_segment_errors(segment: dict[str, Any], segment_index: int) -> list[str]:
         """Collect validation errors for a segment."""
         errors: list[str] = []
         for required_field in ["startTime", "endTime"]:
@@ -108,7 +110,7 @@ class TimelineValidator:
             )
         return errors
 
-    def validate_segment_structure(self, segment: dict, segment_index: int = 0) -> None:
+    def validate_segment_structure(self, segment: dict[str, Any], segment_index: int = 0) -> None:
         """Validate a semantic segment has required fields."""
         if not isinstance(segment, dict):
             raise TimelineValidationError(
