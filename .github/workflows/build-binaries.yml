@@ -110,14 +110,9 @@ jobs:
           copy dist\timeline2images-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}.exe dist\timeline2images.exe
           copy dist\timeline2images-gui-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}.exe dist\timeline2images-gui.exe
 
-          # Prepare Inno Setup script with version
+          # Run Inno Setup compiler with version injected via /d flag
           $issFile = ".inno\timeline2images.iss"
-          $content = Get-Content $issFile
-          $content = $content -replace '\{#AppVersion\}', '${{ steps.version.outputs.VERSION }}'
-          $content | Set-Content -Path $issFile
-
-          # Run Inno Setup compiler
-          & "C:\Program Files (x86)\Inno Setup 6\iscc.exe" $issFile
+          & "C:\Program Files (x86)\Inno Setup 6\iscc.exe" /dAppVersion="${{ steps.version.outputs.VERSION }}" "$issFile"
 
           # Verify installer was created
           if (-Not (Test-Path "dist\timeline2images-${{ steps.version.outputs.VERSION }}-windows-installer.exe")) {

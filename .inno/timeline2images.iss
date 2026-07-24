@@ -1,3 +1,7 @@
+#ifndef AppVersion
+#define AppVersion "0.7.0"
+#endif
+
 [Setup]
 AppName=Timeline 2 Images
 AppVersion={#AppVersion}
