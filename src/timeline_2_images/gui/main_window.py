@@ -497,6 +497,7 @@ class TimelineWindow(QMainWindow):
 
         output_dir = self.get_output_dir()
         image_width, image_height = self._settings_panel.get_image_size()
+        print(f"[DEBUG] GUI image size: {image_width}x{image_height}")
         add_place_names = self._settings_panel.get_add_place_names()
         single_image = self._settings_panel.get_single_image()
         line_thickness = self._settings_panel.get_line_thickness()

@@ -190,10 +190,12 @@ class TimelineProcessorAdapter(ITimelineProcessor):
             app: TimelineApp instance
             config: ImageGenerationConfig with user-selected settings
         """
+        print(f"[DEBUG] Applying config: {config.image_width}x{config.image_height}")
         app.config.image_width = config.image_width
         app.config.image_height = config.image_height
         app.config.add_place_names = config.add_place_names
         app.config.blue_line_width = config.blue_line_width
+        print(f"[DEBUG] App config now: {app.config.image_width}x{app.config.image_height}")
 
     @staticmethod
     def _format_failed_dates(failed_dates: list[str]) -> str:
