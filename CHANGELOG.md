@@ -36,34 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows binary builds now include installer (.exe) in addition to standalone executables
 - README documentation expanded with Windows installer instructions and new feature documentation
 
-## [## [Unreleased]] - 2026-07-22
-
-### Changed
-- Migrated GUI framework from PyQt6 to PySide6 for better cross-platform support
-  - Official Qt Company support and maintenance
-  - Full Nuitka compatibility across all platforms (Linux, Windows, macOS)
-  - More permissive LGPL license vs GPL
-  - Better integration with Qt tooling and ecosystem
-
-### Added
-- macOS GUI binaries now fully supported (both Intel AMD64 and Apple Silicon ARM64)
-- Complete cross-platform binary builds: CLI + GUI on all platforms
-  - Linux AMD64: CLI + GUI
-  - Windows AMD64: CLI + GUI
-  - macOS Intel (AMD64): CLI + GUI
-  - macOS Apple Silicon (ARM64): CLI + GUI
-- GUI layout improvements: bordered sections for Timeline File, Output Directory, Date Range, Image Settings
-  - File picker width alignment
-  - Reduced vertical spacing for compact layout
-  - Better visual hierarchy with consistent spacing
-
-### Fixed
-- GUI builds on macOS previously unavailable (PyQt6 had Nuitka compatibility issues)
-- Workflow version extraction now properly uses uv environment
-- GUI cancel button behavior: now stops image processing instead of closing app
-- UI freezing when Cancel button clicked during processing
-- Progress status text color now matches percentage complete text color
-
 ## [0.4.1] - 2026-07-22
 
 ### Added
