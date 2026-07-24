@@ -37,12 +37,36 @@ chmod +x timeline2images-gui
 
 ### Windows
 
-#### GUI Version
+#### Using the Installer (Recommended)
+
+The easiest way to install on Windows is using the Inno Setup installer:
+
+1. Download `timeline2images-X.X.X-windows-installer.exe` from [Releases](https://github.com/yourusername/timeline-2-images/releases)
+2. Double-click the installer and follow the setup wizard
+3. The installer will:
+   - Place executables in `Program Files\Timeline2Images`
+   - Create Start Menu shortcuts
+   - Create a desktop shortcut (optional)
+4. Launch via Start Menu or desktop icon
+
+The installer handles Windows SmartScreen warnings automatically and is the recommended installation method.
+
+#### Using Standalone Executables
+
+If you prefer not to use the installer, download the standalone `.exe` files directly:
+
+**GUI Version:**
 ```bash
 timeline2images-gui.exe
 ```
 
 Simply double-click to launch the graphical interface.
+
+**CLI Version:**
+```bash
+timeline2images.exe Timeline.json --days 30
+timeline2images.exe Timeline.json --start-date 2026-01-01 --end-date 2026-01-31
+```
 
 **If Windows blocks the app:** Windows SmartScreen may display "This App Has Been Blocked for Your Protection" for unsigned executables. To bypass:
 
@@ -53,12 +77,6 @@ Simply double-click to launch the graphical interface.
 5. Run the executable normally
 
 This is a one-time step per executable.
-
-#### CLI Version
-```bash
-timeline2images.exe Timeline.json --days 30
-timeline2images.exe Timeline.json --start-date 2026-01-01 --end-date 2026-01-31
-```
 
 ### Usage (Python)
 
@@ -82,7 +100,12 @@ uv run python -m timeline_2_images gui
 Opens an interactive window where you can:
 - Select your Timeline.json file
 - Choose date ranges for processing
-- Configure rendering options
+- Configure rendering options:
+  - **Image Size** (W x H): Set width and height in pixels (200-4000, default 500)
+  - **Route Line Thickness**: Adjust the thickness of blue journey lines (1-10 points, default 2). Black border automatically scales to remain visible
+- Toggle options:
+  - **Add place names**: Include start/end location names on maps
+  - **Single combined image**: Merge all dates into one map instead of individual daily maps
 - Monitor generation progress
 
 #### CLI (Command Line)
@@ -105,11 +128,16 @@ uv run python -m timeline_2_images.main Timeline.json --output-dir my_maps
 # Change image resolution (pixels, max 4000)
 uv run python -m timeline_2_images.main Timeline.json --image-size 1500
 
+# Adjust route line thickness (blue lines, 1-10 points, default 2)
+uv run python -m timeline_2_images.main Timeline.json --blue-line-width 5
+
 # Specific date range
 uv run python -m timeline_2_images.main Timeline.json --start-date 2026-01-01 --end-date 2026-01-31
 ```
 
 **Note on image size:** Larger image sizes (1500px+) will significantly increase processing time. Range: 200-4000 pixels.
+
+**Route Line Thickness:** Controls how thick the blue journey lines appear on the maps. The black border is automatically 2 points wider to remain visible. Range: 1-10 points (default: 2).
 
 ### Working with Large Timelines
 
