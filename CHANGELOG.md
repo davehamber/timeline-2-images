@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-24
+
+### Added
+- Route Line Thickness control: CLI `--blue-line-width` parameter (1-10 points, default 2)
+  - Allows users to adjust thickness of blue journey lines on maps
+  - Black border automatically scales 2pt wider to remain visible
+  - Available in both CLI and GUI
+- GUI Route Line Thickness spinbox in Image Settings section
+  - Ranges from 1-10 points with validation on focus loss
+  - Settings persisted across sessions
+- Windows installer: Inno Setup automation generates `.exe` installer for easy installation
+  - Automatic deployment via GitHub Actions on release
+  - Installs to Program Files with Start Menu and desktop shortcuts
+  - Recommended installation method for Windows users
+
+### Fixed
+- GUI spinbox constraints: Image size and line thickness spinboxes now properly constrained from minimum
+  - Image width/height: minimum 200 pixels (was allowing 1 pixel)
+  - Route line thickness: minimum 1 point (was allowing 0 points)
+- Added setSingleStep() to GUI spinboxes for better user experience
+  - Image dimensions: step 50 pixels
+  - Route line thickness: step 1 point
+- Blue line width parameter now properly applied in matplotlib rendering
+
+### Changed
+- Route line rendering now respects user-specified line width instead of hardcoded values
+- Windows binary builds now include installer (.exe) in addition to standalone executables
+- README documentation expanded with Windows installer instructions and new feature documentation
+
 ## [0.6.0] - 2026-07-22
 
 ### Changed
@@ -23,49 +52,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Windows AMD64: CLI + GUI
   - macOS Intel (AMD64): CLI + GUI
   - macOS Apple Silicon (ARM64): CLI + GUI
+- GUI layout improvements: bordered sections for Timeline File, Output Directory, Date Range, Image Settings
+  - File picker width alignment
+  - Reduced vertical spacing for compact layout
+  - Better visual hierarchy with consistent spacing
 
 ### Fixed
 - GUI builds on macOS previously unavailable (PyQt6 had Nuitka compatibility issues)
 - Workflow version extraction now properly uses uv environment
-
-## [## [Unreleased]] - 2026-07-22
-
-### Fixed
-- File picker width alignment: Timeline File and Output Directory pickers now have matching widths
-- Vertical spacing between sections reduced by half for more compact layout
-- Tooltip positioning: question mark help icons now appear next to cursor instead of centered in app
-- Question mark icon vertical alignment with neighboring text labels
-- Cancel button behavior: now stops image processing instead of closing the app
+- GUI cancel button behavior: now stops image processing instead of closing app
 - UI freezing when Cancel button clicked during processing
-- Loading label spacing in file selector preventing proper width matching
-- Nested border appearance around section titles and icons in bordered boxes
 - Progress status text color now matches percentage complete text color
-
-### Changed
-- Reorganized GUI layout: Output Directory section moved between Timeline File and Date Range sections
-- Added bordered boxes around all four main sections (Timeline File, Output Directory, Date Range, Image Settings)
-- Added bordered box around progress panel and buttons section
-- Enhanced visual hierarchy with consistent spacing and borders throughout GUI
-- Code quality: Refactored all Grade B complexity methods to Grade A (335+ Grade A methods total)
-
-## [## [Unreleased]] - 2026-07-22
-
-### Added
-- Separate image width and height controls (image_width, image_height parameters)
-  - CLI: New `--image-width` and `--image-height` flags for granular control
-  - GUI: Two separate spinboxes for width and height independently
-  - API: RenderConfiguration now has image_width and image_height attributes
-- Backward compatibility: `--image-size` flag still works and sets both dimensions
-
-### Changed
-- Image dimension validation now applies to width and height separately (200-4000px range)
-- GUI settings panel redesigned with dual spinboxes for width/height instead of single size
-- All data models updated to use image_width and image_height instead of image_size
-
-### Fixed
-- Rectangular images now render without white borders (was forcing square aspect ratio)
-- Bounds calculation now respects image width/height ratio instead of forcing square bounds
-- Changed aspect ratio handling from 'equal' (square) to 'auto' (rectangular)
 
 ## [0.4.1] - 2026-07-22
 
