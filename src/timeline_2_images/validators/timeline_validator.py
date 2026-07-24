@@ -11,9 +11,7 @@ class TimelineValidator:
     """Validates Timeline.json structure with detailed error messages."""
 
     @staticmethod
-    def validate_field_is_list(
-        data: dict[str, Any], field: str, errors: list[str]
-    ) -> bool:
+    def validate_field_is_list(data: dict[str, Any], field: str, errors: list[str]) -> bool:
         """Check if a field exists and is a list. Returns True if field is valid."""
         if field not in data:
             return False

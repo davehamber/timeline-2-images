@@ -98,7 +98,8 @@ class CLIRunner:
 
         if width < MIN_LINE_WIDTH or width > MAX_LINE_WIDTH:
             raise argparse.ArgumentTypeError(
-                f"blue line width must be between {MIN_LINE_WIDTH} and {MAX_LINE_WIDTH}, got {width}"
+                f"blue line width must be between {MIN_LINE_WIDTH} "
+                f"and {MAX_LINE_WIDTH}, got {width}"
             )
 
         return width

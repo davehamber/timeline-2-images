@@ -13,9 +13,7 @@ from timeline_2_images.cache.segment_cache import SegmentCache
 class SegmentParser:
     """Parses timeline segments from JSON data."""
 
-    def __init__(
-        self, cache: TimelineCache, segment_cache: SegmentCache | None = None
-    ) -> None:
+    def __init__(self, cache: TimelineCache, segment_cache: SegmentCache | None = None) -> None:
         self.cache = cache
         self.segment_cache = segment_cache or SegmentCache()
 

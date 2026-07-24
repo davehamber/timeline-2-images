@@ -52,7 +52,9 @@ class PointExtractor:
             return None
         return self.extract_location_point(parsed_datetime, location)
 
-    def extract_from_flat_locations(self, data: dict[str, Any], target: Any) -> list[tuple[datetime, float, float]]:
+    def extract_from_flat_locations(
+        self, data: dict[str, Any], target: Any
+    ) -> list[tuple[datetime, float, float]]:
         """Extract points from flat locations list."""
         rows: list[tuple[datetime, float, float]] = []
         for location in data.get("locations", []):

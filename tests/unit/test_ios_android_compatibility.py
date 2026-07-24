@@ -6,7 +6,6 @@ import pytest
 from timeline_2_images.parsers.timeline_cache import TimelineCache
 from timeline_2_images.parsers.segment_parser import SegmentParser
 from timeline_2_images.parsers.point_extractor import PointExtractor
-from timeline_2_images.validators.timeline_validator import TimelineValidator
 
 
 class TestBareArrayDetection:
@@ -127,7 +126,7 @@ class TestDateExtraction:
     def test_android_date_extraction(self, android_timeline_json):
         """Android format should correctly extract dates."""
         cache = TimelineCache()
-        dates = cache.load_file(android_timeline_json)
+        cache.load_file(android_timeline_json)
         cache.build_date_index()
 
         assert cache.date_index is not None
@@ -137,7 +136,7 @@ class TestDateExtraction:
     def test_ios_date_extraction(self, ios_timeline_json):
         """iOS format should correctly extract dates after bare array wrapping."""
         cache = TimelineCache()
-        dates = cache.load_file(ios_timeline_json)
+        cache.load_file(ios_timeline_json)
         cache.build_date_index()
 
         assert cache.date_index is not None
