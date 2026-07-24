@@ -323,7 +323,6 @@ class MapRenderer:
         minx, miny, maxx, maxy = bounds
 
         fig_size = self.config.get_figure_size()
-        print(f"[DEBUG] Rendering with config: {self.config.image_width}x{self.config.image_height} @ {self.config.dpi}dpi = {fig_size} inches")
         fig, ax = plt.subplots(figsize=fig_size, dpi=self.config.dpi)
         fig.subplots_adjust(left=0, right=1, top=1, bottom=0, hspace=0, wspace=0)
         ax.set_xlim(minx, maxx)
@@ -632,7 +631,6 @@ class MapRenderer:
         minx, miny, maxx, maxy = bounds
 
         fig_size = self.config.get_figure_size()
-        print(f"[DEBUG] Rendering with config: {self.config.image_width}x{self.config.image_height} @ {self.config.dpi}dpi = {fig_size} inches")
         fig, ax = plt.subplots(figsize=fig_size, dpi=self.config.dpi)
         fig.subplots_adjust(left=0, right=1, top=1, bottom=0, hspace=0, wspace=0)
         ax.set_xlim(minx, maxx)
