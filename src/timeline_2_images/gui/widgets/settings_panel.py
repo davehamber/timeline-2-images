@@ -11,7 +11,12 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QCheckBox,
 )
-from timeline_2_images.config.render_configuration import MIN_IMAGE_SIZE, MAX_IMAGE_SIZE
+from timeline_2_images.config.render_configuration import (
+    MIN_IMAGE_SIZE,
+    MAX_IMAGE_SIZE,
+    MIN_LINE_WIDTH,
+    MAX_LINE_WIDTH,
+)
 
 
 class SettingsPanel(QWidget):
@@ -61,6 +66,23 @@ class SettingsPanel(QWidget):
         size_layout.addStretch()
         layout.addLayout(size_layout)
 
+        # Route line thickness
+        line_thickness_layout = QHBoxLayout()
+        line_thickness_layout.addWidget(QLabel("Route Line Thickness:"))
+        self._line_thickness_spin = QSpinBox()
+        self._line_thickness_spin.setMinimum(1)
+        self._line_thickness_spin.setMaximum(MAX_LINE_WIDTH)
+        self._line_thickness_spin.setValue(2)
+        self._line_thickness_spin.editingFinished.connect(self._on_line_thickness_finished)
+        self._line_thickness_spin.setToolTip(
+            f"Thickness of blue journey lines in points ({MIN_LINE_WIDTH}-{MAX_LINE_WIDTH})\n"
+            "Black border is automatically 2pt wider to remain visible"
+        )
+        line_thickness_layout.addWidget(self._line_thickness_spin)
+        line_thickness_layout.addWidget(QLabel("pt"))
+        line_thickness_layout.addStretch()
+        layout.addLayout(line_thickness_layout)
+
         # Checkboxes
         self._place_names_check = QCheckBox("Add place names")
         self._place_names_check.setChecked(True)
@@ -94,6 +116,14 @@ class SettingsPanel(QWidget):
         elif value > MAX_IMAGE_SIZE:
             self._height_spin.setValue(MAX_IMAGE_SIZE)
 
+    def _on_line_thickness_finished(self) -> None:
+        """Handle line thickness editing finished - clamp to valid range on focus loss."""
+        value = self._line_thickness_spin.value()
+        if value < MIN_LINE_WIDTH:
+            self._line_thickness_spin.setValue(MIN_LINE_WIDTH)
+        elif value > MAX_LINE_WIDTH:
+            self._line_thickness_spin.setValue(MAX_LINE_WIDTH)
+
     def get_image_size(self) -> tuple[int, int]:
         """Get selected image size (width, height)."""
         return (self._width_spin.value(), self._height_spin.value())
@@ -105,3 +135,7 @@ class SettingsPanel(QWidget):
     def get_single_image(self) -> bool:
         """Get single image setting."""
         return self._single_image_check.isChecked()
+
+    def get_line_thickness(self) -> int:
+        """Get route line thickness in points."""
+        return self._line_thickness_spin.value()

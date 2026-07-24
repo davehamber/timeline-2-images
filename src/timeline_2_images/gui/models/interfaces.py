@@ -28,6 +28,7 @@ class ImageGenerationConfig:
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     days: int = 14
+    blue_line_width: int = 2
 
 
 @dataclass

@@ -140,6 +140,7 @@ class TimelineGeneratorPresenter:
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         days: int = 14,
+        blue_line_width: int = 2,
         on_progress: Optional[ProgressCallback] = None,
         on_file_loading: Optional[Callable[[bool], None]] = None,
     ) -> None:
@@ -155,6 +156,7 @@ class TimelineGeneratorPresenter:
             start_date: Start date (YYYY-MM-DD) or None
             end_date: End date (YYYY-MM-DD) or None
             days: Number of days to process
+            blue_line_width: Thickness of blue journey lines in points (1-10)
             on_progress: Progress callback (completed, total)
             on_file_loading: File loading callback (is_cached)
         """
@@ -170,6 +172,7 @@ class TimelineGeneratorPresenter:
             start_date=start_date,
             end_date=end_date,
             days=days,
+            blue_line_width=blue_line_width,
         )
 
         # Create and start generation worker thread to avoid blocking UI

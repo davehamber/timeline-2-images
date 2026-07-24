@@ -392,8 +392,10 @@ class TimelineWindow(QMainWindow):
         """Load image width and height settings."""
         image_width = self._settings_manager.get("image_width", 500)
         image_height = self._settings_manager.get("image_height", 500)
+        line_thickness = self._settings_manager.get("line_thickness", 2)
         self._settings_panel._width_spin.setValue(image_width)
         self._settings_panel._height_spin.setValue(image_height)
+        self._settings_panel._line_thickness_spin.setValue(line_thickness)
 
     def _load_output_directory(self) -> None:
         """Load output directory setting."""
@@ -459,9 +461,11 @@ class TimelineWindow(QMainWindow):
         date_range_mode = "range" if start_date and end_date else "days"
 
         image_width, image_height = self._settings_panel.get_image_size()
+        line_thickness = self._settings_panel.get_line_thickness()
         settings = {
             "image_width": image_width,
             "image_height": image_height,
+            "line_thickness": line_thickness,
             "output_dir": self.get_output_dir(),
             "add_place_names": self._settings_panel.get_add_place_names(),
             "single_image": self._settings_panel.get_single_image(),
@@ -495,6 +499,7 @@ class TimelineWindow(QMainWindow):
         image_width, image_height = self._settings_panel.get_image_size()
         add_place_names = self._settings_panel.get_add_place_names()
         single_image = self._settings_panel.get_single_image()
+        line_thickness = self._settings_panel.get_line_thickness()
 
         start_date, end_date, days = self._date_range_panel.get_date_range()
 
@@ -511,6 +516,7 @@ class TimelineWindow(QMainWindow):
             start_date=start_date,
             end_date=end_date,
             days=days,
+            blue_line_width=line_thickness,
             on_progress=self._progress_panel.update_progress,
             on_file_loading=self._progress_panel.set_loading_file,
         )
