@@ -103,6 +103,30 @@ jobs:
           move dist\timeline2images-gui.exe dist\timeline2images-gui-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}.exe
         shell: cmd
 
+      - name: Build Windows Installer
+        if: runner.os == 'Windows'
+        run: |
+          # Copy binaries without version suffix for installer
+          copy dist\timeline2images-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}.exe dist\timeline2images.exe
+          copy dist\timeline2images-gui-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}.exe dist\timeline2images-gui.exe
+
+          # Prepare Inno Setup script with version
+          $issFile = ".inno\timeline2images.iss"
+          $content = Get-Content $issFile
+          $content = $content -replace '\{#AppVersion\}', '${{ steps.version.outputs.VERSION }}'
+          $content | Set-Content -Path $issFile
+
+          # Run Inno Setup compiler
+          & "C:\Program Files (x86)\Inno Setup 6\iscc.exe" $issFile
+
+          # Verify installer was created
+          if (-Not (Test-Path "dist\timeline2images-${{ steps.version.outputs.VERSION }}-windows-installer.exe")) {
+            Write-Error "Installer creation failed"
+            exit 1
+          }
+          Write-Output "Installer created successfully"
+        shell: pwsh
+
       - name: Generate checksums (Unix)
         if: runner.os != 'Windows'
         run: |
@@ -122,7 +146,23 @@ jobs:
           Get-Content "CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256"
         shell: pwsh
 
-      - name: Upload binaries to release
+      - name: Upload binaries to release (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name || github.event.inputs.version }}"
+          echo "Uploading to release: $TAG_NAME"
+          gh release upload "$TAG_NAME" \
+            dist/timeline2images-*-windows-*.exe \
+            dist/timeline2images-gui-*-windows-*.exe \
+            dist/timeline2images-${{ steps.version.outputs.VERSION }}-windows-installer.exe \
+            dist/CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256 \
+            --clobber
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload binaries to release (Unix)
+        if: runner.os != 'Windows'
         run: |
           TAG_NAME="${{ github.event.release.tag_name || github.event.inputs.version }}"
           echo "Uploading to release: $TAG_NAME"
