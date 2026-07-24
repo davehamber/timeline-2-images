@@ -114,12 +114,17 @@ jobs:
           $issFile = ".inno\timeline2images.iss"
           & "C:\Program Files (x86)\Inno Setup 6\iscc.exe" /dAppVersion="${{ steps.version.outputs.VERSION }}" "$issFile"
 
-          # Verify installer was created
-          if (-Not (Test-Path "dist\timeline2images-${{ steps.version.outputs.VERSION }}-windows-installer.exe")) {
-            Write-Error "Installer creation failed"
+          # Verify installer was created in .inno/dist/ and copy to dist/
+          $installerSource = ".inno\dist\timeline2images-${{ steps.version.outputs.VERSION }}-windows-installer.exe"
+          $installerDest = "dist\timeline2images-${{ steps.version.outputs.VERSION }}-windows-installer.exe"
+
+          if (-Not (Test-Path $installerSource)) {
+            Write-Error "Installer not found at $installerSource"
             exit 1
           }
-          Write-Output "Installer created successfully"
+
+          copy $installerSource $installerDest
+          Write-Output "Installer created successfully at $installerDest"
         shell: pwsh
 
       - name: Generate checksums (Unix)
