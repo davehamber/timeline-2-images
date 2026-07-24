@@ -25,8 +25,8 @@ ShowLanguageDialog=no
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "dist\timeline2images.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "dist\timeline2images-gui.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\timeline2images.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\timeline2images-gui.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
 
 [Icons]
