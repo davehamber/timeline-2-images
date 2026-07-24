@@ -37,3 +37,7 @@ Name: "{group}\{cm:UninstallProgram,Timeline 2 Images}"; Filename: "{uninstallex
 
 [Run]
 Filename: "{app}\timeline2images-gui.exe"; Description: "Launch Timeline 2 Images"; Flags: postinstall skipifsilent nowait
+
+[UninstallDelete]
+Type: files; Name: "{localappdata}\timeline-2-images\*"
+Type: dirs; Name: "{localappdata}\timeline-2-images"
