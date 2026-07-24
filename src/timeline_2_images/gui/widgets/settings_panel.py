@@ -39,9 +39,10 @@ class SettingsPanel(QWidget):
 
         size_layout.addWidget(QLabel("W:"))
         self._width_spin = QSpinBox()
-        self._width_spin.setMinimum(1)
+        self._width_spin.setMinimum(MIN_IMAGE_SIZE)
         self._width_spin.setMaximum(MAX_IMAGE_SIZE)
         self._width_spin.setValue(500)
+        self._width_spin.setSingleStep(50)
         self._width_spin.editingFinished.connect(self._on_width_finished)
         self._width_spin.setToolTip(
             f"Image width in pixels ({MIN_IMAGE_SIZE}-{MAX_IMAGE_SIZE})\n"
@@ -52,9 +53,10 @@ class SettingsPanel(QWidget):
 
         size_layout.addWidget(QLabel("H:"))
         self._height_spin = QSpinBox()
-        self._height_spin.setMinimum(1)
+        self._height_spin.setMinimum(MIN_IMAGE_SIZE)
         self._height_spin.setMaximum(MAX_IMAGE_SIZE)
         self._height_spin.setValue(500)
+        self._height_spin.setSingleStep(50)
         self._height_spin.editingFinished.connect(self._on_height_finished)
         self._height_spin.setToolTip(
             f"Image height in pixels ({MIN_IMAGE_SIZE}-{MAX_IMAGE_SIZE})\n"
@@ -70,9 +72,10 @@ class SettingsPanel(QWidget):
         line_thickness_layout = QHBoxLayout()
         line_thickness_layout.addWidget(QLabel("Route Line Thickness:"))
         self._line_thickness_spin = QSpinBox()
-        self._line_thickness_spin.setMinimum(1)
+        self._line_thickness_spin.setMinimum(MIN_LINE_WIDTH)
         self._line_thickness_spin.setMaximum(MAX_LINE_WIDTH)
         self._line_thickness_spin.setValue(2)
+        self._line_thickness_spin.setSingleStep(1)
         self._line_thickness_spin.editingFinished.connect(self._on_line_thickness_finished)
         self._line_thickness_spin.setToolTip(
             f"Thickness of blue journey lines in points ({MIN_LINE_WIDTH}-{MAX_LINE_WIDTH})\n"
