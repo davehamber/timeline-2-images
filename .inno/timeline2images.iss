@@ -18,7 +18,7 @@ OutputBaseFilename=timeline2images-{#AppVersion}-windows-installer
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
-LicenseFile=LICENSE.txt
+LicenseFile=..\LICENSE
 ShowLanguageDialog=no
 
 [Languages]
@@ -27,7 +27,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Files]
 Source: "dist\timeline2images.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\timeline2images-gui.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
+Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
 
 [Icons]
 Name: "{group}\Timeline 2 Images (GUI)"; Filename: "{app}\timeline2images-gui.exe"; IconIndex: 0
