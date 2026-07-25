@@ -28,11 +28,11 @@ jobs:
             platform: windows
             arch: amd64
             suffix: ".exe"
-          - os: macos-12
+          - os: macos-15-intel
             platform: macos
             arch: amd64
             suffix: ""
-          - os: macos-14
+          - os: macos-15
             platform: macos
             arch: arm64
             suffix: ""
