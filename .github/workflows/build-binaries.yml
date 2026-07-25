@@ -28,11 +28,11 @@ jobs:
             platform: windows
             arch: amd64
             suffix: ".exe"
-          - os: macos-latest
+          - os: macos-13
             platform: macos
             arch: amd64
             suffix: ""
-          - os: macos-latest
+          - os: macos-14
             platform: macos
             arch: arm64
             suffix: ""
@@ -72,6 +72,19 @@ jobs:
 
       - name: Build GUI binary
         run: uv run bash ./build_executable.sh gui
+        shell: bash
+
+      - name: Verify binary architecture (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          echo "Checking CLI binary architecture..."
+          file dist/timeline2images || echo "CLI binary not found"
+          echo ""
+          echo "Checking GUI binary architecture..."
+          file dist/timeline2images-gui || echo "GUI binary not found"
+          echo ""
+          echo "Expected for macos-13 (Intel): x86_64"
+          echo "Expected for macos-14 (Apple Silicon): arm64"
         shell: bash
 
       - name: Extract version
