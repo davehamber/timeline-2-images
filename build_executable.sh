@@ -52,10 +52,10 @@ case "$BUILD_TYPE" in
         ;;
 esac
 
-# macOS-specific flags to use system libraries and avoid bundling conflicts
+# macOS-specific flags to avoid library bundling conflicts
 MACOS_FLAGS=""
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    MACOS_FLAGS="--static-libcurl=no"
+    MACOS_FLAGS="--noinclude-dlls=*libcurl* --noinclude-dlls=*libssl* --noinclude-dlls=*libcrypto*"
 fi
 
 uv run nuitka \
