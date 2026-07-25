@@ -52,6 +52,12 @@ case "$BUILD_TYPE" in
         ;;
 esac
 
+# macOS-specific flags to use system libraries and avoid bundling conflicts
+MACOS_FLAGS=""
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    MACOS_FLAGS="--static-libcurl=no"
+fi
+
 uv run nuitka \
   --onefile \
   --output-dir=./dist \
@@ -61,6 +67,7 @@ uv run nuitka \
   $CONSOLE_FLAGS \
   --assume-yes-for-downloads \
   --remove-output \
+  $MACOS_FLAGS \
   "$ENTRY_POINT"
 
 echo "Checking for binary in dist directory..."
