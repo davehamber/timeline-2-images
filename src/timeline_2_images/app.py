@@ -13,7 +13,6 @@ from timeline_2_images.config import RenderConfiguration, DateRangeQuery, BatchC
 from timeline_2_images.models import RenderResult
 from timeline_2_images.validators import TimelineValidator
 from timeline_2_images.day_connector_builder import DayConnectorBuilder
-from geopy.geocoders import Nominatim
 
 ProgressCallback = Callable[[int, int], None]
 
@@ -90,7 +89,9 @@ class TimelineApp:
         if batch_config is not None:
             return batch_config.create_renderer()
         tile_cache = TileCacheManager(cache_dir)
-        geocoder = Nominatim(user_agent="timeline-2-images")
+        from timeline_2_images.rendering.place_name_geocoder import PlaceNameGeocoder
+
+        geocoder = PlaceNameGeocoder(user_agent="timeline-2-images")
         return MapRenderer(config=self.config, tile_cache=tile_cache, geocoder=geocoder)
 
     def _setup_cache_config(self, cache_config: CacheConfig | None) -> CacheConfig:

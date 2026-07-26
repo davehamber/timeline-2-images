@@ -9,13 +9,12 @@ import matplotlib
 import matplotlib.pyplot as plt
 import geopandas as gpd
 from shapely.geometry import Point, LineString
-import contextily as cx  # type: ignore
-from geopy.geocoders import Nominatim  # type: ignore
-from geopy.exc import GeocoderTimedOut, GeocoderUnavailable  # type: ignore
 
 from timeline_2_images.config import RenderConfiguration
 from timeline_2_images.models import ProcessedSegment, RenderResult
 from timeline_2_images.rendering.tile_cache_manager import TileCacheManager
+from timeline_2_images.rendering.tile_downloader import TileDownloader
+from timeline_2_images.rendering.place_name_geocoder import PlaceNameGeocoder
 
 matplotlib.use("Agg")
 
@@ -27,21 +26,23 @@ class MapRenderer:
         self,
         config: RenderConfiguration | None = None,
         tile_cache: TileCacheManager | None = None,
-        geocoder: Nominatim | None = None,
+        geocoder: PlaceNameGeocoder | None = None,
         tile_cache_dir: str | None = None,
+        osm_cache_dir: str | None = None,
     ):
         """Initialize map renderer with dependency injection support.
 
         Args:
             config: RenderConfiguration object (created if not provided)
             tile_cache: TileCacheManager instance (created if not provided)
-            geocoder: Nominatim geocoder instance (created if not provided)
-            tile_cache_dir: Alternative way to specify tile cache directory
-                (creates TileCacheManager if tile_cache not provided)
+            geocoder: PlaceNameGeocoder instance (created if not provided)
+            tile_cache_dir: Directory for tile cache
+            osm_cache_dir: Directory for OSM tile cache
         """
         self.config = config or RenderConfiguration()
         self.tile_cache = tile_cache or TileCacheManager(tile_cache_dir)
-        self.geocoder = geocoder or Nominatim(user_agent="timeline-2-images")
+        self.geocoder = geocoder or PlaceNameGeocoder()
+        self.tile_downloader = TileDownloader(cache_dir=osm_cache_dir)
         self.config.validate()
 
     def render_segments(
@@ -97,60 +98,6 @@ class MapRenderer:
                 error_message=str(exception),
             )
 
-    def _extract_from_structured_address(self, address: dict) -> str:
-        """Extract place name from structured address dict.
-
-        Args:
-            address: Address dict from Nominatim
-
-        Returns:
-            Place name or empty string
-        """
-        priority_keys = ["city", "town", "village", "borough", "district", "suburb"]
-        for key in priority_keys:
-            if key in address:
-                return str(address[key])
-        return ""
-
-    def _try_structured_address(self, location) -> str:
-        """Try to extract place from structured address in location.raw."""
-        if not hasattr(location, "raw") or not location.raw:
-            return ""
-        address = location.raw.get("address", {})
-        return self._extract_from_structured_address(address)
-
-    def _extract_place_from_location(self, location) -> str:
-        """Extract place name from geocoded location object."""
-        if not location:
-            return ""
-
-        place = self._try_structured_address(location)
-        if place:
-            return place
-
-        return self._extract_from_address_string(location.address) if location.address else ""
-
-    def _is_valid_place_name(self, part: str) -> bool:
-        """Check if a part is a valid place name (not empty, not digit-only, >2 chars)."""
-        return bool(part) and not part.isdigit() and len(part) > 2
-
-    def _extract_from_address_string(self, address_str: str) -> str:
-        """Extract place name from comma-separated address string.
-
-        Args:
-            address_str: Address string from Nominatim
-
-        Returns:
-            Place name or empty string
-        """
-        parts = [p.strip() for p in address_str.split(",")]
-
-        for part in parts[1:-1]:
-            if self._is_valid_place_name(part):
-                return str(part)
-
-        return str(parts[0].strip()) if parts else ""
-
     def _get_place_name(self, lat: float, lon: float) -> str:
         """Fetch place name from coordinates using Nominatim.
 
@@ -163,9 +110,7 @@ class MapRenderer:
         """
         try:
             location = self.geocoder.reverse(f"{lat}, {lon}", language="en", timeout=5)
-            return self._extract_place_from_location(location)
-        except (GeocoderTimedOut, GeocoderUnavailable):
-            return ""
+            return self.geocoder.extract_place_name(location)
         except Exception:  # pylint: disable=broad-except
             return ""
 
@@ -329,10 +274,8 @@ class MapRenderer:
         ax.set_ylim(miny, maxy)
         ax.set_aspect("auto")
 
-        osm_url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        cx.add_basemap(ax, source=osm_url, zoom="auto")
-
-        self._draw_segments(ax, segments)
+        # Add OSM basemap
+        self.tile_downloader.add_basemap(ax)
         self._draw_journey_line(ax, segments)
         self._draw_markers(ax, segments)
 
@@ -362,15 +305,6 @@ class MapRenderer:
             output_path, dpi=self.config.dpi, format=self.config.output_format, facecolor="white"
         )
         plt.close(fig)
-
-    def _draw_segments(self, ax: Any, segments: list[ProcessedSegment]) -> None:
-        """Draw individual segments.
-
-        Args:
-            ax: Matplotlib axis
-            segments: List of ProcessedSegment objects
-        """
-        pass
 
     def _draw_journey_line(self, ax: Any, segments: list[ProcessedSegment]) -> None:
         """Draw journey line with border.
@@ -471,37 +405,13 @@ class MapRenderer:
         """Clear tile cache."""
         self.tile_cache.clear()
 
-    def _calculate_cache_stats(self, cache_files: list) -> tuple[int, float]:
-        """Calculate tile count and cache size from cache files."""
-        files = [f for f in cache_files if f.is_file()]
-        cached_tiles = len(files)
-        cache_size_bytes = sum(f.stat().st_size for f in files)
-        cache_size_mb = cache_size_bytes / 1024 / 1024
-        return cached_tiles, cache_size_mb
-
-    def _get_contextily_cache_info(self) -> dict:
-        """Get contextily cache statistics if it exists."""
-        contextily_cache_dir = Path.home() / ".cache" / "contextily"
-        if not contextily_cache_dir.exists():
-            return {}
-
-        cache_files = list(contextily_cache_dir.rglob("*"))
-        cached_tiles, cache_size_mb = self._calculate_cache_stats(cache_files)
-
-        return {
-            "contextily_tiles": cached_tiles,
-            "contextily_cache_size_mb": round(cache_size_mb, 2),
-        }
-
     def get_cache_info(self) -> dict:
-        """Get cache information including contextily tiles.
+        """Get cache information.
 
         Returns:
             Dictionary with cache stats
         """
-        info = self.tile_cache.get_info()
-        info.update(self._get_contextily_cache_info())
-        return info
+        return self.tile_cache.get_info()
 
     def render_combined_segments(
         self, segments: list[ProcessedSegment], output_path: str | Path
@@ -557,12 +467,31 @@ class MapRenderer:
         """Extract lat/lon bounds from waypoints."""
         lats = [p[0] for p in waypoints]
         lons = [p[1] for p in waypoints]
-        return min(lats), max(lats), min(lons), max(lons)
+        min_lat, max_lat, min_lon, max_lon = min(lats), max(lats), min(lons), max(lons)
+        # Diagnostic log for debugging coordinate issues
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.info(
+            f"Bounds from {len(waypoints)} waypoints: "
+            f"lat {min_lat:.2f}°-{max_lat:.2f}°, lon {min_lon:.2f}°-{max_lon:.2f}°"
+        )
+        return min_lat, max_lat, min_lon, max_lon
 
     def _project_to_mercator(
         self, min_lat: float, max_lat: float, min_lon: float, max_lon: float
     ) -> tuple:
         """Project lat/lon bounds to Web Mercator coordinates."""
+        # Sanity check for coordinate values
+        if not (-90 <= min_lat <= 90 and -90 <= max_lat <= 90):
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                f"Latitude bounds appear invalid: {min_lat}°-{max_lat}° "
+                f"(expected -90 to 90). Swapping with longitude?"
+            )
+
         bounds_gdf = gpd.GeoDataFrame(
             geometry=[Point(min_lon, min_lat), Point(max_lon, max_lat)],
             crs="EPSG:4326",
@@ -637,8 +566,7 @@ class MapRenderer:
         ax.set_ylim(miny, maxy)
         ax.set_aspect("auto")
 
-        osm_url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        cx.add_basemap(ax, source=osm_url, zoom="auto")
+        self.tile_downloader.add_basemap(ax)
 
         self._draw_combined_journey_line(ax, segments)
         self._draw_large_span_waypoint_markers(ax, segments)
