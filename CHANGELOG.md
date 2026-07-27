@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Corrected mock patch path for TimelineWorker
   - GUI test now properly initializes PySide6 environment
 
-## [0.7.0] - 2026-07-24
+## [## [Unreleased]] - 2026-07-24
 
 ### Added
 - Route Line Thickness control: CLI `--blue-line-width` parameter (1-10 points, default 2)
