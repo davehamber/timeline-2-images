@@ -3,11 +3,13 @@
 import pytest
 
 try:
-    import PyQt6.QtWidgets  # noqa: F401
+    import PySide6.QtWidgets  # noqa: F401
 
-    PYQT6_AVAILABLE = True
-except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = True
+    PYSIDE6_ERROR = None
+except ImportError as e:
+    PYSIDE6_AVAILABLE = False
+    PYSIDE6_ERROR = str(e)
 
 from timeline_2_images.gui.models import (
     ITimelineProcessor,
@@ -63,7 +65,7 @@ class TestTimelineGeneratorPresenter:
         presenter.on_available_dates(lambda dates: None)
         presenter.on_generation_complete(lambda result: None)
 
-    @pytest.mark.skipif(not PYQT6_AVAILABLE, reason="PyQt6 not available")
+    @pytest.mark.skipif(not PYSIDE6_AVAILABLE, reason="PySide6 not available")
     def test_presenter_handles_file_selected(self):
         """Presenter should handle file selection with threading."""
         from unittest.mock import Mock, patch
@@ -78,7 +80,7 @@ class TestTimelineGeneratorPresenter:
         presenter.on_available_dates(dates_callback)
 
         # Mock the TimelineWorker to avoid needing a Qt event loop in tests
-        with patch("timeline_2_images.gui.presenter.TimelineWorker") as mock_worker_class:
+        with patch("timeline_2_images.gui.timeline_worker.TimelineWorker") as mock_worker_class:
             mock_worker = Mock()
             mock_worker_class.return_value = mock_worker
 

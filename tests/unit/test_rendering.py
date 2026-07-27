@@ -247,24 +247,26 @@ class TestMapRenderer:
             assert place_name == "Portland"
 
     def test_get_place_name_geocoder_timeout(self):
-        """Test handling of Nominatim timeout."""
+        """Test handling of geocoder timeout."""
         from unittest.mock import patch
-        from geopy.exc import GeocoderTimedOut
+        import socket
 
         renderer = MapRenderer()
 
-        with patch.object(renderer.geocoder, "reverse", side_effect=GeocoderTimedOut()):
+        with patch.object(renderer.geocoder, "reverse", side_effect=socket.timeout()):
             place_name = renderer._get_place_name(40.7128, -74.0060)
             assert place_name == ""
 
     def test_get_place_name_geocoder_unavailable(self):
-        """Test handling of Nominatim service unavailable."""
+        """Test handling of geocoder service unavailable."""
         from unittest.mock import patch
-        from geopy.exc import GeocoderUnavailable
+        import requests
 
         renderer = MapRenderer()
 
-        with patch.object(renderer.geocoder, "reverse", side_effect=GeocoderUnavailable()):
+        with patch.object(
+            renderer.geocoder, "reverse", side_effect=requests.ConnectionError()
+        ):
             place_name = renderer._get_place_name(40.7128, -74.0060)
             assert place_name == ""
 
@@ -352,7 +354,7 @@ class TestMapRenderer:
     def test_get_location_label_failed_lookups(self):
         """Test location label when place name lookups fail."""
         from unittest.mock import patch
-        from geopy.exc import GeocoderUnavailable
+        import requests
 
         renderer = MapRenderer()
         segments = [
@@ -368,7 +370,7 @@ class TestMapRenderer:
             ),
         ]
 
-        with patch.object(renderer.geocoder, "reverse", side_effect=GeocoderUnavailable()):
+        with patch.object(renderer.geocoder, "reverse", side_effect=requests.ConnectionError()):
             label = renderer._get_location_label(segments)
             assert label == ""
 
