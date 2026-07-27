@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-07-27
+
+### Fixed
+- Test infrastructure: Fixed tests to work with custom PlaceNameGeocoder instead of removed geopy exceptions
+  - Replaced `geopy.exc.GeocoderTimedOut` with `socket.timeout()`
+  - Replaced `geopy.exc.GeocoderUnavailable` with `requests.ConnectionError()`
+- Test fixtures: Added complete iOS and Android Timeline format fixtures in conftest.py
+  - `sample_timeline_json`: Standard Android format with semanticSegments key
+  - `ios_timeline_json`: Bare array format with geo: URI prefixes
+  - `android_timeline_json`: Object with semanticSegments key and waypoints
+- GUI test: Fixed PySide6 availability by using proper pytest invocation (`python -m pytest` instead of `pytest`)
+  - Corrected mock patch path for TimelineWorker
+  - GUI test now properly initializes PySide6 environment
+
 ## [0.7.0] - 2026-07-24
 
 ### Added
