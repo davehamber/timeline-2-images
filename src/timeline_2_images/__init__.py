@@ -24,7 +24,7 @@ from timeline_2_images.config import RenderConfiguration, DateRangeQuery
 from timeline_2_images.models import Segment, ProcessedSegment, RenderResult
 from timeline_2_images.exceptions import TimelineException
 
-__version__ = "0.7.1"
+__version__ = "0.7.2"
 
 __all__ = [
     "TimelineApp",
