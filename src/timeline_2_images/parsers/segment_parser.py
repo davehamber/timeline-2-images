@@ -128,7 +128,7 @@ class SegmentParser:
 
     def load_for_day(
         self, json_path: str, target_date: str, profile: bool = False
-    ) -> list[dict[str, Any]] | tuple[list[dict[str, Any]], dict[str, Any]]:
+    ) -> list[dict[str, Any]] | tuple[list[dict[str, Any]], dict[str, Any]] | None:
         """Extract semantic segments for a given date with waypoints."""
         timing: dict[str, Any] = {}
         start = time.time()

@@ -32,6 +32,8 @@ class TimelineProcessor:
             List of Segment objects
         """
         raw_segments_result = self._parser.load_segments_for_day(self.json_path, date)
+        if raw_segments_result is None:
+            return []
         if isinstance(raw_segments_result, tuple):
             raw_segments = raw_segments_result[0]
         else:

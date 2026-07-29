@@ -91,7 +91,7 @@ class TimelineValidator:
         data: Any = self.load_json_file(json_path)
         self.check_data_is_dict(data)
         self.check_has_data_sources(data)
-        return data  # type: ignore[return-value]
+        return data  # type: ignore[no-any-return]
 
     @staticmethod
     def collect_segment_errors(segment: dict[str, Any], segment_index: int) -> list[str]:

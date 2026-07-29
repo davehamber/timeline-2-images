@@ -296,7 +296,7 @@ class TimelineApp:
                 return None, error
 
             output_path = self.output_dir / f"{date}.jpg"
-            return self._render_and_read_image(date, processed_segments, output_path)
+            return self._render_and_read_image(date, processed_segments, output_path)  # type: ignore[arg-type]
 
         except (ValueError, OSError, IOError, RuntimeError) as exception:
             return None, self._create_error_result(date, str(exception))

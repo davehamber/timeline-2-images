@@ -9,8 +9,10 @@ import argparse
 from pathlib import Path
 from typing import Any
 
+from timeline_2_images import __version__
 from timeline_2_images.banner import print_banner
 from timeline_2_images.app import TimelineApp
+from timeline_2_images.cache_cleanup import cleanup_old_cache_versions
 from timeline_2_images.config import RenderConfiguration, DateRangeQuery
 from timeline_2_images.config.render_configuration import (
     MIN_IMAGE_SIZE,
@@ -385,6 +387,9 @@ def cli() -> None:
     Parses command-line arguments and calls main().
     This function is configured in pyproject.toml as the entry point.
     """
+    # Clean up old cache versions (macOS only, silently ignored on other platforms)
+    cleanup_old_cache_versions(__version__)
+
     print_banner()
 
     runner = CLIRunner()

@@ -264,9 +264,7 @@ class TestMapRenderer:
 
         renderer = MapRenderer()
 
-        with patch.object(
-            renderer.geocoder, "reverse", side_effect=requests.ConnectionError()
-        ):
+        with patch.object(renderer.geocoder, "reverse", side_effect=requests.ConnectionError()):
             place_name = renderer._get_place_name(40.7128, -74.0060)
             assert place_name == ""
 

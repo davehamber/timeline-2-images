@@ -21,7 +21,37 @@ Pre-compiled standalone executables are available for Windows, macOS, and Linux.
 
 Download the latest binaries from the [Releases](https://github.com/yourusername/timeline-2-images/releases) page for your platform.
 
-### Linux & macOS
+### macOS
+
+**CLI Version (Command Line):**
+
+1. Download `timeline2images-X.X.X-macos-cli.pkg` from [Releases](https://github.com/yourusername/timeline-2-images/releases)
+2. Double-click the `.pkg` installer and follow the setup wizard
+3. The installer will:
+   - Place the `timeline2images` executable in `/usr/local/bin`
+   - Pre-warm the compilation cache during installation for instant first run
+4. Run from terminal: `timeline2images Timeline.json --days 30`
+
+**GUI Version (Graphical Interface):**
+
+1. Download `timeline2images-X.X.X-macos-gui.zip` from [Releases](https://github.com/yourusername/timeline-2-images/releases)
+2. Extract the ZIP file (double-click)
+3. You'll have `timeline2images-gui.app`
+4. **Before running the app**, remove the quarantine attribute (required for fast startup):
+   ```bash
+   xattr -cr timeline2images-gui.app
+   ```
+   If you moved it to Applications, use:
+   ```bash
+   xattr -cr /Applications/timeline2images-gui.app
+   ```
+   Without this step, the first launch will take ~5 minutes as macOS scans the app.
+5. Move it to your **Applications** folder (optional but recommended)
+6. Launch by double-clicking the app, or from Applications folder
+
+This removes the quarantine extended attribute that macOS applies to downloaded apps. The app is safe to run—this is just a security precaution for apps from outside the Mac App Store.
+
+### Linux
 
 ```bash
 # Make executable

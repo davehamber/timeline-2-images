@@ -29,7 +29,7 @@ class SettingsManager:
         if self.settings_file.exists():
             try:
                 with open(self.settings_file, "r") as f:
-                    return json.load(f)
+                    return json.load(f)  # type: ignore[no-any-return]
             except Exception:
                 return {}
         return {}

@@ -70,6 +70,11 @@ jobs:
         run: uv run bash ./build_executable.sh cli
         shell: bash
 
+      - name: Build macOS .pkg installer (CLI)
+        if: runner.os == 'macOS'
+        run: bash ./build_macos_pkg.sh
+        shell: bash
+
       - name: Build GUI binary
         run: uv run bash ./build_executable.sh gui
         shell: bash
@@ -99,10 +104,21 @@ jobs:
         run: |
           mv dist/timeline2images dist/timeline2images-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}
 
-      - name: Rename GUI binary (Unix)
-        if: runner.os != 'Windows'
+      - name: Rename GUI binary (Unix, non-macOS)
+        if: runner.os != 'Windows' && runner.os != 'macOS'
         run: |
           mv dist/timeline2images-gui dist/timeline2images-gui-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}
+
+      - name: Rename GUI app bundle (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          # On macOS with --mode=app, GUI builds create .app bundles
+          if [ -d "dist/timeline2images-gui-${{ steps.version.outputs.VERSION }}-macos-${{ matrix.arch }}.app" ]; then
+            echo "macOS GUI app bundle found - keeping as-is"
+          elif [ -f "dist/timeline2images-gui" ]; then
+            echo "macOS GUI binary found (fallback, converting to app name)"
+            mv dist/timeline2images-gui dist/timeline2images-gui-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}
+          fi
 
       - name: Rename CLI binary (Windows)
         if: runner.os == 'Windows'
@@ -140,11 +156,32 @@ jobs:
           Write-Output "Installer created successfully at $installerDest"
         shell: pwsh
 
-      - name: Generate checksums (Unix)
-        if: runner.os != 'Windows'
+      - name: Generate checksums (macOS)
+        if: runner.os == 'macOS'
         run: |
           cd dist
-          sha256sum timeline2images-* > CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256
+          # On macOS, hash .pkg (CLI) and .zip (GUI) files if they exist
+          rm -f CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256
+
+          # Hash CLI .pkg files
+          find timeline2images-*.pkg -maxdepth 0 -type f -exec sha256sum {} \; >> CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256 2>/dev/null || true
+
+          # Hash GUI .zip files
+          find timeline2images-gui-*.zip -maxdepth 0 -type f -exec sha256sum {} \; >> CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256 2>/dev/null || true
+
+          # Show results
+          if [ -s CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256 ]; then
+            cat CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256
+          else
+            echo "Warning: No .pkg or .zip files found for checksums"
+          fi
+
+      - name: Generate checksums (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cd dist
+          # On Linux, hash all timeline2images files (bare binaries)
+          find timeline2images-* -maxdepth 0 -type f -exec sha256sum {} \; > CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256
           cat CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256
 
       - name: Generate checksums (Windows)
@@ -165,8 +202,8 @@ jobs:
           TAG_NAME="${{ github.event.release.tag_name || github.event.inputs.version }}"
           echo "Uploading to release: $TAG_NAME"
           gh release upload "$TAG_NAME" \
-            dist/timeline2images-*-windows-*.exe \
-            dist/timeline2images-gui-*-windows-*.exe \
+            dist/timeline2images-${{ steps.version.outputs.VERSION }}-windows-amd64.exe \
+            dist/timeline2images-gui-${{ steps.version.outputs.VERSION }}-windows-amd64.exe \
             dist/timeline2images-${{ steps.version.outputs.VERSION }}-windows-installer.exe \
             dist/CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256 \
             --clobber
@@ -174,26 +211,75 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload binaries to release (Unix)
-        if: runner.os != 'Windows'
+      - name: Prepare macOS artifacts (create zip for .app bundle)
+        if: runner.os == 'macOS'
+        run: |
+          cd dist
+          # Zip the GUI app bundle if it exists
+          if [ -d "timeline2images-gui-${{ steps.version.outputs.VERSION }}-macos-${{ matrix.arch }}.app" ]; then
+            zip -r "timeline2images-gui-${{ steps.version.outputs.VERSION }}-macos-${{ matrix.arch }}.zip" "timeline2images-gui-${{ steps.version.outputs.VERSION }}-macos-${{ matrix.arch }}.app"
+            rm -rf "timeline2images-gui-${{ steps.version.outputs.VERSION }}-macos-${{ matrix.arch }}.app"
+          fi
+          cd ..
+        shell: bash
+
+      - name: Upload binaries to release (macOS)
+        if: runner.os == 'macOS'
         run: |
           TAG_NAME="${{ github.event.release.tag_name || github.event.inputs.version }}"
-          echo "Uploading to release: $TAG_NAME"
-          gh release upload "$TAG_NAME" \
-            dist/timeline2images-* \
-            dist/CHECKSUMS-${{ matrix.platform }}-${{ matrix.arch }}.sha256 \
-            --clobber
+          echo "Uploading macOS release: $TAG_NAME"
+
+          cd dist
+          # On macOS, distribute only:
+          # - CLI: .pkg installer (no bare binary)
+          # - GUI: .zip app bundle (no bare binary)
+          # - CHECKSUMS: for verification
+          FILES=""
+
+          # Add CLI .pkg if exists
+          if find timeline2images-*.pkg -maxdepth 0 -type f >/dev/null 2>&1; then
+            FILES="$FILES $(find timeline2images-*.pkg -maxdepth 0 -type f)"
+          fi
+
+          # Add GUI .zip if exists
+          if find timeline2images-gui-*.zip -maxdepth 0 -type f >/dev/null 2>&1; then
+            FILES="$FILES $(find timeline2images-gui-*.zip -maxdepth 0 -type f)"
+          fi
+
+          # Always add checksums
+          FILES="$FILES $(find CHECKSUMS-* -maxdepth 0 -type f 2>/dev/null || true)"
+
+          # Trim whitespace
+          FILES=$(echo $FILES | xargs)
+
+          if [ -z "$FILES" ]; then
+            echo "Error: No files found to upload"
+            exit 1
+          fi
+
+          echo "Files to upload:"
+          echo "$FILES"
+
+          gh release upload "$TAG_NAME" $FILES --clobber
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  verify:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Verify release assets
-        uses: softprops/action-gh-release@v1
-        with:
-          draft: false
+      - name: Upload binaries to release (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name || github.event.inputs.version }}"
+          echo "Uploading Linux release: $TAG_NAME"
+
+          cd dist
+          # On Linux, distribute bare binaries and checksums
+          FILES=$(find timeline2images-* CHECKSUMS-* -maxdepth 0 -type f 2>/dev/null)
+          if [ -z "$FILES" ]; then
+            echo "No files found to upload"
+            exit 1
+          fi
+
+          gh release upload "$TAG_NAME" $FILES --clobber
+        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

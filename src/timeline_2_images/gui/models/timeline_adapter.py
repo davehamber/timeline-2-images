@@ -113,7 +113,7 @@ class TimelineProcessorAdapter(ITimelineProcessor):
     def _get_cache_source(cache: Any) -> bool:
         """Check if cache was loaded from session."""
         try:
-            return cache.cache_source == "session"
+            return cache.cache_source == "session"  # type: ignore[no-any-return]
         except Exception:
             return False
 

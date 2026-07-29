@@ -1532,7 +1532,7 @@ wheels = [
 
 [[package]]
 name = "timeline-2-images"
-version = "0.7.0"
+version = "0.7.1"
 source = { editable = "." }
 dependencies = [
     { name = "geopandas" },

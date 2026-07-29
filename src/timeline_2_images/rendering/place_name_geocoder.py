@@ -98,7 +98,8 @@ class PlaceNameGeocoder:
             requests.exceptions.ConnectionError,
             requests.exceptions.RequestException,
         ) as e:
-            return self._handle_request_error(e, lat, lon)
+            self._handle_request_error(e, lat, lon)
+            return None
         except (json.JSONDecodeError, ValueError) as e:
             logger.warning(f"Error parsing Nominatim response: {e}")
             return None
@@ -125,7 +126,6 @@ class PlaceNameGeocoder:
             logger.warning(f"Connection error from Nominatim: {error}")
         else:
             logger.warning(f"Error from Nominatim: {error}")
-        return None
 
     def _is_response_ok(self, response: requests.Response) -> bool:
         """Check if HTTP response is valid."""
@@ -149,15 +149,15 @@ class PlaceNameGeocoder:
         if not data:
             return None
 
-        data = self._normalize_response_data(data)
+        data = self._normalize_response_data(data)  # type: ignore[assignment]
         if data is None:
             return None
 
-        display_name = data.get("display_name", "")
-        lat_result = float(data.get("lat", lat))
-        lon_result = float(data.get("lon", lon))
+        display_name = data.get("display_name", "")  # type: ignore[union-attr]
+        lat_result = float(data.get("lat", lat))  # type: ignore[union-attr]
+        lon_result = float(data.get("lon", lon))  # type: ignore[union-attr]
 
-        return Location(address=display_name, latitude=lat_result, longitude=lon_result, raw=data)
+        return Location(address=display_name, latitude=lat_result, longitude=lon_result, raw=data)  # type: ignore[arg-type]
 
     def _is_error_response(self, data: dict | list) -> bool:
         """Check if response contains an error."""
@@ -238,4 +238,4 @@ class PlaceNameGeocoder:
     @staticmethod
     def _is_valid_place_name(part: str) -> bool:
         """Check if a part string is a valid place name."""
-        return part and not part.isdigit() and len(part) > 2
+        return bool(part and not part.isdigit() and len(part) > 2)

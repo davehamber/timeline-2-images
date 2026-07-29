@@ -496,7 +496,7 @@ class MapRenderer:
             geometry=[Point(min_lon, min_lat), Point(max_lon, max_lat)],
             crs="EPSG:4326",
         ).to_crs(epsg=3857)
-        return bounds_gdf.total_bounds
+        return tuple(bounds_gdf.total_bounds)
 
     def _calculate_border_padded_bounds(
         self, dx: float, dy: float, center_x: float, center_y: float

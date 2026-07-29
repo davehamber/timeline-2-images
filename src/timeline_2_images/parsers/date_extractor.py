@@ -61,7 +61,7 @@ class DateExtractor:
             dt_timestamp = pd.to_datetime(start_str, utc=True, errors="coerce")
             if pd.isna(dt_timestamp):
                 return None
-            return dt_timestamp.to_pydatetime().astimezone(timezone.utc).date()  # type: ignore[union-attr]
+            return dt_timestamp.to_pydatetime().astimezone(timezone.utc).date()  # type: ignore[no-any-return]
         except Exception:
             return None
 
@@ -70,10 +70,10 @@ class DateExtractor:
         """Extract start time string from segment or duration."""
         start_str = segment.get("startTime")
         if start_str:
-            return start_str
+            return start_str  # type: ignore[no-any-return]
 
         duration = segment.get("duration", {})
-        return duration.get("startTimestamp") or duration.get("startTimestampMs")
+        return duration.get("startTimestamp") or duration.get("startTimestampMs")  # type: ignore[no-any-return]
 
     @staticmethod
     def get_segment_start_date(segment: dict[str, Any]) -> date | None:

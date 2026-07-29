@@ -50,7 +50,10 @@ class TileDownloader:
             return
 
         min_lon, min_lat, max_lon, max_lat = self._convert_to_lat_lon(
-            minx_wm, miny_wm, maxx_wm, maxy_wm
+            minx_wm,
+            miny_wm,
+            maxx_wm,
+            maxy_wm,  # type: ignore[arg-type]
         )
         zoom = self._calculate_zoom(min_lon, min_lat, max_lon, max_lat)
 
@@ -97,8 +100,8 @@ class TileDownloader:
             crs="EPSG:3857",
         ).to_crs(epsg=4326)
 
-        min_lon, min_lat = gdf_wm.geometry[0].x, gdf_wm.geometry[0].y
-        max_lon, max_lat = gdf_wm.geometry[1].x, gdf_wm.geometry[1].y
+        min_lon, min_lat = gdf_wm.geometry[0].x, gdf_wm.geometry[0].y  # type: ignore[attr-defined]
+        max_lon, max_lat = gdf_wm.geometry[1].x, gdf_wm.geometry[1].y  # type: ignore[attr-defined]
         logger.info(f"Converted to LL: ({min_lon}, {min_lat}, {max_lon}, {max_lat})")
 
         return min_lon, min_lat, max_lon, max_lat

@@ -3,8 +3,18 @@
 
 """Main application window for timeline-2-images GUI."""
 
+import time
 from pathlib import Path
 from typing import Any, Optional
+
+_INIT_START = time.time()
+
+
+def _log_init(message: str) -> None:
+    """Log initialization timing."""
+    elapsed = time.time() - _INIT_START
+    print(f"[INIT {elapsed:.2f}s] {message}", flush=True)
+
 
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -107,21 +117,34 @@ class TimelineWindow(QMainWindow):
     def __init__(self) -> None:
         """Initialize main window."""
         super().__init__()
+        _log_init("QMainWindow.__init__() complete")
+
         self.setWindowTitle("Timeline 2 Images")
         self.setGeometry(100, 100, 520, 600)
 
         # Initialize settings manager
+        _log_init("Creating SettingsManager...")
         self._settings_manager = SettingsManager()
+        _log_init("SettingsManager created")
 
         # Initialize presenter with adapter
+        _log_init("Creating TimelineGeneratorPresenter...")
         self._presenter = TimelineGeneratorPresenter(TimelineProcessorAdapter())
+        _log_init("TimelineGeneratorPresenter created")
+
+        _log_init("Registering callbacks...")
         self._register_callbacks()
+        _log_init("Callbacks registered")
 
         # Create UI
+        _log_init("Creating UI...")
         self._create_ui()
+        _log_init("UI created")
 
         # Load saved settings
+        _log_init("Loading saved settings...")
         self._load_settings()
+        _log_init("Settings loaded - initialization complete")
 
     def _create_ui(self) -> None:
         """Create the user interface."""

@@ -48,7 +48,6 @@ class GenerationWorker(QThread):
             result = self.processor.generate_images(
                 self.config,
                 on_progress=self.on_progress,
-                on_file_loading=self.on_file_loading,
             )
             # Check if thread was interrupted during generation
             if self.isInterruptionRequested():

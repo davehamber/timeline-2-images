@@ -114,7 +114,7 @@ class PointExtractor:
         """Check if datetime matches target date."""
         if parsed_datetime is None:
             return False
-        return parsed_datetime.astimezone(timezone.utc).date() == target
+        return parsed_datetime.astimezone(timezone.utc).date() == target  # type: ignore[no-any-return]
 
     def process_timeline_object(
         self, obj: dict[str, Any], target: Any
